@@ -15,12 +15,95 @@ datasource db {
 }
 
 model User {
-  id            Int          @id @default(autoincrement())
-  firstName     String       @default("Buzz")
-  lastName      String       @default("Honeywell")
-  username        String       @unique
+  id            Int           @id @default(autoincrement())
+  firstName     String        @default("Buzz")
+  lastName      String        @default("Honeywell")
+  username      String        @unique
   password      String
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  accountStatus String       @default("active")
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  accountStatus String        @default("active")
+  pitch         String?
+  resume        Resume[]
+  positions     JobPosition[]
+  achievements  Achievement[]
+  projects      Project[]
+}
+
+model Resume {
+  id          String        @id @default(uuid())
+  userID      Int
+  user        User          @relation(fields: [userID], references: [id])
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  firstName   String        @default("")
+  lastName    String        @default("")
+  email       String        @default("")
+  summary     String        @default("")
+  phoneNumber String        @default("")
+  location    String        @default("")
+  website     String        @default("")
+  linkedin    String        @default("")
+  github      String        @default("")
+  title       String?
+  positions   JobOnResume[]
+}
+
+model JobOnResume{
+  id          String        @id @default(uuid())
+  resumeID        String?
+  resume          Resume?       @relation(fields: [resumeID], references: [id])
+  jobID        String?
+  job          JobPosition?       @relation(fields: [jobID], references: [id])
+  visibleAchievements Achievement[] @relation("visibleAchievements")
+}
+
+model JobPosition {
+  id              String        @id @default(uuid())
+  userID          Int
+  user            User          @relation(fields: [userID], references: [id])
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  name            String
+  description     String        @default("")
+  startDate       DateTime
+  endDate         DateTime?
+  currentPosition Boolean       @default(false)
+  resumeID        String?
+  company         String
+  achievements    Achievement[]
+  projects        Project[]
+  onResumes JobOnResume[]
+}
+
+model Achievement {
+  id              String       @id @default(uuid())
+  userID          Int
+  user            User         @relation(fields: [userID], references: [id])
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  name            String
+  description     String
+  goal            String?
+  result          String?
+  metrics         String?
+  myContribution  String?
+  projectID       String?
+  visibleOnResume Boolean?     @default(true)
+  project         Project?     @relation(fields: [projectID], references: [id])
+  jobPositionID   String?
+  jobPosition     JobPosition? @relation(fields: [jobPositionID], references: [id])
+  resumePosition JobOnResume [] @relation("visibleAchievements")
+}
+
+model Project {
+  id            String        @id @default(uuid())
+  userID        Int
+  user          User          @relation(fields: [userID], references: [id])
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  jobPositionID String
+  jobPosition   JobPosition   @relation(fields: [jobPositionID], references: [id])
+  description   String
+  achievements  Achievement[]
 }

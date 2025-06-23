@@ -8,6 +8,11 @@ async function bootstrap() {
 
   app.useGlobalPipes(new ValidationPipe());
 
+  app.enableCors({
+    origin: 'http://localhost:5173', // your frontend URL
+    credentials: true,
+  });
+
   const config = new DocumentBuilder()
     .setTitle('Career Fingerprint API')
     .setDescription('API for the Career Fingerprint Application')

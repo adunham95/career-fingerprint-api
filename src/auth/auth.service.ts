@@ -10,8 +10,8 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async loginUser(username: string, pass: string) {
-    const user = await this.usersService.user({ username });
+  async loginUser(email: string, pass: string) {
+    const user = await this.usersService.user({ email });
 
     if (!user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -23,7 +23,11 @@ export class AuthService {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
     }
 
-    const payload = { username: user.username, userID: user.id };
+    const payload = {
+      username: user.username,
+      userID: user.id,
+      email: user.email,
+    };
 
     const accessToken = this.jwtService.sign(payload);
 

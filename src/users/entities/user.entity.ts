@@ -1,6 +1,9 @@
 import { User } from '@prisma/client';
 
 export class UserEntity implements User {
+  constructor(partial: Partial<UserEntity>) {
+    Object.assign(this, partial);
+  }
   id: number;
 
   password: string;
@@ -16,4 +19,12 @@ export class UserEntity implements User {
   updatedAt: Date;
 
   accountStatus: string;
+
+  pitch: string;
+
+  email: string;
+
+  lookingFor: string;
+
+  profileImage: string;
 }

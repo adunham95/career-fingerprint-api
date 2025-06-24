@@ -31,34 +31,37 @@ model User {
   positions     JobPosition[]
   achievements  Achievement[]
   projects      Project[]
+  education     Education[]
 }
 
 model Resume {
-  id          String        @id @default(uuid())
+  id          String       @id @default(uuid())
   name        String?
   userID      Int
-  user        User          @relation(fields: [userID], references: [id])
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  firstName   String        @default("")
-  lastName    String        @default("")
-  email       String        @default("")
-  summary     String        @default("")
-  phoneNumber String        @default("")
-  location    String        @default("")
-  website     String        @default("")
-  linkedin    String        @default("")
-  github      String        @default("")
+  user        User         @relation(fields: [userID], references: [id])
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  default     Boolean      @default(false)
+  firstName   String       @default("")
+  lastName    String       @default("")
+  email       String       @default("")
+  summary     String       @default("")
+  phoneNumber String       @default("")
+  location    String       @default("")
+  website     String       @default("")
+  linkedin    String       @default("")
+  github      String       @default("")
   title       String?
-  positions   JobOnResume[]
+  positions   JobOptions[]
 }
 
-model JobOnResume {
+model JobOptions {
   id                  String        @id @default(uuid())
   resumeID            String?
   resume              Resume?       @relation(fields: [resumeID], references: [id])
   jobID               String?
   job                 JobPosition?  @relation(fields: [jobID], references: [id])
+  jobOverwrites       Json?
   visibleAchievements Achievement[] @relation("visibleAchievements")
 }
 
@@ -73,19 +76,18 @@ model JobPosition {
   startDate       DateTime
   endDate         DateTime?
   currentPosition Boolean       @default(false)
-  resumeID        String?
   company         String
   achievements    Achievement[]
   projects        Project[]
-  onResumes       JobOnResume[]
+  jobOptions      JobOptions[]
 }
 
 model Achievement {
-  id              String        @id @default(uuid())
+  id              String       @id @default(uuid())
   userID          Int
-  user            User          @relation(fields: [userID], references: [id])
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  user            User         @relation(fields: [userID], references: [id])
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
   name            String
   description     String
   goal            String?
@@ -93,11 +95,11 @@ model Achievement {
   metrics         String?
   myContribution  String?
   projectID       String?
-  visibleOnResume Boolean?      @default(true)
-  project         Project?      @relation(fields: [projectID], references: [id])
+  visibleOnResume Boolean?     @default(true)
+  project         Project?     @relation(fields: [projectID], references: [id])
   jobPositionID   String?
-  jobPosition     JobPosition?  @relation(fields: [jobPositionID], references: [id])
-  resumePosition  JobOnResume[] @relation("visibleAchievements")
+  jobPosition     JobPosition? @relation(fields: [jobPositionID], references: [id])
+  resumePosition  JobOptions[] @relation("visibleAchievements")
 }
 
 model Project {
@@ -110,4 +112,18 @@ model Project {
   jobPosition   JobPosition   @relation(fields: [jobPositionID], references: [id])
   description   String
   achievements  Achievement[]
+}
+
+model Education {
+  id              String    @id @default(uuid())
+  userID          Int
+  user            User      @relation(fields: [userID], references: [id])
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  institution     String    @default("")
+  degree          String    @default("")
+  description     String    @default("")
+  startDate       DateTime?
+  endDate         DateTime?
+  currentPosition Boolean   @default(false)
 }

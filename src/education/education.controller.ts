@@ -9,17 +9,20 @@ import {
   Req,
   HttpException,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { EducationService } from './education.service';
 import { CreateEducationDto } from './dto/create-education.dto';
 import { UpdateEducationDto } from './dto/update-education.dto';
 import { Request } from 'express';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
 @Controller('education')
 export class EducationController {
   constructor(private readonly educationService: EducationService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   create(@Body() createEducationDto: CreateEducationDto, @Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -34,6 +37,7 @@ export class EducationController {
   }
 
   @Get('my')
+  @UseGuards(JwtAuthGuard)
   findMyEducation(@Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);

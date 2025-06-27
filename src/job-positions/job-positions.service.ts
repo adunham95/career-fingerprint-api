@@ -7,6 +7,12 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class JobPositionsService {
   constructor(private prisma: PrismaService) {}
   create(createJobPositionDto: CreateJobPositionDto) {
+    if (createJobPositionDto.startDate) {
+      createJobPositionDto.startDate = new Date(createJobPositionDto.startDate);
+    }
+    if (createJobPositionDto.endDate) {
+      createJobPositionDto.endDate = new Date(createJobPositionDto.endDate);
+    }
     return this.prisma.jobPosition.create({ data: createJobPositionDto });
   }
 
@@ -14,8 +20,11 @@ export class JobPositionsService {
     return this.prisma.jobPosition.findMany();
   }
 
-  findMyJobPositions(userID: number) {
-    return this.prisma.jobPosition.findMany({ where: { userID } });
+  async findMyJobPositions(userID: number) {
+    return this.prisma.jobPosition.findMany({
+      where: { userID },
+      orderBy: { startDate: { sort: 'desc', nulls: 'last' } },
+    });
   }
 
   findOne(id: string) {
@@ -23,6 +32,12 @@ export class JobPositionsService {
   }
 
   update(id: string, updateJobPositionDto: UpdateJobPositionDto) {
+    if (updateJobPositionDto.startDate) {
+      updateJobPositionDto.startDate = new Date(updateJobPositionDto.startDate);
+    }
+    if (updateJobPositionDto.endDate) {
+      updateJobPositionDto.endDate = new Date(updateJobPositionDto.endDate);
+    }
     return this.prisma.jobPosition.update({
       where: { id },
       data: updateJobPositionDto,

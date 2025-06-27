@@ -4,6 +4,7 @@ import { IsBoolean, IsDateString, IsOptional, IsString } from 'class-validator';
 export class CreateJobPositionDto {
   @ApiProperty()
   @IsString()
+  @IsOptional()
   name: string;
 
   @ApiProperty()
@@ -11,13 +12,14 @@ export class CreateJobPositionDto {
   description?: string;
 
   @ApiProperty()
+  @IsOptional()
   @IsDateString()
-  startDate: Date;
+  startDate: string | Date;
 
   @ApiProperty()
   @IsDateString()
   @IsOptional()
-  endDate?: Date;
+  endDate?: string | Date;
 
   @ApiProperty({ default: false })
   @IsBoolean()
@@ -26,6 +28,7 @@ export class CreateJobPositionDto {
 
   @ApiProperty({ default: '' })
   @IsString()
+  @IsOptional()
   company: string;
 
   userID: number;

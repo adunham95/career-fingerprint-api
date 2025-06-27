@@ -41,19 +41,20 @@ export class JobPositionsController {
     return this.jobPositionsService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.jobPositionsService.findOne(id);
-  }
-
   @Get('my')
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  findMyJobs(@Req() req: Request) {
+  async findMyJobs(@Req() req: Request) {
+    console.log('my jobs');
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
     }
+
     return this.jobPositionsService.findMyJobPositions(req.user?.id);
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.jobPositionsService.findOne(id);
   }
 
   @Patch(':id')

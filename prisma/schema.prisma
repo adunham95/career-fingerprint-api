@@ -71,12 +71,13 @@ model JobPosition {
   user            User          @relation(fields: [userID], references: [id])
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
-  name            String
+  name            String        @default("")
   description     String        @default("")
-  startDate       DateTime
+  startDate       DateTime?
   endDate         DateTime?
   currentPosition Boolean       @default(false)
-  company         String
+  company         String        @default("")
+  location        String        @default("")
   achievements    Achievement[]
   projects        Project[]
   jobOptions      JobOptions[]

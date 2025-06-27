@@ -17,8 +17,8 @@ async function bootstrap() {
   });
 
   const config = new DocumentBuilder()
-    .setTitle('Career Fingerprint API')
-    .setDescription('API for the Career Fingerprint Application')
+    .setTitle('Skill Fingerprint API')
+    .setDescription('API for the Skill Fingerprint Application')
     .setVersion('1.0')
     .addCookieAuth()
     .addBearerAuth()

@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "JobPosition" ALTER COLUMN "name" SET DEFAULT '',
+ALTER COLUMN "startDate" DROP NOT NULL,
+ALTER COLUMN "company" SET DEFAULT '';

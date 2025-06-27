@@ -16,8 +16,8 @@ datasource db {
 
 model User {
   id            Int           @id @default(autoincrement())
-  firstName     String        @default("Buzz")
-  lastName      String        @default("Honeywell")
+  firstName     String        @default("")
+  lastName      String        @default("")
   username      String?       @unique
   password      String
   profileImage  String?       @default("")
@@ -89,7 +89,7 @@ model Achievement {
   user            User         @relation(fields: [userID], references: [id])
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
-  name            String
+  name            String?      @default("")
   description     String
   goal            String?
   result          String?
@@ -100,6 +100,8 @@ model Achievement {
   project         Project?     @relation(fields: [projectID], references: [id])
   jobPositionID   String?
   jobPosition     JobPosition? @relation(fields: [jobPositionID], references: [id])
+  educationID     String?
+  education       Education?   @relation(fields: [educationID], references: [id])
   resumePosition  JobOptions[] @relation("visibleAchievements")
 }
 
@@ -116,15 +118,16 @@ model Project {
 }
 
 model Education {
-  id              String    @id @default(uuid())
+  id              String        @id @default(uuid())
   userID          Int
-  user            User      @relation(fields: [userID], references: [id])
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  institution     String    @default("")
-  degree          String    @default("")
-  description     String    @default("")
+  user            User          @relation(fields: [userID], references: [id])
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  institution     String        @default("")
+  degree          String        @default("")
+  description     String        @default("")
   startDate       DateTime?
   endDate         DateTime?
-  currentPosition Boolean   @default(false)
+  currentPosition Boolean       @default(false)
+  achievements    Achievement[]
 }

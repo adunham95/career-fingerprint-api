@@ -7,9 +7,10 @@ import { JobPositionsModule } from './job-positions/job-positions.module';
 import { ResumeModule } from './resume/resume.module';
 import { AchievementModule } from './achievement/achievement.module';
 import { EducationModule } from './education/education.module';
+import { RegisterModule } from './register/register.module';
 
 @Module({
-  imports: [UsersModule, AuthModule, JobPositionsModule, ResumeModule, AchievementModule, EducationModule],
+  imports: [UsersModule, AuthModule, JobPositionsModule, ResumeModule, AchievementModule, EducationModule, RegisterModule],
   controllers: [AppController],
   providers: [AppService],
 })

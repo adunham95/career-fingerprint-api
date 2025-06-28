@@ -1,8 +1,12 @@
-import { User } from '@prisma/client';
+import { Subscription, User } from '@prisma/client';
 
 export class UserEntity implements User {
-  constructor(partial: Partial<UserEntity>) {
+  constructor({ subscriptions = [], ...partial }: Partial<UserEntity>) {
     Object.assign(this, partial);
+
+    if (subscriptions.length > 0) {
+      this.subscription = subscriptions[0];
+    }
   }
   id: number;
 
@@ -27,4 +31,8 @@ export class UserEntity implements User {
   lookingFor: string;
 
   profileImage: string;
+
+  subscriptions?: Subscription[];
+
+  subscription?: Subscription;
 }

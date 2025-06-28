@@ -8,9 +8,10 @@ import { ResumeModule } from './resume/resume.module';
 import { AchievementModule } from './achievement/achievement.module';
 import { EducationModule } from './education/education.module';
 import { RegisterModule } from './register/register.module';
+import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 
 @Module({
-  imports: [UsersModule, AuthModule, JobPositionsModule, ResumeModule, AchievementModule, EducationModule, RegisterModule],
+  imports: [UsersModule, AuthModule, JobPositionsModule, ResumeModule, AchievementModule, EducationModule, RegisterModule, SubscriptionsModule],
   controllers: [AppController],
   providers: [AppService],
 })

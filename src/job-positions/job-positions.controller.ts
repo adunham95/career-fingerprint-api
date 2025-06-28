@@ -45,6 +45,7 @@ export class JobPositionsController {
   @UseGuards(JwtAuthGuard)
   async findMyJobs(@Req() req: Request) {
     console.log('my jobs');
+    console.log({ req });
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
     }

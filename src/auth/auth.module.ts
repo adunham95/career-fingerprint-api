@@ -6,6 +6,7 @@ import { PrismaModule } from 'src/prisma/prisma.module';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt.strategy';
 import { AuthController } from './auth.controller';
+import { SubscriptionsModule } from 'src/subscriptions/subscriptions.module';
 
 export const jwtSecret = process.env.SECRET || '123abc';
 
@@ -18,6 +19,7 @@ export const jwtSecret = process.env.SECRET || '123abc';
       signOptions: { expiresIn: '7d' }, // e.g. 30s, 7d, 24h
     }),
     UsersModule,
+    SubscriptionsModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],

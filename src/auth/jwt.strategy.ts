@@ -4,10 +4,14 @@ import { Strategy } from 'passport-jwt';
 import { jwtSecret } from './auth.module';
 import { UsersService } from 'src/users/users.service';
 import { Request } from 'express';
+import { SubscriptionsService } from 'src/subscriptions/subscriptions.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
-  constructor(private usersService: UsersService) {
+  constructor(
+    private usersService: UsersService,
+    private subscriptionService: SubscriptionsService,
+  ) {
     super({
       jwtFromRequest: (req: Request) => {
         console.log('jwt from request', req.cookies);
@@ -32,12 +36,16 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     console.log({ payload });
     const user = await this.usersService.user({ id: payload.userID });
 
-    console.log({ user });
-
     if (!user) {
       throw new UnauthorizedException();
     }
 
-    return user;
+    const subscription = await this.subscriptionService.getActive(user?.id);
+
+    const planLevel = subscription?.plan?.level ?? 0; // 0 = Free
+
+    console.log({ user, planLevel });
+
+    return { ...user, planLevel, subscription };
   }
 }

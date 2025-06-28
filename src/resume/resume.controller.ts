@@ -17,6 +17,7 @@ import { UpdateResumeDto } from './dto/update-resume.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { Request } from 'express';
+import { MinPlanLevel } from 'src/decorators/min-plan-level.decorator';
 
 @Controller('resume')
 export class ResumeController {
@@ -24,6 +25,7 @@ export class ResumeController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
+  @MinPlanLevel(0)
   create(@Body() createResumeDto: CreateResumeDto, @Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);

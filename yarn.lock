@@ -2353,6 +2353,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/stripe@npm:^8.0.417":
+  version: 8.0.417
+  resolution: "@types/stripe@npm:8.0.417"
+  dependencies:
+    stripe: "npm:*"
+  checksum: 10c0/97e3a5ad6948a94366d6749328b721a3c9004ba68795e7675efaa74e4b4c51d57c1dfc785747f4221192dabd7a13fb41778e88e080bafd5d3938a50df7f4ef98
+  languageName: node
+  linkType: hard
+
 "@types/superagent@npm:^8.1.0":
   version: 8.1.9
   resolution: "@types/superagent@npm:8.1.9"
@@ -3038,6 +3047,7 @@ __metadata:
     "@types/passport": "npm:^0"
     "@types/passport-jwt": "npm:^4.0.1"
     "@types/passport-local": "npm:^1.0.38"
+    "@types/stripe": "npm:^8.0.417"
     "@types/supertest": "npm:^6.0.2"
     bcrypt: "npm:^6.0.0"
     class-transformer: "npm:^0.5.1"
@@ -3057,6 +3067,7 @@ __metadata:
     reflect-metadata: "npm:^0.2.2"
     rxjs: "npm:^7.8.1"
     source-map-support: "npm:^0.5.21"
+    stripe: "npm:^18.2.1"
     supertest: "npm:^7.0.0"
     ts-jest: "npm:^29.2.5"
     ts-loader: "npm:^9.5.2"
@@ -7966,6 +7977,20 @@ __metadata:
   version: 3.1.1
   resolution: "strip-json-comments@npm:3.1.1"
   checksum: 10c0/9681a6257b925a7fa0f285851c0e613cc934a50661fa7bb41ca9cbbff89686bb4a0ee366e6ecedc4daafd01e83eee0720111ab294366fe7c185e935475ebcecd
+  languageName: node
+  linkType: hard
+
+"stripe@npm:*, stripe@npm:^18.2.1":
+  version: 18.2.1
+  resolution: "stripe@npm:18.2.1"
+  dependencies:
+    qs: "npm:^6.11.0"
+  peerDependencies:
+    "@types/node": ">=12.x.x"
+  peerDependenciesMeta:
+    "@types/node":
+      optional: true
+  checksum: 10c0/7edef67ca27bd4e84ac24eae4e10fa1d712392c08eec62aa6748c78241ebccc2a057651716a619fcaac1b70c5f08ba5fc5adf255d67462d5a441e3a96c0dc6c5
   languageName: node
   linkType: hard
 

@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "Plan" ADD COLUMN     "metadata" JSONB,
+ALTER COLUMN "level" DROP NOT NULL,
+ALTER COLUMN "level" SET DEFAULT 0;

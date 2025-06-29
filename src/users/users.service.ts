@@ -38,7 +38,7 @@ export class UsersService {
     data.password = await this.hashPassword(data.password);
 
     const freePlan = await this.prisma.plan.findFirst({
-      where: { level: 0 }, // or { name: 'Free' }
+      where: { key: 'free' }, // or { name: 'Free' }
     });
 
     if (!freePlan) {

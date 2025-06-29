@@ -1,36 +1,30 @@
 import { Injectable } from '@nestjs/common';
-import { CreateSubscriptionDto } from './dto/create-subscription.dto';
-import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { FeatureFlag } from 'src/utils/featureFlags';
 
 @Injectable()
 export class SubscriptionsService {
   constructor(private prisma: PrismaService) {}
-  create(createSubscriptionDto: CreateSubscriptionDto) {
-    return 'This action adds a new subscription';
-  }
 
-  findAll() {
-    return `This action returns all subscriptions`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} subscription`;
-  }
-
-  update(id: number, updateSubscriptionDto: UpdateSubscriptionDto) {
-    return `This action updates a #${id} subscription`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} subscription`;
+  findPlans() {
+    return this.prisma.plan.findMany();
   }
 
   getActive(userID: number) {
     return this.prisma.subscription.findFirst({
-      where: { userID, status: 'active' },
+      where: {
+        userID,
+        status: { in: ['trialing', 'active', 'past_due'] },
+        currentPeriodEnd: { gt: new Date() }, // optional: time-safe check
+      },
       orderBy: { createdAt: 'desc' },
       include: { plan: true },
     });
+  }
+
+  async hasFeature(userID: number, feature: FeatureFlag): Promise<boolean> {
+    const sub = await this.getActive(userID);
+
+    return sub?.plan?.features.includes(feature) ?? false;
   }
 }

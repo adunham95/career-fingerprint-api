@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateRegisterDto } from './dto/create-register.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UsersService } from 'src/users/users.service';
+import { Plan } from '@prisma/client';
 @Injectable()
 export class RegisterService {
   constructor(
@@ -15,6 +16,10 @@ export class RegisterService {
       firstName: createRegisterDto.firstName,
       lookingFor: createRegisterDto.lookingFor,
     });
+
+    console.log({ newUser });
+
+    let plan: Plan | null = null;
 
     switch (createRegisterDto.lookingFor) {
       case 'student':
@@ -33,6 +38,8 @@ export class RegisterService {
             },
           },
         });
+
+        plan = await this.prisma.plan.findFirst({ where: { key: 'pro' } });
         break;
 
       case 'growing':
@@ -43,7 +50,10 @@ export class RegisterService {
             name: createRegisterDto.position,
             company: createRegisterDto.companyName,
             startDate: createRegisterDto.startDate,
-            endDate: createRegisterDto.endDate,
+            endDate:
+              createRegisterDto.endDate === ''
+                ? null
+                : createRegisterDto.endDate,
             currentPosition: true,
             achievements: {
               create: {
@@ -53,11 +63,13 @@ export class RegisterService {
             },
           },
         });
+
+        plan = await this.prisma.plan.findFirst({ where: { key: 'pro' } });
         break;
       default:
         break;
     }
 
-    return newUser;
+    return { user: newUser, plan };
   }
 }

@@ -24,24 +24,25 @@ datasource db {
 }
 
 model User {
-  id            Int            @id @default(autoincrement())
-  firstName     String         @default("")
-  lastName      String         @default("")
-  username      String?        @unique
-  password      String
-  profileImage  String?        @default("")
-  email         String         @unique
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  accountStatus String         @default("active")
-  pitch         String?
-  lookingFor    String?
-  resume        Resume[]
-  positions     JobPosition[]
-  achievements  Achievement[]
-  projects      Project[]
-  education     Education[]
-  subscriptions Subscription[]
+  id               Int            @id @default(autoincrement())
+  firstName        String         @default("")
+  lastName         String         @default("")
+  username         String?        @unique
+  password         String
+  profileImage     String?        @default("")
+  email            String         @unique
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  accountStatus    String         @default("active")
+  pitch            String?
+  lookingFor       String?
+  stripeCustomerID String?
+  resume           Resume[]
+  positions        JobPosition[]
+  achievements     Achievement[]
+  projects         Project[]
+  education        Education[]
+  subscriptions    Subscription[]
 }
 
 model Plan {
@@ -56,6 +57,7 @@ model Plan {
   subscriptions Subscription[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+  stripePriceID String?
 
   @@index([key])
 }
@@ -64,8 +66,7 @@ model Subscription {
   id               String    @id @default(uuid())
   userID           Int
   planID           String
-  status           String    @default("trial")
-  stripeCustomerId String? // optional, for Stripe integration
+  status           String    @default("trialing")
   stripeSubId      String? // Stripe subscription ID
   trialEndsAt      DateTime?
   currentPeriodEnd DateTime?

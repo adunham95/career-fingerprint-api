@@ -17,9 +17,9 @@ import { UpdateResumeDto } from './dto/update-resume.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { Request } from 'express';
-import { FeatureGuard } from 'src/auth/feature.guard';
-import { HasFeature } from 'src/decorators/has-feature.decorator';
-import { FeatureFlags } from 'src/utils/featureFlags';
+// import { FeatureGuard } from 'src/auth/feature.guard';
+// import { HasFeature } from 'src/decorators/has-feature.decorator';
+// import { FeatureFlags } from 'src/utils/featureFlags';
 
 @Controller('resume')
 export class ResumeController {
@@ -27,8 +27,8 @@ export class ResumeController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  @UseGuards(FeatureGuard)
-  @HasFeature(FeatureFlags.CreateResumes)
+  // @UseGuards(FeatureGuard)
+  // @HasFeature(FeatureFlags.CreateResumes)
   create(@Body() createResumeDto: CreateResumeDto, @Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);

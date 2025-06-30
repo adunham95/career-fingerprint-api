@@ -16,7 +16,8 @@ export class RegisterController {
     @Body() createRegisterDto: CreateRegisterDto,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const user = await this.registerService.registerNewUser(createRegisterDto);
+    const { user, plan } =
+      await this.registerService.registerNewUser(createRegisterDto);
 
     const { accessToken } = await this.authService.loginUser(
       user.email,
@@ -29,6 +30,6 @@ export class RegisterController {
       sameSite: 'lax',
       maxAge: 1000 * 60 * 60 * 24 * 7, // 7 day
     });
-    return { accessToken, user };
+    return { accessToken, user, plan };
   }
 }

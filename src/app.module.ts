@@ -9,9 +9,10 @@ import { AchievementModule } from './achievement/achievement.module';
 import { EducationModule } from './education/education.module';
 import { RegisterModule } from './register/register.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
+import { StripeModule } from './stripe/stripe.module';
 
 @Module({
-  imports: [UsersModule, AuthModule, JobPositionsModule, ResumeModule, AchievementModule, EducationModule, RegisterModule, SubscriptionsModule],
+  imports: [UsersModule, AuthModule, JobPositionsModule, ResumeModule, AchievementModule, EducationModule, RegisterModule, SubscriptionsModule, StripeModule],
   controllers: [AppController],
   providers: [AppService],
 })

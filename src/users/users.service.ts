@@ -2,12 +2,16 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma, User } from '@prisma/client';
 import bcrypt from 'bcrypt';
+import { StripeService } from 'src/stripe/stripe.service';
 
 export const roundsOfHashing = 10;
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private stripe: StripeService,
+  ) {}
 
   async user(
     userWhereUniqueInput: Prisma.UserWhereUniqueInput,
@@ -45,21 +49,28 @@ export class UsersService {
       throw new HttpException('Missing Plans', HttpStatus.FAILED_DEPENDENCY);
     }
 
-    return await this.prisma.$transaction(async (tx) => {
-      const user = await tx.user.create({
-        data,
-      });
-
-      await tx.subscription.create({
-        data: {
-          userID: user.id,
-          planID: freePlan.id,
-          status: 'active',
-        },
-      });
-
-      return user;
+    const user = await this.prisma.user.create({
+      data,
     });
+
+    const stripeCustomer = await this.stripe.createStripeCustomer(user);
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        stripeCustomerID: stripeCustomer.id,
+      },
+    });
+
+    await this.prisma.subscription.create({
+      data: {
+        userID: user.id,
+        planID: freePlan.id,
+        status: 'active',
+      },
+    });
+
+    return updatedUser;
   }
 
   async updateUser(params: {

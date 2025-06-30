@@ -49,9 +49,6 @@ export class StripeService {
       stripeUserID = stripeCustomer.id;
     }
 
-    if (stripeUserID !== 'string')
-      throw Error(`Stripe User id: ${stripeUserID} does not exist`);
-
     const subscription = await this.stripe.subscriptions.create({
       customer: stripeUserID,
       items: [{ price: priceID }],

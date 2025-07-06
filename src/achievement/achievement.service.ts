@@ -15,6 +15,7 @@ export class AchievementService {
     return this.prisma.achievement.findMany();
   }
 
+  // TODO pagination
   findMy(userID: number) {
     return this.prisma.achievement.findMany({
       where: { userID },

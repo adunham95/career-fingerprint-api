@@ -6,10 +6,7 @@ async function main() {
   // Free Plan
   await prisma.plan.upsert({
     where: { key: 'free' },
-    update: {
-      features: [FeatureFlags.CreateResumes],
-      metadata: { resumeLimit: 1 },
-    },
+    update: {},
     create: {
       name: 'Free',
       key: 'free',
@@ -24,10 +21,7 @@ async function main() {
   // Pro Plan
   await prisma.plan.upsert({
     where: { key: 'pro' },
-    update: {
-      features: [FeatureFlags.CreateResumes, FeatureFlags.ExportPDF],
-      metadata: { resumeLimit: null },
-    },
+    update: {},
     create: {
       name: 'Elevate',
       key: 'pro',

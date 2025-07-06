@@ -152,14 +152,11 @@ model Achievement {
   user            User         @relation(fields: [userID], references: [id])
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
-  name            String?      @default("")
   description     String
-  goal            String?
-  result          String?
-  metrics         String?
+  happened        String?
+  level           Int?         @default(3)
   myContribution  String?
   projectID       String?
-  visibleOnResume Boolean?     @default(true)
   project         Project?     @relation(fields: [projectID], references: [id])
   jobPositionID   String?
   jobPosition     JobPosition? @relation(fields: [jobPositionID], references: [id])

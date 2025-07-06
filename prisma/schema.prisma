@@ -147,22 +147,23 @@ model JobPosition {
 }
 
 model Achievement {
-  id              String       @id @default(uuid())
-  userID          Int
-  user            User         @relation(fields: [userID], references: [id])
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-  description     String
-  happened        String?
-  level           Int?         @default(3)
-  myContribution  String?
-  projectID       String?
-  project         Project?     @relation(fields: [projectID], references: [id])
-  jobPositionID   String?
-  jobPosition     JobPosition? @relation(fields: [jobPositionID], references: [id])
-  educationID     String?
-  education       Education?   @relation(fields: [educationID], references: [id])
-  resumePosition  JobOptions[] @relation("visibleAchievements")
+  id             String       @id @default(uuid())
+  userID         Int
+  user           User         @relation(fields: [userID], references: [id])
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  description    String?
+  result         String?
+  myContribution String?
+  projectID      String?
+  startDate      DateTime?
+  endDate        DateTime?
+  project        Project?     @relation(fields: [projectID], references: [id])
+  jobPositionID  String?
+  jobPosition    JobPosition? @relation(fields: [jobPositionID], references: [id])
+  educationID    String?
+  education      Education?   @relation(fields: [educationID], references: [id])
+  resumePosition JobOptions[] @relation("visibleAchievements")
 }
 
 model Project {

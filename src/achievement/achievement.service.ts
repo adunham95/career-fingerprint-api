@@ -16,7 +16,10 @@ export class AchievementService {
   }
 
   findMy(userID: number) {
-    return this.prisma.achievement.findMany({ where: { userID } });
+    return this.prisma.achievement.findMany({
+      where: { userID },
+      orderBy: { startDate: 'desc' },
+    });
   }
 
   findOne(id: string) {

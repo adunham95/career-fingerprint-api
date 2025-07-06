@@ -1,19 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString } from 'class-validator';
+import { IsDateString, IsOptional, IsString } from 'class-validator';
 
 export class CreateAchievementDto {
   @ApiProperty()
   @IsString()
-  name: string;
-
-  @ApiProperty()
-  @IsString()
   description: string;
-
-  @ApiProperty()
-  @IsString()
-  @IsOptional()
-  goal?: string;
 
   @ApiProperty()
   @IsString()
@@ -23,22 +14,27 @@ export class CreateAchievementDto {
   @ApiProperty()
   @IsString()
   @IsOptional()
-  metrics?: string;
-
-  @ApiProperty()
-  @IsString()
-  @IsOptional()
   myContribution?: string;
 
   @ApiProperty()
   @IsString()
   @IsOptional()
-  jobPostingID?: string;
+  jobID?: string;
 
   @ApiProperty()
   @IsString()
   @IsOptional()
-  projectID?: string;
+  educationID?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsDateString()
+  startDate: string | Date;
+
+  @ApiProperty()
+  @IsDateString()
+  @IsOptional()
+  endDate?: string | Date;
 
   userID: number;
 }

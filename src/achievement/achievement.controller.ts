@@ -42,7 +42,9 @@ export class AchievementController {
   }
 
   @Get('my')
+  @UseGuards(JwtAuthGuard)
   findMyAchievements(@Req() req: Request) {
+    console.log({ user: req.user });
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
     }

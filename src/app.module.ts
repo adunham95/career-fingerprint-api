@@ -11,9 +11,22 @@ import { RegisterModule } from './register/register.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { StripeModule } from './stripe/stripe.module';
 import { JobApplicationsModule } from './job-applications/job-applications.module';
+import { MeetingsModule } from './meetings/meetings.module';
 
 @Module({
-  imports: [UsersModule, AuthModule, JobPositionsModule, ResumeModule, AchievementModule, EducationModule, RegisterModule, SubscriptionsModule, StripeModule, JobApplicationsModule],
+  imports: [
+    UsersModule,
+    AuthModule,
+    JobPositionsModule,
+    ResumeModule,
+    AchievementModule,
+    EducationModule,
+    RegisterModule,
+    SubscriptionsModule,
+    StripeModule,
+    JobApplicationsModule,
+    MeetingsModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

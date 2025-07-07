@@ -45,7 +45,7 @@ model User {
   subscriptions    Subscription[]
   jobApplications  JobApplication[]
   notes            Note[]
-  interviews       Interview[]
+  meetings         Meeting[]
 }
 
 model Plan {
@@ -144,6 +144,7 @@ model JobPosition {
   achievements    Achievement[]
   projects        Project[]
   jobOptions      JobOptions[]
+  meetings        Meeting[]
 }
 
 model Achievement {
@@ -191,6 +192,7 @@ model Education {
   endDate         DateTime?
   currentPosition Boolean       @default(false)
   achievements    Achievement[]
+  meetings        Meeting[]
 }
 
 // Optional: Store webhook events for debugging
@@ -206,31 +208,37 @@ model WebhookEvent {
 }
 
 model JobApplication {
-  id                String      @id @default(uuid())
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @default(now()) @updatedAt
+  id                String    @id @default(uuid())
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @default(now()) @updatedAt
   userID            Int
-  user              User        @relation(fields: [userID], references: [id])
+  user              User      @relation(fields: [userID], references: [id])
   title             String
   company           String?
   companyURL        String?
-  status            String      @default("applied")
+  status            String    @default("applied")
   location          String?
   jobDescriptionURL String?
   notes             Note[]
-  interviews        Interview[]
+  meetings          Meeting[]
 }
 
-model Interview {
-  id        String          @id @default(uuid())
-  createdAt DateTime        @default(now())
-  updatedAt DateTime        @updatedAt
-  userID    Int
-  user      User            @relation(fields: [userID], references: [id])
-  time      DateTime        @default(now())
-  notes     Note[]
-  jobAppID  String?
-  jobApp    JobApplication? @relation(fields: [jobAppID], references: [id])
+model Meeting {
+  id            String          @id @default(uuid())
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  userID        Int
+  user          User            @relation(fields: [userID], references: [id])
+  time          DateTime        @default(now())
+  title         String?
+  type          String?         @default("interview")
+  notes         Note[]
+  jobAppID      String?
+  jobApp        JobApplication? @relation(fields: [jobAppID], references: [id])
+  jobPositionID String?
+  jobPosition   JobPosition?    @relation(fields: [jobPositionID], references: [id])
+  educationID   String?
+  education     Education?      @relation(fields: [educationID], references: [id])
 }
 
 model Note {
@@ -243,5 +251,5 @@ model Note {
   jobApplicationID String?
   jobApplication   JobApplication? @relation(fields: [jobApplicationID], references: [id])
   interviewID      String?
-  interview        Interview?      @relation(fields: [interviewID], references: [id])
+  meetings         Meeting?        @relation(fields: [interviewID], references: [id])
 }

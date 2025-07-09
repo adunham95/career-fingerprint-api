@@ -47,7 +47,7 @@ export class MeetingsController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.meetingsService.findOne(+id);
+    return this.meetingsService.findOne(id);
   }
 
   @Patch(':id')

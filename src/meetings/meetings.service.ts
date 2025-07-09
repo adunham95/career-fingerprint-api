@@ -19,8 +19,8 @@ export class MeetingsService {
     return this.prisma.meeting.findMany({ where: { userID } });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} meeting`;
+  findOne(id: string) {
+    return this.prisma.meeting.findFirst({ where: { id } });
   }
 
   update(id: number, updateMeetingDto: UpdateMeetingDto) {

@@ -1,0 +1,38 @@
+doctype html
+html
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport", content="width=device-width, initial-scale=1.0")
+  body(style="margin:0; padding:0; background-color:#f4f4f4; font-family:Arial, sans-serif;")
+    table(width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f4f4f4; padding: 20px 0;")
+      tr
+        td(align="center")
+          table(width="600" cellpadding="0" cellspacing="0" border="0" style="background-color:#ffffff; border-radius:8px; overflow:hidden;")
+            // Header
+            tr
+              td(style="padding: 30px; text-align: center; background-color:#fefefe;")
+                h1(style="color:#1a1a1a; font-size:26px; margin:0;") Hi #{firstName}, your eCard is ready! 🎉
+                p(style="color:#555; font-size:16px; line-height:1.6; margin:20px 0 0;") 
+                  | Thanks for using Planner Bee. Your eCard is ready to view!
+
+            // Body Content
+            tr
+              td(style="padding: 20px 30px 0 30px;")
+                p(style="color:#333; font-size:16px; margin:0 0 10px 0; font-weight:bold;") Here’s what you can do:
+                ul(style="color:#555; font-size:15px; padding-left:20px; margin:10px 0;")
+                  li(style="margin-bottom:8px;") 💌 View your beautifully crafted eCard
+                  li(style="margin-bottom:8px;") ✏️ Make edits if needed
+                  li(style="margin-bottom:8px;") 📤 Share it with friends and family
+
+            // CTA Button
+            tr
+              td(style="padding: 20px 30px 30px 30px; text-align: center;")
+                a(href=ecardURL style="background-color:#6b46c1; color:#ffffff; text-decoration:none; padding:12px 24px; border-radius:6px; display:inline-block; font-weight:bold;") View Your eCard
+
+            // Footer
+            tr
+              td(style="background-color:#fafafa; padding: 20px 30px; text-align:center; font-size:12px; color:#888;")
+                | Need help? Contact us at 
+                a(href="mailto:support@planner-bee.com" style="color:#6b46c1; text-decoration:none;") support@planner-bee.com
+                br
+                | © 2025 Planner Bee. All rights reserved.

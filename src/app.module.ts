@@ -12,6 +12,10 @@ import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { StripeModule } from './stripe/stripe.module';
 import { JobApplicationsModule } from './job-applications/job-applications.module';
 import { MeetingsModule } from './meetings/meetings.module';
+import { BullModule } from '@nestjs/bull';
+import { MailerModule } from '@nestjs-modules/mailer';
+import { MailModule } from './mail/mail.module';
+import { PugAdapter } from '@nestjs-modules/mailer/dist/adapters/pug.adapter';
 
 @Module({
   imports: [
@@ -26,6 +30,36 @@ import { MeetingsModule } from './meetings/meetings.module';
     StripeModule,
     JobApplicationsModule,
     MeetingsModule,
+    MailModule,
+    MailerModule.forRoot({
+      transport: {
+        host: process.env.SMTP_HOST,
+        port: parseInt(process.env.SMTP_PORT || '2525'),
+        secure: false, // upgrade later with START
+        auth: {
+          user: process.env.SMTP_USERNAME,
+          pass: process.env.SMTP_PASSWORD,
+        },
+      },
+      defaults: {
+        from: process.env.SMTP_FROM,
+      },
+      template: {
+        dir: process.cwd() + '/templates',
+        adapter: new PugAdapter(),
+        options: {
+          strict: true,
+        },
+      },
+    }),
+    BullModule.forRoot({
+      redis: {
+        host: process.env.REDIS_HOST,
+        port: parseInt(process.env.REDIS_PORT || '3000'),
+        username: process.env.REDIS_USERNAME,
+        password: process.env.REDIS_PASSWORD,
+      },
+    }),
   ],
   controllers: [AppController],
   providers: [AppService],

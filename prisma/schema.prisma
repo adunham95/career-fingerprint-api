@@ -231,6 +231,7 @@ model JobApplication {
   status            String    @default("applied")
   location          String?
   jobDescriptionURL String?
+  jobDescription    String?
   notes             Note[]
   meetings          Meeting[]
 }
@@ -262,6 +263,6 @@ model Note {
   note             String
   jobApplicationID String?
   jobApplication   JobApplication? @relation(fields: [jobApplicationID], references: [id])
-  interviewID      String?
-  meetings         Meeting?        @relation(fields: [interviewID], references: [id])
+  meetingID        String?
+  meetings         Meeting?        @relation(fields: [meetingID], references: [id])
 }

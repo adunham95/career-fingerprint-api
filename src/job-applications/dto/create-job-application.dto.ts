@@ -32,5 +32,10 @@ export class CreateJobApplicationDto {
   @ApiProperty()
   @IsString()
   @IsOptional()
+  jobDescription?: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
   jobDescriptionURL?: string;
 }

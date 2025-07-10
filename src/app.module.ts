@@ -17,6 +17,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { MailModule } from './mail/mail.module';
 import { PugAdapter } from '@nestjs-modules/mailer/dist/adapters/pug.adapter';
 import { MjmlAdapter } from '@nestjs-modules/mailer/dist/adapters/mjml.adapter';
+import { NotesModule } from './notes/notes.module';
 import path from 'path';
 
 @Module({
@@ -67,6 +68,7 @@ import path from 'path';
         password: process.env.REDIS_PASSWORD,
       },
     }),
+    NotesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

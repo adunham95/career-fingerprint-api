@@ -46,6 +46,18 @@ model User {
   jobApplications  JobApplication[]
   notes            Note[]
   meetings         Meeting[]
+  resetTokens      ResetToken[]
+
+  @@index([email])
+}
+
+model ResetToken {
+  token     String
+  email     String
+  expiresAt DateTime
+  user      User     @relation(fields: [email], references: [email])
+
+  @@id([token, email])
 }
 
 model Plan {

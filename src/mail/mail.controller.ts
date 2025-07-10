@@ -17,4 +17,9 @@ export class MailController {
       },
     });
   }
+
+  @Get('preview')
+  async sendPreview() {
+    await this.mailService.sendPreviewEmail();
+  }
 }

@@ -11,7 +11,11 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiCookieAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { LoginDto } from './dto/auth.dto';
+import {
+  InitiatePasswordResetDto,
+  LoginDto,
+  PasswordResetDto,
+} from './dto/auth.dto';
 import { Request, Response } from 'express';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { UserEntity } from 'src/users/entities/user.entity';
@@ -38,15 +42,15 @@ export class AuthController {
     return { accessToken };
   }
 
-  //   @Post('request-reset')
-  //   async requestPasswordReset(@Body() { email }: InitiatePasswordResetDto) {
-  //     return this.authService.generateResetToken(email);
-  //   }
+  @Post('request-reset')
+  requestPasswordReset(@Body() { email }: InitiatePasswordResetDto) {
+    return this.authService.generateResetToken(email);
+  }
 
-  //   @Post('reset-password')
-  //   async requestPassword(@Body() { password, token }: PasswordResetDto) {
-  //     return this.authService.resetFromToken(password, token);
-  //   }
+  @Post('reset-password')
+  requestPassword(@Body() { email, password, token }: PasswordResetDto) {
+    return this.authService.resetFromToken(email, password, token);
+  }
 
   @Get('current-user')
   @UseGuards(JwtAuthGuard)

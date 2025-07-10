@@ -16,6 +16,8 @@ import { BullModule } from '@nestjs/bull';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { MailModule } from './mail/mail.module';
 import { PugAdapter } from '@nestjs-modules/mailer/dist/adapters/pug.adapter';
+import { MjmlAdapter } from '@nestjs-modules/mailer/dist/adapters/mjml.adapter';
+import path from 'path';
 
 @Module({
   imports: [
@@ -47,9 +49,14 @@ import { PugAdapter } from '@nestjs-modules/mailer/dist/adapters/pug.adapter';
       template: {
         dir: process.cwd() + '/templates',
         adapter: new PugAdapter(),
+        // adapter: new MjmlAdapter('pug', { inlineCssEnabled: false }),
         options: {
           strict: true,
         },
+      },
+      preview: {
+        open: true, // opens in browser if supported
+        dir: path.join(process.cwd(), 'previews'), // custom dir
       },
     }),
     BullModule.forRoot({

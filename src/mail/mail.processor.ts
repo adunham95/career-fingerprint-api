@@ -57,4 +57,36 @@ export class MailProcessor {
       console.log(`❎ Email not sent`, error);
     }
   }
+
+  @Process('resetPassword')
+  async handleSendPasswordReset(
+    job: Job<{
+      to: string;
+      context: { email: string; token: string };
+    }>,
+  ) {
+    const {
+      to,
+      context: { email, token },
+    } = job.data;
+
+    const template = 'password-reset';
+    const subject = 'Reset Your Career Fingerprint Password';
+
+    console.log(`📧 Sending email to ${to}`);
+
+    try {
+      await this.mailerService.sendMail({
+        to: [to],
+        template,
+        subject,
+        context: {
+          resetPasswordLink: `${process.env.APP_URL}/reset-password?email=${email}&token=${token}`,
+        },
+      });
+      console.log(`✅ Email sent to ${to}`);
+    } catch (error) {
+      console.log(`❎ Email not sent`, error);
+    }
+  }
 }

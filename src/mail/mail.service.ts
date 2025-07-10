@@ -1,4 +1,4 @@
-import { ISendMailOptions } from '@nestjs-modules/mailer';
+import { ISendMailOptions, MailerService } from '@nestjs-modules/mailer';
 import { InjectQueue } from '@nestjs/bull';
 import { Injectable, Logger } from '@nestjs/common';
 import { Queue } from 'bull';
@@ -7,7 +7,10 @@ import { Queue } from 'bull';
 export class MailService {
   private readonly logger = new Logger(MailService.name);
 
-  constructor(@InjectQueue('email') private mailQueue: Queue) {}
+  constructor(
+    @InjectQueue('email') private mailQueue: Queue,
+    private readonly mailerService: MailerService,
+  ) {}
 
   async sendEmail(params: {
     subject: string;
@@ -31,5 +34,39 @@ export class MailService {
       to: params.to,
       context: params.context,
     });
+  }
+
+  async sendResetEmail(params: {
+    to: string;
+    context: { email: string; token: string };
+  }) {
+    await this.mailQueue.add('resetPassword', {
+      to: params.to,
+      context: params.context,
+    });
+    // .sendMail({
+    //   to: 'no-reply@career-fingerprint.com',
+    //   template: 'password-reset',
+    //   subject: 'Preview Email',
+    //   context: {
+    //     resetPasswordLink: `${process.env.APP_URL}/reset-password?email=${email}&token=${token}`,
+    //   },
+    // })
+    // // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    // .catch((e) => console.log({ e }));
+  }
+
+  async sendPreviewEmail() {
+    await this.mailerService
+      .sendMail({
+        to: 'no-reply@career-fingerprint.com',
+        template: 'password-reset',
+        subject: 'Preview Email',
+        context: {
+          resetPasswordLink: `example.com`,
+        },
+      })
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      .catch((e) => console.log({ e }));
   }
 }

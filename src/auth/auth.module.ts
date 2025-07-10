@@ -7,6 +7,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt.strategy';
 import { AuthController } from './auth.controller';
 import { SubscriptionsModule } from 'src/subscriptions/subscriptions.module';
+import { MailModule } from 'src/mail/mail.module';
 
 export const jwtSecret = process.env.SECRET || '123abc';
 
@@ -20,6 +21,7 @@ export const jwtSecret = process.env.SECRET || '123abc';
     }),
     UsersModule,
     SubscriptionsModule,
+    MailModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],

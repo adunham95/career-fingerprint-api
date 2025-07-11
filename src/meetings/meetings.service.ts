@@ -20,11 +20,17 @@ export class MeetingsService {
   }
 
   findOne(id: string) {
-    return this.prisma.meeting.findFirst({ where: { id } });
+    return this.prisma.meeting.findFirst({
+      where: { id },
+      include: { jobApp: true, jobPosition: true, education: true },
+    });
   }
 
-  update(id: number, updateMeetingDto: UpdateMeetingDto) {
-    return `This action updates a #${id} meeting`;
+  update(id: string, updateMeetingDto: UpdateMeetingDto) {
+    return this.prisma.meeting.update({
+      where: { id },
+      data: updateMeetingDto,
+    });
   }
 
   remove(id: number) {

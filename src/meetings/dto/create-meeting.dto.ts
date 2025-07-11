@@ -32,5 +32,15 @@ export class CreateMeetingDto {
   @IsString()
   educationPositionID?: string;
 
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  location?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  link?: string;
+
   userID: number;
 }

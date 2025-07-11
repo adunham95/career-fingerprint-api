@@ -52,7 +52,7 @@ export class MeetingsController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateMeetingDto: UpdateMeetingDto) {
-    return this.meetingsService.update(+id, updateMeetingDto);
+    return this.meetingsService.update(id, updateMeetingDto);
   }
 
   @Delete(':id')

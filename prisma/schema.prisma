@@ -47,6 +47,7 @@ model User {
   notes            Note[]
   meetings         Meeting[]
   resetTokens      ResetToken[]
+  highlights       Highlight[]
 
   @@index([email])
 }
@@ -157,6 +158,7 @@ model JobPosition {
   projects        Project[]
   jobOptions      JobOptions[]
   meetings        Meeting[]
+  notes           Note[]
 }
 
 model Achievement {
@@ -177,6 +179,7 @@ model Achievement {
   educationID    String?
   education      Education?   @relation(fields: [educationID], references: [id])
   resumePosition JobOptions[] @relation("visibleAchievements")
+  highlights     Highlight[]  @relation("highlightAchievements")
 }
 
 model Project {
@@ -205,6 +208,7 @@ model Education {
   currentPosition Boolean       @default(false)
   achievements    Achievement[]
   meetings        Meeting[]
+  notes           Note[]
 }
 
 // Optional: Store webhook events for debugging
@@ -232,6 +236,11 @@ model JobApplication {
   location          String?
   jobDescriptionURL String?
   jobDescription    String?
+  knowAboutCompany  String?
+  likeAboutCompany  String?
+  goodFit           String?
+  grow              String?
+  otherQuestions    String?
   notes             Note[]
   meetings          Meeting[]
 }
@@ -246,23 +255,45 @@ model Meeting {
   title         String?
   type          String?         @default("interview")
   notes         Note[]
+  location      String?
+  link          String?
   jobAppID      String?
   jobApp        JobApplication? @relation(fields: [jobAppID], references: [id])
   jobPositionID String?
   jobPosition   JobPosition?    @relation(fields: [jobPositionID], references: [id])
   educationID   String?
   education     Education?      @relation(fields: [educationID], references: [id])
+  highlights    Highlight[]
 }
 
 model Note {
-  id               String          @id @default(uuid())
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
-  userID           Int
-  user             User            @relation(fields: [userID], references: [id])
-  note             String
-  jobApplicationID String?
-  jobApplication   JobApplication? @relation(fields: [jobApplicationID], references: [id])
-  meetingID        String?
-  meetings         Meeting?        @relation(fields: [meetingID], references: [id])
+  id            String          @id @default(uuid())
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  userID        Int
+  user          User            @relation(fields: [userID], references: [id])
+  note          String
+  meetingID     String?
+  meetings      Meeting?        @relation(fields: [meetingID], references: [id])
+  jobAppID      String?
+  jobApp        JobApplication? @relation(fields: [jobAppID], references: [id])
+  jobPositionID String?
+  jobPosition   JobPosition?    @relation(fields: [jobPositionID], references: [id])
+  educationID   String?
+  education     Education?      @relation(fields: [educationID], references: [id])
+  highlightID   String?
+  highlight     Highlight?      @relation(fields: [highlightID], references: [id])
+}
+
+model Highlight {
+  id           String        @id @default(uuid())
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  userID       Int
+  user         User          @relation(fields: [userID], references: [id])
+  text         String
+  notes        Note[]
+  achievements Achievement[] @relation("highlightAchievements")
+  meetingID    String?
+  meetings     Meeting?      @relation(fields: [meetingID], references: [id])
 }

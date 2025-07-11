@@ -18,6 +18,7 @@ import { MailModule } from './mail/mail.module';
 import { PugAdapter } from '@nestjs-modules/mailer/dist/adapters/pug.adapter';
 import { MjmlAdapter } from '@nestjs-modules/mailer/dist/adapters/mjml.adapter';
 import { NotesModule } from './notes/notes.module';
+import { HighlightsModule } from './highlights/highlights.module';
 import path from 'path';
 
 @Module({
@@ -69,6 +70,7 @@ import path from 'path';
       },
     }),
     NotesModule,
+    HighlightsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

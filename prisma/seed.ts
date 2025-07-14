@@ -32,6 +32,62 @@ async function main() {
       metadata: { resumeLimit: null },
     },
   });
+
+  // Prep Question One
+  await prisma.prepQuestion.upsert({
+    where: { key: 'about-company' },
+    update: {},
+    create: {
+      order: 1,
+      key: 'about-company',
+      question: 'What do you know about the company?',
+      displayOn: ['interview'],
+    },
+  });
+
+  await prisma.prepQuestion.upsert({
+    where: { key: 'like-company' },
+    update: {},
+    create: {
+      order: 2,
+      key: 'like-company',
+      question: 'What do you like about the company?',
+      displayOn: ['interview'],
+    },
+  });
+
+  await prisma.prepQuestion.upsert({
+    where: { key: 'good-fit' },
+    update: {},
+    create: {
+      order: 3,
+      key: 'good-fit',
+      question: 'What makes you a good fit for this role?',
+      displayOn: ['interview'],
+    },
+  });
+
+  await prisma.prepQuestion.upsert({
+    where: { key: 'role-grow' },
+    update: {},
+    create: {
+      order: 4,
+      key: 'role-grow',
+      question: 'Describe how you can grow in this role.',
+      displayOn: ['interview'],
+    },
+  });
+
+  await prisma.prepQuestion.upsert({
+    where: { key: 'bring-up' },
+    update: {},
+    create: {
+      order: 5,
+      key: 'bring-up',
+      question: 'What is a question you would like to bring up?s',
+      displayOn: ['interview'],
+    },
+  });
 }
 
 main()

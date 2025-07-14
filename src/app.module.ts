@@ -19,6 +19,7 @@ import { PugAdapter } from '@nestjs-modules/mailer/dist/adapters/pug.adapter';
 import { MjmlAdapter } from '@nestjs-modules/mailer/dist/adapters/mjml.adapter';
 import { NotesModule } from './notes/notes.module';
 import { HighlightsModule } from './highlights/highlights.module';
+import { PrepModule } from './prep/prep.module';
 import path from 'path';
 
 @Module({
@@ -71,6 +72,7 @@ import path from 'path';
     }),
     NotesModule,
     HighlightsModule,
+    PrepModule,
   ],
   controllers: [AppController],
   providers: [AppService],

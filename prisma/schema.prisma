@@ -48,6 +48,7 @@ model User {
   meetings         Meeting[]
   resetTokens      ResetToken[]
   highlights       Highlight[]
+  prepAnswers      PrepAnswer[]
 
   @@index([email])
 }
@@ -224,15 +225,15 @@ model WebhookEvent {
 }
 
 model JobApplication {
-  id                String    @id @default(uuid())
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @default(now()) @updatedAt
+  id                String       @id @default(uuid())
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @default(now()) @updatedAt
   userID            Int
-  user              User      @relation(fields: [userID], references: [id])
+  user              User         @relation(fields: [userID], references: [id])
   title             String
   company           String?
   companyURL        String?
-  status            String    @default("applied")
+  status            String       @default("applied")
   location          String?
   jobDescriptionURL String?
   jobDescription    String?
@@ -243,6 +244,7 @@ model JobApplication {
   otherQuestions    String?
   notes             Note[]
   meetings          Meeting[]
+  prepAnswer        PrepAnswer[]
 }
 
 model Meeting {
@@ -296,4 +298,31 @@ model Highlight {
   achievements Achievement[] @relation("highlightAchievements")
   meetingID    String?
   meetings     Meeting?      @relation(fields: [meetingID], references: [id])
+}
+
+model PrepQuestion {
+  id          String       @id @default(uuid())
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  question    String
+  key         String       @unique
+  displayOn   String[]
+  order       Int          @default(99)
+  prepAnswers PrepAnswer[]
+}
+
+model PrepAnswer {
+  id               String          @id @default(uuid())
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  answer           String
+  userID           Int
+  user             User            @relation(fields: [userID], references: [id])
+  questionID       String
+  question         PrepQuestion    @relation(fields: [questionID], references: [id])
+  jobApplicationID String?
+  JobApplication   JobApplication? @relation(fields: [jobApplicationID], references: [id])
+
+
+  @@unique([userID, jobApplicationID, questionID])
 }

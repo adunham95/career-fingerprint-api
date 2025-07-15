@@ -33,7 +33,7 @@ export class RegisterService {
             achievements: {
               create: {
                 userID: newUser.id,
-                description: createRegisterDto.achievement,
+                myContribution: createRegisterDto.achievement,
               },
             },
           },
@@ -58,7 +58,7 @@ export class RegisterService {
             achievements: {
               create: {
                 userID: newUser.id,
-                description: createRegisterDto.achievement,
+                myContribution: createRegisterDto.achievement,
               },
             },
           },

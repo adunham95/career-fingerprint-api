@@ -8,6 +8,8 @@ export class MeetingsService {
   constructor(private prisma: PrismaService) {}
 
   create(createMeetingDto: CreateMeetingDto) {
+    console.log('create meeting', CreateMeetingDto);
+
     return this.prisma.meeting.create({ data: createMeetingDto });
   }
 

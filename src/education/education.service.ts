@@ -16,7 +16,10 @@ export class EducationService {
   }
 
   findMyEducation(userID: number) {
-    return this.prisma.education.findMany({ where: { userID } });
+    return this.prisma.education.findMany({
+      where: { userID },
+      include: { achievements: true },
+    });
   }
 
   findOne(id: string) {

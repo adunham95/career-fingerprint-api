@@ -23,6 +23,34 @@ export class NotesService {
     return `This action returns a #${id} note`;
   }
 
+  findByJobApplication(id: string) {
+    return this.prisma.note.findMany({
+      where: { meetings: { jobAppID: id }, highlight: null },
+    });
+  }
+
+  async findByMeeting(meetingID: string) {
+    const meeting = await this.prisma.meeting.findUnique({
+      where: { id: meetingID },
+      select: { jobAppID: true },
+    });
+
+    console.log({ meeting });
+
+    if (!meeting) {
+      throw new Error('Not Found');
+    }
+
+    return this.prisma.note.findMany({
+      where: {
+        meetings: {
+          OR: [{ id: meetingID }, { jobAppID: meeting.jobAppID }],
+        },
+        AND: { highlightID: null },
+      },
+    });
+  }
+
   update(id: string, updateNoteDto: UpdateNoteDto) {
     return this.prisma.note.update({ where: { id }, data: updateNoteDto });
   }

@@ -1,3 +1,4 @@
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import {
   Controller,
   Get,
@@ -9,6 +10,7 @@ import {
   Req,
   HttpException,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { NotesService } from './notes.service';
 import { CreateNoteDto } from './dto/create-note.dto';
@@ -20,6 +22,7 @@ export class NotesController {
   constructor(private readonly notesService: NotesService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   create(@Body() createNoteDto: CreateNoteDto, @Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -34,11 +37,27 @@ export class NotesController {
   }
 
   @Get('my')
+  @UseGuards(JwtAuthGuard)
   findMyNotes(@Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
     }
     return this.notesService.findMy(req.user.id);
+  }
+
+  @Get('job-application/:id')
+  @UseGuards(JwtAuthGuard)
+  findJobAppNotes(@Param('id') id: string, @Req() req: Request) {
+    if (!req.user) {
+      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+    }
+    return this.notesService.findByJobApplication(id);
+  }
+
+  @Get('meeting/:id')
+  @UseGuards(JwtAuthGuard)
+  findMeetingNOtes(@Param('id') id: string) {
+    return this.notesService.findByMeeting(id);
   }
 
   @Get(':id')

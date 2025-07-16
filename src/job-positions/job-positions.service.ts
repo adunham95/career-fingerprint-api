@@ -24,6 +24,7 @@ export class JobPositionsService {
     return this.prisma.jobPosition.findMany({
       where: { userID },
       orderBy: { startDate: { sort: 'desc', nulls: 'last' } },
+      include: { achievements: true },
     });
   }
 

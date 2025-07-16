@@ -159,7 +159,6 @@ model JobPosition {
   projects        Project[]
   jobOptions      JobOptions[]
   meetings        Meeting[]
-  notes           Note[]
 }
 
 model Achievement {
@@ -209,7 +208,6 @@ model Education {
   currentPosition Boolean       @default(false)
   achievements    Achievement[]
   meetings        Meeting[]
-  notes           Note[]
 }
 
 // Optional: Store webhook events for debugging
@@ -242,7 +240,6 @@ model JobApplication {
   goodFit           String?
   grow              String?
   otherQuestions    String?
-  notes             Note[]
   meetings          Meeting[]
   prepAnswer        PrepAnswer[]
 }
@@ -277,12 +274,6 @@ model Note {
   note          String
   meetingID     String?
   meetings      Meeting?        @relation(fields: [meetingID], references: [id])
-  jobAppID      String?
-  jobApp        JobApplication? @relation(fields: [jobAppID], references: [id])
-  jobPositionID String?
-  jobPosition   JobPosition?    @relation(fields: [jobPositionID], references: [id])
-  educationID   String?
-  education     Education?      @relation(fields: [educationID], references: [id])
   highlightID   String?
   highlight     Highlight?      @relation(fields: [highlightID], references: [id])
 }

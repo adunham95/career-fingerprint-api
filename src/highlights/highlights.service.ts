@@ -1,3 +1,4 @@
+import { Meeting } from './../meetings/entities/meeting.entity';
 import { Injectable } from '@nestjs/common';
 import { CreateHighlightDto } from './dto/create-highlight.dto';
 import { UpdateHighlightDto } from './dto/update-highlight.dto';
@@ -45,6 +46,24 @@ export class HighlightsService {
 
   findAll() {
     return `This action returns all highlights`;
+  }
+
+  async findForMeeting(meetingID: string) {
+    const meeting = await this.prisma.meeting.findUnique({
+      where: { id: meetingID },
+      select: { jobAppID: true },
+    });
+
+    if (!meeting) {
+      throw new Error('Not Found');
+    }
+
+    return this.prisma.highlight.findMany({
+      where: {
+        meetings: { OR: [{ id: meetingID }, { jobAppID: meeting.jobAppID }] },
+      },
+      include: { notes: true, achievements: true },
+    });
   }
 
   findOne(id: number) {

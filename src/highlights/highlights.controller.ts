@@ -41,6 +41,12 @@ export class HighlightsController {
     return this.highlightsService.findOne(+id);
   }
 
+  @Get('meeting/:id')
+  @UseGuards(JwtAuthGuard)
+  findForMeeting(@Param('id') id: string) {
+    return this.highlightsService.findForMeeting(id);
+  }
+
   @Patch(':id')
   update(
     @Param('id') id: string,

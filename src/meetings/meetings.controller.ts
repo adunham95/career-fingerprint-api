@@ -10,12 +10,14 @@ import {
   HttpException,
   HttpStatus,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { MeetingsService } from './meetings.service';
 import { CreateMeetingDto } from './dto/create-meeting.dto';
 import { UpdateMeetingDto } from './dto/update-meeting.dto';
 import { Request } from 'express';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { MeetingQueryDto } from './dto/meeting-query.dto';
 
 @Controller('meetings')
 export class MeetingsController {
@@ -38,11 +40,11 @@ export class MeetingsController {
 
   @Get('my')
   @UseGuards(JwtAuthGuard)
-  findMine(@Req() req: Request) {
+  findMine(@Req() req: Request, @Query() query: MeetingQueryDto) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
     }
-    return this.meetingsService.findMine(req.user.id);
+    return this.meetingsService.findMine(req.user.id, query);
   }
 
   @Get(':id')

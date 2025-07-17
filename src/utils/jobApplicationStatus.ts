@@ -5,6 +5,7 @@ export const JobApplicationStatus = {
   ACCEPTED: 'accepted',
   REJECTED: 'rejected',
   GHOSTED: 'ghosted',
+  ARCHIVE: 'archived',
 } as const;
 
 export type JobApplicationStatu =

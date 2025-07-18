@@ -12,6 +12,7 @@ export class PrepService {
 
   async findAllPrepQuestionsForMeeting(id: string, userID: number) {
     const meeting = await this.prisma.meeting.findFirst({ where: { id } });
+    console.log({ meeting });
     return this.prisma.prepQuestion.findMany({
       where: {
         displayOn: { has: meeting?.type },

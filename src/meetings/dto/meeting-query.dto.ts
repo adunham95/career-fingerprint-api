@@ -1,4 +1,4 @@
-import { IsInt, IsOptional, Min } from 'class-validator';
+import { IsBoolean, IsInt, IsOptional, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class MeetingQueryDto {
@@ -13,4 +13,21 @@ export class MeetingQueryDto {
   @IsInt()
   @Min(1)
   limit?: number;
+}
+
+export class SingleMeetingQueryDto {
+  @IsOptional()
+  @IsBoolean()
+  @Type(() => Boolean)
+  highlights?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  @Type(() => Boolean)
+  achievements?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  @Type(() => Boolean)
+  questions?: boolean;
 }

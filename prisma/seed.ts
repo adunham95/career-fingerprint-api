@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { FeatureFlags } from '../src/utils/featureFlags';
 const prisma = new PrismaClient();
+import bcrypt from 'bcrypt';
 
 async function main() {
   // Free Plan
@@ -86,6 +87,21 @@ async function main() {
       key: 'bring-up',
       question: 'What is a question you would like to bring up?s',
       displayOn: ['interview'],
+    },
+  });
+
+  const saltRounds = 10;
+  const password = await bcrypt.hash('password', saltRounds);
+
+  const demoUserBob = await prisma.user.upsert({
+    where: { email: 'bob.buttonman@email.com' },
+    update: {},
+    create: {
+      firstName: 'Bob',
+      lastName: 'Buttonman',
+      email: 'bob.buttonman@email.com',
+      accountStatus: 'active',
+      password,
     },
   });
 }

@@ -17,7 +17,10 @@ import { CreateMeetingDto } from './dto/create-meeting.dto';
 import { UpdateMeetingDto } from './dto/update-meeting.dto';
 import { Request } from 'express';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { MeetingQueryDto } from './dto/meeting-query.dto';
+import {
+  MeetingQueryDto,
+  SingleMeetingQueryDto,
+} from './dto/meeting-query.dto';
 
 @Controller('meetings')
 export class MeetingsController {
@@ -48,8 +51,9 @@ export class MeetingsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.meetingsService.findOne(id);
+  @UseGuards(JwtAuthGuard)
+  findOne(@Param('id') id: string, @Query() query: SingleMeetingQueryDto) {
+    return this.meetingsService.findOne(id, query);
   }
 
   @Patch(':id')

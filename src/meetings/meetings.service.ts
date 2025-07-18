@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateMeetingDto } from './dto/create-meeting.dto';
 import { UpdateMeetingDto } from './dto/update-meeting.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { SingleMeetingQueryDto } from './dto/meeting-query.dto';
 
 @Injectable()
 export class MeetingsService {
@@ -38,10 +39,34 @@ export class MeetingsService {
     });
   }
 
-  findOne(id: string) {
+  findOne(id: string, query?: SingleMeetingQueryDto) {
+    let include: {
+      [key: string]:
+        | boolean
+        | {
+            include: {
+              [key: string]: boolean | { include: { [key: string]: boolean } };
+            };
+          };
+    } = {
+      jobApp: { include: { prepAnswer: { include: { question: true } } } },
+      jobPosition: true,
+      education: true,
+    };
+
+    if (query?.highlights) {
+      include = {
+        ...include,
+        highlights: { include: { notes: true, achievements: true } },
+      };
+    }
+
+    console.log({ include, query });
+
     return this.prisma.meeting.findFirst({
       where: { id },
-      include: { jobApp: true, jobPosition: true, education: true },
+      // include: { jobApp: true, jobPosition: true, education: true },
+      include,
     });
   }
 

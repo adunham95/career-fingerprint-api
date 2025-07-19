@@ -50,6 +50,15 @@ export class MeetingsController {
     return this.meetingsService.findMine(req.user.id, query);
   }
 
+  @Get('my/upcoming')
+  @UseGuards(JwtAuthGuard)
+  findMineUpcoming(@Req() req: Request, @Query() query: MeetingQueryDto) {
+    if (!req.user) {
+      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+    }
+    return this.meetingsService.findMineUpcoming(req.user.id, query);
+  }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   findOne(@Param('id') id: string, @Query() query: SingleMeetingQueryDto) {

@@ -20,12 +20,9 @@ export class MeetingsService {
 
   findMine(userID: number, query?: { page?: number; limit?: number }) {
     const queryData: {
-      where: { userID: number };
       skip?: number;
       take?: number;
-    } = {
-      where: { userID },
-    };
+    } = {};
     if (query?.limit && query.page) {
       const { page, limit } = query;
       const skip = (page - 1) * limit;
@@ -35,7 +32,37 @@ export class MeetingsService {
 
     return this.prisma.meeting.findMany({
       ...queryData,
-      orderBy: { time: 'desc' },
+      where: { userID },
+      orderBy: {
+        time: 'desc',
+      },
+    });
+  }
+
+  findMineUpcoming(userID: number, query?: { page?: number; limit?: number }) {
+    const queryData: {
+      skip?: number;
+      take?: number;
+    } = {};
+    if (query?.limit && query.page) {
+      const { page, limit } = query;
+      const skip = (page - 1) * limit;
+      queryData.skip = skip;
+      queryData.take = limit;
+    }
+
+    return this.prisma.meeting.findMany({
+      ...queryData,
+      where: {
+        userID,
+        title: { not: null },
+        time: {
+          gt: new Date(),
+        },
+      },
+      orderBy: {
+        time: 'asc',
+      },
     });
   }
 

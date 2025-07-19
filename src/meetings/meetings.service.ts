@@ -55,9 +55,36 @@ export class MeetingsService {
       ...queryData,
       where: {
         userID,
-        title: { not: null },
+        // title: { not: null },
         time: {
-          gt: new Date(),
+          gte: new Date(),
+        },
+      },
+      orderBy: {
+        time: 'asc',
+      },
+    });
+  }
+
+  findMinePrevious(userID: number, query?: { page?: number; limit?: number }) {
+    const queryData: {
+      skip?: number;
+      take?: number;
+    } = {};
+    if (query?.limit && query.page) {
+      const { page, limit } = query;
+      const skip = (page - 1) * limit;
+      queryData.skip = skip;
+      queryData.take = limit;
+    }
+
+    return this.prisma.meeting.findMany({
+      ...queryData,
+      where: {
+        userID,
+        // title: { not: null },
+        time: {
+          lt: new Date(),
         },
       },
       orderBy: {

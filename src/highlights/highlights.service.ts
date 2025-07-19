@@ -1,4 +1,3 @@
-import { Meeting } from './../meetings/entities/meeting.entity';
 import { Injectable } from '@nestjs/common';
 import { CreateHighlightDto } from './dto/create-highlight.dto';
 import { UpdateHighlightDto } from './dto/update-highlight.dto';
@@ -63,6 +62,7 @@ export class HighlightsService {
         meetings: { OR: [{ id: meetingID }, { jobAppID: meeting.jobAppID }] },
       },
       include: { notes: true, achievements: true },
+      orderBy: { createdAt: 'asc' },
     });
   }
 
@@ -70,11 +70,31 @@ export class HighlightsService {
     return `This action returns a #${id} highlight`;
   }
 
-  update(id: number, updateHighlightDto: UpdateHighlightDto) {
-    return `This action updates a #${id} highlight`;
+  async update(id: string, updateHighlightDto: UpdateHighlightDto) {
+    if (updateHighlightDto.note && updateHighlightDto.noteID) {
+      await this.prisma.note.update({
+        where: { id: updateHighlightDto.noteID },
+        data: { note: updateHighlightDto.note },
+      });
+    }
+
+    return this.prisma.highlight.update({
+      where: { id },
+      data: {
+        text: updateHighlightDto.text,
+        achievements: {
+          connect: updateHighlightDto.achievementIDs?.map((achID) => ({
+            id: achID,
+          })),
+          disconnect: updateHighlightDto.uncheckAchievementIDs?.map(
+            (achID) => ({ id: achID }),
+          ),
+        },
+      },
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} highlight`;
+  remove(id: string) {
+    return this.prisma.highlight.delete({ where: { id } });
   }
 }

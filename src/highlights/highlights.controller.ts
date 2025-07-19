@@ -52,11 +52,11 @@ export class HighlightsController {
     @Param('id') id: string,
     @Body() updateHighlightDto: UpdateHighlightDto,
   ) {
-    return this.highlightsService.update(+id, updateHighlightDto);
+    return this.highlightsService.update(id, updateHighlightDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.highlightsService.remove(+id);
+    return this.highlightsService.remove(id);
   }
 }

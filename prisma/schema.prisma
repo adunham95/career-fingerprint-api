@@ -252,7 +252,7 @@ model Meeting {
   user          User            @relation(fields: [userID], references: [id])
   time          DateTime        @default(now())
   title         String?
-  type          String?         @default("interview")
+  type          String?         @default("Interview")
   notes         Note[]
   location      String?
   link          String?
@@ -266,16 +266,16 @@ model Meeting {
 }
 
 model Note {
-  id            String          @id @default(uuid())
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-  userID        Int
-  user          User            @relation(fields: [userID], references: [id])
-  note          String
-  meetingID     String?
-  meetings      Meeting?        @relation(fields: [meetingID], references: [id])
-  highlightID   String?
-  highlight     Highlight?      @relation(fields: [highlightID], references: [id])
+  id          String     @id @default(uuid())
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  userID      Int
+  user        User       @relation(fields: [userID], references: [id])
+  note        String
+  meetingID   String?
+  meetings    Meeting?   @relation(fields: [meetingID], references: [id])
+  highlightID String?
+  highlight   Highlight? @relation(fields: [highlightID], references: [id])
 }
 
 model Highlight {
@@ -313,7 +313,6 @@ model PrepAnswer {
   question         PrepQuestion    @relation(fields: [questionID], references: [id])
   jobApplicationID String?
   JobApplication   JobApplication? @relation(fields: [jobApplicationID], references: [id])
-
 
   @@unique([userID, jobApplicationID, questionID])
 }

@@ -18,7 +18,7 @@ export class JobApplicationsService {
   findMyJobApps(userID: number) {
     return this.prisma.jobApplication.findMany({
       where: { userID },
-      include: { _count: { select: { notes: true, meetings: true } } },
+      include: { _count: { select: { meetings: true } } },
     });
   }
 

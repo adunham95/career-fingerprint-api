@@ -3,13 +3,19 @@ import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
+import * as express from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Stripe webhook needs raw body
+  app.use('/webhook', express.raw({ type: 'application/json' }));
+
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
 
   app.use(cookieParser());
+
+  // TODO convert to ENV
 
   app.enableCors({
     origin: 'http://localhost:5173', // your frontend URL

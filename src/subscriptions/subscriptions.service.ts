@@ -10,12 +10,19 @@ export class SubscriptionsService {
     return this.prisma.plan.findMany();
   }
 
+  findPlanByID(id: string) {
+    return this.prisma.plan.findFirst({ where: { key: id } });
+  }
+
   getActive(userID: number) {
     return this.prisma.subscription.findFirst({
       where: {
         userID,
         status: { in: ['trialing', 'active', 'past_due'] },
-        currentPeriodEnd: { gt: new Date() }, // optional: time-safe check
+        OR: [
+          { currentPeriodEnd: null },
+          { currentPeriodEnd: { gt: new Date() } },
+        ], // optional: time-safe check
       },
       orderBy: { createdAt: 'desc' },
       include: { plan: true },

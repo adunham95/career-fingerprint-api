@@ -93,17 +93,24 @@ export class MeetingsService {
     });
   }
 
-  findOne(id: string, query?: SingleMeetingQueryDto) {
+  async findOne(id: string, query?: SingleMeetingQueryDto) {
+    const meeting = await this.prisma.meeting.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        jobAppID: true,
+        userID: true,
+      },
+    });
+
+    if (!meeting) {
+      throw new Error('Meeting not found');
+    }
+
     let include: {
-      [key: string]:
-        | boolean
-        | {
-            include: {
-              [key: string]: boolean | { include: { [key: string]: boolean } };
-            };
-          };
+      [key: string]: unknown;
     } = {
-      jobApp: { include: { prepAnswer: { include: { question: true } } } },
+      jobApp: true,
       jobPosition: true,
       education: true,
     };
@@ -115,11 +122,32 @@ export class MeetingsService {
       };
     }
 
+    if (query?.questions) {
+      console.log('include questions');
+      include = {
+        ...include,
+        prepAnswers: {
+          where: {
+            OR: [{ meetingID: id }, { jobApplicationID: meeting?.jobAppID }],
+          },
+          take: 1,
+        },
+        // prepAnswers: {
+        //   where: {
+        //     OR: [
+        //       { jobApplicationID: meeting.jobAppID, userID: meeting.userID },
+        //       { meetingID: meeting.id, userID: meeting.userID },
+        //     ],
+        //   },
+        //   include: { question: true },
+        // },
+      };
+    }
+
     console.log({ include, query });
 
     return this.prisma.meeting.findFirst({
       where: { id },
-      // include: { jobApp: true, jobPosition: true, education: true },
       include,
     });
   }

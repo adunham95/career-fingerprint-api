@@ -20,10 +20,29 @@ export class PrepService {
       orderBy: { order: 'asc' },
       include: {
         prepAnswers: {
-          where: { jobApplicationID: meeting?.jobAppID, userID },
+          where: {
+            OR: [
+              { jobApplicationID: meeting?.jobAppID, userID },
+              { meetingID: id, userID },
+            ],
+          },
           take: 1,
         },
       },
+    });
+  }
+
+  async findAllPrepAnswersForMeeting(id: string, userID: number) {
+    const meeting = await this.prisma.meeting.findFirst({ where: { id } });
+    console.log({ meeting });
+    return this.prisma.prepAnswer.findMany({
+      where: {
+        OR: [
+          { jobApplicationID: meeting?.jobAppID, userID },
+          { meetingID: id, userID },
+        ],
+      },
+      include: { question: true },
     });
   }
 
@@ -32,10 +51,10 @@ export class PrepService {
 
     return this.prisma.prepAnswer.upsert({
       where: {
-        userID_jobApplicationID_questionID: {
+        userID_questionID_meetingID: {
           userID: upsertPrepAnswerDto.userID,
-          jobApplicationID: upsertPrepAnswerDto.jobApplicationID,
           questionID: upsertPrepAnswerDto.questionID,
+          meetingID: upsertPrepAnswerDto.meetingID,
         },
       },
       update: {

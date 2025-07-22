@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 export class UpsertPrepAnswerDto {
   @ApiProperty()
@@ -12,7 +12,12 @@ export class UpsertPrepAnswerDto {
 
   @ApiProperty()
   @IsString()
+  @IsOptional()
   jobApplicationID: string;
+
+  @ApiProperty()
+  @IsString()
+  meetingID: string;
 
   userID: number;
 }

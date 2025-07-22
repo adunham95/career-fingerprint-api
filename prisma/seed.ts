@@ -42,7 +42,7 @@ async function main() {
       order: 1,
       key: 'about-company',
       question: 'What do you know about the company?',
-      displayOn: ['interview'],
+      displayOn: ['Interview'],
     },
   });
 
@@ -53,7 +53,7 @@ async function main() {
       order: 2,
       key: 'like-company',
       question: 'What do you like about the company?',
-      displayOn: ['interview'],
+      displayOn: ['Interview'],
     },
   });
 
@@ -64,7 +64,7 @@ async function main() {
       order: 3,
       key: 'good-fit',
       question: 'What makes you a good fit for this role?',
-      displayOn: ['interview'],
+      displayOn: ['Interview'],
     },
   });
 
@@ -75,7 +75,7 @@ async function main() {
       order: 4,
       key: 'role-grow',
       question: 'Describe how you can grow in this role.',
-      displayOn: ['interview'],
+      displayOn: ['Interview'],
     },
   });
 
@@ -86,14 +86,58 @@ async function main() {
       order: 5,
       key: 'bring-up',
       question: 'What is a question you would like to bring up?s',
-      displayOn: ['interview'],
+      displayOn: ['Interview'],
+    },
+  });
+
+  await prisma.prepQuestion.upsert({
+    where: { key: 'int-goal' },
+    update: {},
+    create: {
+      order: 1,
+      key: 'int-goal',
+      question: 'What is your goal for this meeting?',
+      displayOn: ['Internal'],
+    },
+  });
+
+  await prisma.prepQuestion.upsert({
+    where: { key: 'int-key-points' },
+    update: {},
+    create: {
+      order: 2,
+      key: 'int-key-points',
+      question: 'What key points do you want to bring up during this meeting?',
+      displayOn: ['Internal'],
+    },
+  });
+
+  await prisma.prepQuestion.upsert({
+    where: { key: 'int-outcomes' },
+    update: {},
+    create: {
+      order: 3,
+      key: 'int-outcomes',
+      question: 'What are the best and worst outcomes for this meeting?',
+      displayOn: ['Internal'],
+    },
+  });
+
+  await prisma.prepQuestion.upsert({
+    where: { key: 'int-action' },
+    update: {},
+    create: {
+      order: 4,
+      key: 'int-action',
+      question: 'Describe potential actions to come out of this meeting?',
+      displayOn: ['Internal'],
     },
   });
 
   const saltRounds = 10;
   const password = await bcrypt.hash('password', saltRounds);
 
-  const demoUserBob = await prisma.user.upsert({
+  await prisma.user.upsert({
     where: { email: 'bob.buttonman@email.com' },
     update: {},
     create: {

@@ -256,6 +256,8 @@ model Meeting {
   notes         Note[]
   location      String?
   link          String?
+  agenda        String?
+  attendees     String[]
   jobAppID      String?
   jobApp        JobApplication? @relation(fields: [jobAppID], references: [id])
   jobPositionID String?
@@ -263,6 +265,7 @@ model Meeting {
   educationID   String?
   education     Education?      @relation(fields: [educationID], references: [id])
   highlights    Highlight[]
+  prepAnswers   PrepAnswer[]
 }
 
 model Note {
@@ -313,6 +316,8 @@ model PrepAnswer {
   question         PrepQuestion    @relation(fields: [questionID], references: [id])
   jobApplicationID String?
   JobApplication   JobApplication? @relation(fields: [jobApplicationID], references: [id])
+  meetingID        String?
+  meeting          Meeting?        @relation(fields: [meetingID], references: [id])
 
-  @@unique([userID, jobApplicationID, questionID])
+  @@unique([userID, questionID, meetingID])
 }

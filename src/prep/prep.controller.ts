@@ -25,11 +25,20 @@ export class PrepController {
 
   @Get('questions/meeting/:id')
   @UseGuards(JwtAuthGuard)
-  findAllForMeeting(@Param('id') id: string, @Req() req: Request) {
+  findAllQForMeeting(@Param('id') id: string, @Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
     }
     return this.prepService.findAllPrepQuestionsForMeeting(id, req.user.id);
+  }
+
+  @Get('answers/meeting/:id')
+  @UseGuards(JwtAuthGuard)
+  findAllAForMeeting(@Param('id') id: string, @Req() req: Request) {
+    if (!req.user) {
+      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+    }
+    return this.prepService.findAllPrepAnswersForMeeting(id, req.user.id);
   }
 
   @Patch('answer')

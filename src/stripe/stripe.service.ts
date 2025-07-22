@@ -2,18 +2,17 @@ import { Inject, Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import Stripe from 'stripe';
-// import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class StripeService {
   private stripe: Stripe;
-  private prisma: PrismaService;
 
   constructor(
     @Inject('STRIPE_API_SECRET')
     private readonly secretKey: string,
     @Inject('FRONT_END_URL')
     private readonly frontEndUrl: string,
+    private prisma: PrismaService,
   ) {
     this.stripe = new Stripe(this.secretKey, {
       apiVersion: '2025-05-28.basil',
@@ -66,5 +65,41 @@ export class StripeService {
     });
 
     return subscription;
+  }
+
+  async createCheckoutSession(user: User, priceID: string) {
+    console.log({ priceID });
+    const stripeUserID = user?.stripeCustomerID || '';
+    console.log({ stripeUserID });
+    if (stripeUserID === null || stripeUserID === '') {
+      throw Error('Missing stripeUserID');
+    }
+
+    const planDetails = await this.prisma.plan.findFirst({
+      where: {
+        OR: [
+          { annualStripePriceID: priceID },
+          { monthlyStripePriceID: priceID },
+        ],
+      },
+    });
+
+    if (!planDetails) {
+      throw new Error(`No plan found for price ID: ${priceID}`);
+    }
+
+    const checkoutSession = await this.stripe.checkout.sessions.create({
+      ui_mode: 'custom',
+      customer: stripeUserID,
+      line_items: [{ price: priceID, quantity: 1 }],
+      metadata: {
+        userId: user.id,
+        planKey: planDetails?.key || 'pro',
+      },
+      mode: 'subscription',
+      return_url: `${this.frontEndUrl}/return?session_id={CHECKOUT_SESSION_ID}`,
+    });
+
+    return { checkoutSessionClientSecret: checkoutSession.client_secret };
   }
 }

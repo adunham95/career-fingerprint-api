@@ -14,8 +14,23 @@ export class SubscriptionsService {
     return this.prisma.plan.findFirst({ where: { key: id } });
   }
 
-  getActive(userID: number) {
-    return this.prisma.subscription.findFirst({
+  findUpgradePlan(planLevel: number) {
+    const nextPlanLevel = planLevel + 1;
+
+    return this.prisma.plan.findFirst({
+      where: { level: nextPlanLevel, key: 'pro-beta' },
+      select: {
+        annualStripePriceID: true,
+        monthlyStripePriceID: true,
+        priceCents: true,
+        name: true,
+        priceCentsYear: true,
+      },
+    });
+  }
+
+  async getActive(userID: number) {
+    return await this.prisma.subscription.findFirst({
       where: {
         userID,
         status: { in: ['trialing', 'active', 'past_due'] },

@@ -28,6 +28,39 @@ async function main() {
       key: 'pro',
       level: 1,
       priceCents: 999,
+      priceCentsYear: 9999,
+      interval: 'month',
+      features: [FeatureFlags.CreateResumes, FeatureFlags.ExportPDF],
+      metadata: { resumeLimit: null },
+    },
+  });
+
+  // Pro Plan
+  await prisma.plan.upsert({
+    where: { key: 'pro-edu' },
+    update: {},
+    create: {
+      name: 'Elevate',
+      key: 'pro-edu',
+      level: 1,
+      priceCents: 699,
+      priceCentsYear: 6999,
+      interval: 'month',
+      features: [FeatureFlags.CreateResumes, FeatureFlags.ExportPDF],
+      metadata: { resumeLimit: null },
+    },
+  });
+
+  // Pro Plan
+  await prisma.plan.upsert({
+    where: { key: 'pro-beta' },
+    update: {},
+    create: {
+      name: 'Elevate',
+      key: 'pro-beta',
+      level: 1,
+      priceCents: 699,
+      priceCentsYear: 6999,
       interval: 'month',
       features: [FeatureFlags.CreateResumes, FeatureFlags.ExportPDF],
       metadata: { resumeLimit: null },
@@ -129,7 +162,7 @@ async function main() {
     create: {
       order: 4,
       key: 'int-action',
-      question: 'Describe potential actions to come out of this meeting?',
+      question: 'Describe potential action items to come out of this meeting.',
       displayOn: ['Internal'],
     },
   });

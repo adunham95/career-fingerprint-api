@@ -63,18 +63,20 @@ model ResetToken {
 }
 
 model Plan {
-  id            String         @id @default(uuid())
-  key           String         @unique
-  level         Int?           @default(0)
-  name          String
-  priceCents    Int // e.g. 0 for Free, 1000 for $10
-  interval      String // 'month', 'year'
-  features      String[] // Optional
-  metadata      Json?
-  subscriptions Subscription[]
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  stripePriceID String?
+  id                   String         @id @default(uuid())
+  key                  String         @unique
+  level                Int?           @default(0)
+  name                 String
+  priceCents           Int // e.g. 0 for Free, 1000 for $10
+  priceCentsYear      Int? // e.g. 0 for Free, 1000 for $10
+  interval             String // 'month', 'year'
+  features             String[] // Optional
+  metadata             Json?
+  subscriptions        Subscription[]
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+  monthlyStripePriceID String?
+  annualStripePriceID  String?
 
   @@index([key])
 }

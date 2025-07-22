@@ -30,4 +30,19 @@ export class StripeController {
       createStripeSubscriptionDto.priceID,
     );
   }
+
+  @Post('create-checkout-session')
+  @UseGuards(JwtAuthGuard)
+  createCheckoutSession(
+    @Body() createCheckoutSessionDto: CreateStripeSubscriptionDto,
+    @Req() req: Request,
+  ) {
+    if (!req.user) {
+      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+    }
+    return this.stripeService.createCheckoutSession(
+      req.user,
+      createCheckoutSessionDto.priceID,
+    );
+  }
 }

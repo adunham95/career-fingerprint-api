@@ -31,8 +31,8 @@ export class SubscriptionsController {
   }
 
   @Get('plans/:key')
-  getPlanByKey(@Param('id') id: string) {
-    return this.subscriptionsService.findPlanByID(id);
+  getPlanByKey(@Param('key') key: string) {
+    return this.subscriptionsService.findPlanByID(key);
   }
 
   @Get('details')

@@ -97,7 +97,7 @@ export class StripeService {
         planKey: planDetails?.key || 'pro',
       },
       mode: 'subscription',
-      return_url: `${this.frontEndUrl}/return?session_id={CHECKOUT_SESSION_ID}`,
+      return_url: `${this.frontEndUrl}/settings/membership/thank-you?session_id={CHECKOUT_SESSION_ID}`,
     });
 
     return { checkoutSessionClientSecret: checkoutSession.client_secret };

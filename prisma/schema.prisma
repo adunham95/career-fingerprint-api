@@ -67,8 +67,10 @@ model Plan {
   key                  String         @unique
   level                Int?           @default(0)
   name                 String
+  description          String         @default("")
+  featureList          String[]
   priceCents           Int // e.g. 0 for Free, 1000 for $10
-  priceCentsYear      Int? // e.g. 0 for Free, 1000 for $10
+  priceCentsYear       Int? // e.g. 0 for Free, 1000 for $10
   interval             String // 'month', 'year'
   features             String[] // Optional
   metadata             Json?

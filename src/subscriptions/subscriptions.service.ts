@@ -25,6 +25,8 @@ export class SubscriptionsService {
         priceCents: true,
         name: true,
         priceCentsYear: true,
+        description: true,
+        featureList: true,
       },
     });
   }

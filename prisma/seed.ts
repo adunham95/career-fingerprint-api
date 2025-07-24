@@ -7,10 +7,27 @@ async function main() {
   // Free Plan
   await prisma.plan.upsert({
     where: { key: 'free' },
-    update: {},
+    update: {
+      description:
+        'Perfect for job seekers who want a smarter way to organize and track their career progress',
+      featureList: [
+        'Add Achievements',
+        'Schedule Jobs',
+        'Track Job Applications',
+        'Update Your Resume',
+      ],
+    },
     create: {
       name: 'Free',
       key: 'free',
+      description:
+        'Perfect for job seekers who want a smarter way to organize and track their career progress',
+      featureList: [
+        'Add Achievements',
+        'Schedule Jobs',
+        'Track Job Applications',
+        'Update Your Resume',
+      ],
       level: 0,
       priceCents: 0,
       interval: 'month',
@@ -22,9 +39,22 @@ async function main() {
   // Pro Plan
   await prisma.plan.upsert({
     where: { key: 'pro' },
-    update: {},
+    update: {
+      description: 'For people who want to elevate there career',
+      featureList: [
+        'Meeting Cheat Sheet',
+        'Meeting Prep',
+        'Reminder Achievement Emails',
+      ],
+    },
     create: {
       name: 'Elevate',
+      description: 'For people who want to elevate there career',
+      featureList: [
+        'Meeting Cheat Sheet',
+        'Meeting Prep',
+        'Reminder Achievement Emails',
+      ],
       key: 'pro',
       level: 1,
       priceCents: 999,
@@ -38,9 +68,22 @@ async function main() {
   // Pro Plan
   await prisma.plan.upsert({
     where: { key: 'pro-edu' },
-    update: {},
+    update: {
+      description: 'For people who want to elevate there career',
+      featureList: [
+        'Meeting Cheat Sheet',
+        'Meeting Prep',
+        'Reminder Achievement Emails',
+      ],
+    },
     create: {
       name: 'Elevate',
+      description: 'For people who want to elevate there career',
+      featureList: [
+        'Meeting Cheat Sheet',
+        'Meeting Prep',
+        'Reminder Achievement Emails',
+      ],
       key: 'pro-edu',
       level: 1,
       priceCents: 699,
@@ -54,10 +97,23 @@ async function main() {
   // Pro Plan
   await prisma.plan.upsert({
     where: { key: 'pro-beta' },
-    update: {},
+    update: {
+      description: 'For people who want to elevate there career',
+      featureList: [
+        'Meeting Cheat Sheet',
+        'Meeting Prep',
+        'Reminder Achievement Emails',
+      ],
+    },
     create: {
       name: 'Elevate',
       key: 'pro-beta',
+      description: 'For people who want to elevate there career',
+      featureList: [
+        'Meeting Cheat Sheet',
+        'Meeting Prep',
+        'Reminder Achievement Emails',
+      ],
       level: 1,
       priceCents: 699,
       priceCentsYear: 6999,

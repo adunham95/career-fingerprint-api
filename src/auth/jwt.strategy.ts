@@ -44,7 +44,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
 
     const planLevel = subscription?.plan?.level ?? 0; // 0 = Free
 
-    console.log({ user, planLevel });
+    // console.log({ user, planLevel });
 
     return { ...user, planLevel, subscription };
   }

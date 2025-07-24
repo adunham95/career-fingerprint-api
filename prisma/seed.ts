@@ -48,7 +48,7 @@ async function main() {
       ],
     },
     create: {
-      name: 'Elevate',
+      name: 'Premium',
       description: 'For people who want to elevate there career',
       featureList: [
         'Meeting Cheat Sheet',
@@ -77,7 +77,7 @@ async function main() {
       ],
     },
     create: {
-      name: 'Elevate',
+      name: 'Premium',
       description: 'For people who want to elevate there career',
       featureList: [
         'Meeting Cheat Sheet',
@@ -106,7 +106,7 @@ async function main() {
       ],
     },
     create: {
-      name: 'Elevate',
+      name: 'Premium',
       key: 'pro-beta',
       description: 'For people who want to elevate there career',
       featureList: [

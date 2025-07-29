@@ -1,5 +1,7 @@
+import { InjectQueue } from '@nestjs/bull';
 import { Inject, Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
+import { Queue } from 'bull';
 import { PrismaService } from 'src/prisma/prisma.service';
 import Stripe from 'stripe';
 
@@ -8,6 +10,7 @@ export class StripeService {
   private stripe: Stripe;
 
   constructor(
+    @InjectQueue('stripe') private stripeQueue: Queue,
     @Inject('STRIPE_API_SECRET')
     private readonly secretKey: string,
     @Inject('FRONT_END_URL')
@@ -21,6 +24,16 @@ export class StripeService {
 
   getStripe() {
     return this.stripe;
+  }
+
+  async newStripeCustomer(
+    user: Partial<User> & Pick<User, 'id' | 'email'>,
+    address?: { county: string; postal_code: string },
+  ) {
+    await this.stripeQueue.add('linkToStripe', {
+      user,
+      address,
+    });
   }
 
   async createStripeCustomer(

@@ -10,7 +10,7 @@ export const roundsOfHashing = 10;
 export class UsersService {
   constructor(
     private prisma: PrismaService,
-    private stripe: StripeService,
+    private stripeService: StripeService,
   ) {}
 
   async user(
@@ -53,15 +53,6 @@ export class UsersService {
       data,
     });
 
-    const stripeCustomer = await this.stripe.createStripeCustomer(user);
-
-    const updatedUser = await this.prisma.user.update({
-      where: { id: user.id },
-      data: {
-        stripeCustomerID: stripeCustomer.id,
-      },
-    });
-
     await this.prisma.subscription.create({
       data: {
         userID: user.id,
@@ -70,7 +61,9 @@ export class UsersService {
       },
     });
 
-    return updatedUser;
+    await this.stripeService.newStripeCustomer(user);
+
+    return user;
   }
 
   async updateUser(params: {

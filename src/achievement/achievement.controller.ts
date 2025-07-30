@@ -10,6 +10,7 @@ import {
   Req,
   HttpException,
   HttpStatus,
+  Query,
 } from '@nestjs/common';
 import { AchievementService } from './achievement.service';
 import { CreateAchievementDto } from './dto/create-achievement.dto';
@@ -43,11 +44,17 @@ export class AchievementController {
 
   @Get('my')
   @UseGuards(JwtAuthGuard)
-  findMyAchievements(@Req() req: Request) {
+  findMyAchievements(
+    @Req() req: Request,
+    @Query() query: { includeLinked: string },
+  ) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
     }
-    return this.achievementService.findMy(req.user.id);
+    return this.achievementService.findMy(
+      req.user.id,
+      query.includeLinked === 'true',
+    );
   }
 
   @Get(':id')

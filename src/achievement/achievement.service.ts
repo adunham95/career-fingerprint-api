@@ -16,10 +16,14 @@ export class AchievementService {
   }
 
   // TODO pagination
-  findMy(userID: number) {
+  findMy(userID: number, includeLinked: boolean = false) {
     return this.prisma.achievement.findMany({
       where: { userID },
       orderBy: { startDate: 'desc' },
+      include: {
+        jobPosition: includeLinked && { select: { name: true } },
+        education: includeLinked && { select: { institution: true } },
+      },
     });
   }
 

@@ -16,7 +16,10 @@ export class AuthService {
   ) {}
 
   async loginUser(email: string, pass: string) {
-    const user = await this.usersService.user({ email });
+    const user = await this.usersService.user({
+      email,
+      accountStatus: 'active',
+    });
 
     if (!user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);

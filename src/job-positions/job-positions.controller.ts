@@ -36,6 +36,21 @@ export class JobPositionsController {
     return this.jobPositionsService.create(createJobPositionDto);
   }
 
+  @Post('application')
+  @UseGuards(JwtAuthGuard)
+  createFromApplications(
+    @Req() req: Request,
+    @Body() { appID }: { appID: string },
+  ) {
+    if (!req.user) {
+      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+    }
+    return this.jobPositionsService.createFromJobApplication(
+      req.user.id,
+      appID,
+    );
+  }
+
   @Get()
   findAll() {
     return this.jobPositionsService.findAll();

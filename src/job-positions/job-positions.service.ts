@@ -16,6 +16,35 @@ export class JobPositionsService {
     return this.prisma.jobPosition.create({ data: createJobPositionDto });
   }
 
+  async createFromJobApplication(userID: number, jobApplicationID: string) {
+    const jobApplication = await this.prisma.jobApplication.findFirst({
+      where: { id: jobApplicationID },
+    });
+
+    if (jobApplication?.migrated === true) {
+      throw Error('Already migrated');
+    }
+
+    const newJobPosition = await this.prisma.jobPosition.create({
+      data: {
+        name: jobApplication?.title || '',
+        userID,
+        currentPosition: true,
+        description: jobApplication?.jobDescription || '',
+        company: jobApplication?.company || '',
+        location: jobApplication?.location || '',
+        startDate: new Date(),
+      },
+    });
+
+    await this.prisma.jobApplication.update({
+      where: { id: jobApplicationID },
+      data: { migrated: true },
+    });
+
+    return newJobPosition;
+  }
+
   findAll() {
     return this.prisma.jobPosition.findMany();
   }

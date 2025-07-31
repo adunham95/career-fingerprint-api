@@ -260,6 +260,7 @@ model JobApplication {
   otherQuestions    String?
   meetings          Meeting[]
   prepAnswer        PrepAnswer[]
+  migrated          Boolean      @default(false)
 }
 
 model Meeting {
@@ -341,11 +342,11 @@ model PrepAnswer {
 }
 
 model Feedback {
-  id        String  @id @default(uuid())
-  userID    Int
-  feedback  String
-  page      String
-  device    String
-  rating    Int
-  contact   Boolean
+  id       String  @id @default(uuid())
+  userID   Int
+  feedback String
+  page     String
+  device   String
+  rating   Int
+  contact  Boolean
 }

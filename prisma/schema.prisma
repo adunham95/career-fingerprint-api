@@ -49,6 +49,7 @@ model User {
   resetTokens      ResetToken[]
   highlights       Highlight[]
   prepAnswers      PrepAnswer[]
+  achievementTags  AchievementTag[]
 
   @@index([email])
 }
@@ -166,24 +167,37 @@ model JobPosition {
 }
 
 model Achievement {
-  id             String       @id @default(uuid())
+  id             String           @id @default(uuid())
   userID         Int
-  user           User         @relation(fields: [userID], references: [id])
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  user           User             @relation(fields: [userID], references: [id])
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
   description    String?
   result         String?
   myContribution String?
   projectID      String?
   startDate      DateTime?
   endDate        DateTime?
-  project        Project?     @relation(fields: [projectID], references: [id])
+  project        Project?         @relation(fields: [projectID], references: [id])
   jobPositionID  String?
-  jobPosition    JobPosition? @relation(fields: [jobPositionID], references: [id])
+  jobPosition    JobPosition?     @relation(fields: [jobPositionID], references: [id])
   educationID    String?
-  education      Education?   @relation(fields: [educationID], references: [id])
-  resumePosition JobOptions[] @relation("visibleAchievements")
-  highlights     Highlight[]  @relation("highlightAchievements")
+  education      Education?       @relation(fields: [educationID], references: [id])
+  resumePosition JobOptions[]     @relation("visibleAchievements")
+  highlights     Highlight[]      @relation("highlightAchievements")
+  tags           AchievementTag[] @relation("achievementTags")
+}
+
+model AchievementTag {
+  id           String        @id @default(uuid())
+  userID       Int
+  user         User          @relation(references: [id], fields: [userID])
+  name         String
+  color        String
+  achievements Achievement[] @relation("achievementTags")
+
+  @@unique([userID, name])
+  @@index([name])
 }
 
 model Project {

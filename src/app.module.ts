@@ -20,6 +20,7 @@ import { PugAdapter } from '@nestjs-modules/mailer/dist/adapters/pug.adapter';
 import { NotesModule } from './notes/notes.module';
 import { HighlightsModule } from './highlights/highlights.module';
 import { PrepModule } from './prep/prep.module';
+import { AchievementTagsModule } from './achievement-tags/achievement-tags.module';
 import path from 'path';
 
 @Module({
@@ -73,6 +74,7 @@ import path from 'path';
     NotesModule,
     HighlightsModule,
     PrepModule,
+    AchievementTagsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -8,7 +8,32 @@ export class AchievementService {
   constructor(private prisma: PrismaService) {}
 
   create(createAchievementDto: CreateAchievementDto) {
-    return this.prisma.achievement.create({ data: createAchievementDto });
+    const tags = createAchievementDto?.achievementTags || [];
+
+    delete createAchievementDto.achievementTags;
+
+    return this.prisma.achievement.create({
+      data: {
+        ...createAchievementDto,
+        tags: {
+          connectOrCreate: tags.map((tagName) => {
+            return {
+              where: {
+                userID_name: {
+                  name: tagName,
+                  userID: createAchievementDto.userID,
+                },
+              },
+              create: {
+                name: tagName,
+                userID: createAchievementDto.userID,
+                color: 'brand',
+              },
+            };
+          }),
+        },
+      },
+    });
   }
 
   findAll() {
@@ -23,6 +48,7 @@ export class AchievementService {
       include: {
         jobPosition: includeLinked && { select: { name: true } },
         education: includeLinked && { select: { institution: true } },
+        tags: includeLinked && { select: { name: true, color: true } },
       },
     });
   }

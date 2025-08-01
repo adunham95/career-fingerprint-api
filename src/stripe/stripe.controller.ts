@@ -1,8 +1,10 @@
 import {
   Body,
   Controller,
+  Get,
   HttpException,
   HttpStatus,
+  Param,
   Post,
   Req,
   UseGuards,
@@ -44,5 +46,10 @@ export class StripeController {
       req.user,
       createCheckoutSessionDto.priceID,
     );
+  }
+
+  @Get('validate/:checkoutSession')
+  validateSubscription(@Param('checkoutSession') checkoutSession: string) {
+    return this.stripeService.validateSubscription(checkoutSession);
   }
 }

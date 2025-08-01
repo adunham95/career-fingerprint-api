@@ -30,7 +30,7 @@ model User {
   username         String?          @unique
   password         String
   profileImage     String?          @default("")
-  email            String          @unique
+  email            String           @unique
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
   accountStatus    String           @default("active")
@@ -90,6 +90,7 @@ model Subscription {
   planID           String
   status           String    @default("trialing")
   stripeSubId      String? // Stripe subscription ID
+  stripeSessionID  String?
   trialEndsAt      DateTime?
   currentPeriodEnd DateTime?
   createdAt        DateTime  @default(now())

@@ -1,9 +1,12 @@
 import {
+  Body,
   Controller,
+  Delete,
   Get,
   HttpException,
   HttpStatus,
   Param,
+  Post,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -14,6 +17,24 @@ import { Request } from 'express';
 @Controller('subscriptions')
 export class SubscriptionsController {
   constructor(private readonly subscriptionsService: SubscriptionsService) {}
+
+  @Post('temp-access')
+  @UseGuards(JwtAuthGuard)
+  async createSubscription(
+    @Body()
+    { priceID, sessionID }: { priceID: string; sessionID: string },
+    @Req() req: Request,
+  ): Promise<{ success: boolean }> {
+    if (!req.user) {
+      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+    }
+    await this.subscriptionsService.createTempSubscription(
+      priceID,
+      sessionID,
+      req.user.id,
+    );
+    return { success: true };
+  }
 
   @Get('plans')
   getPlans() {
@@ -42,5 +63,14 @@ export class SubscriptionsController {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
     }
     return this.subscriptionsService.getActive(req.user.id);
+  }
+
+  @Delete('cancel/:id')
+  @UseGuards(JwtAuthGuard)
+  cancelCurrentSubscription(@Req() req: Request, @Param('id') id: string) {
+    if (!req.user) {
+      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+    }
+    return this.subscriptionsService.cancelCurrentSubscription(id);
   }
 }

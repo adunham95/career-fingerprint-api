@@ -1,5 +1,5 @@
 import { InjectQueue } from '@nestjs/bull';
-import { Inject, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { Queue } from 'bull';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -80,6 +80,32 @@ export class StripeService {
     return subscription;
   }
 
+  async validateSubscription(sessionID: string) {
+    const subscription = await this.prisma.subscription.findFirst({
+      where: {
+        stripeSessionID: sessionID,
+      },
+    });
+
+    if (!subscription) {
+      throw new HttpException('No subscription', HttpStatus.FAILED_DEPENDENCY);
+    }
+
+    const session = await this.stripe.checkout.sessions.retrieve(sessionID, {
+      expand: ['subscription'],
+    });
+
+    return this.prisma.subscription.update({
+      where: {
+        id: subscription.id,
+      },
+      data: {
+        status: session.payment_status === 'paid' ? 'active' : 'temp',
+      },
+      include: { plan: true },
+    });
+  }
+
   async createCheckoutSession(user: User, priceID: string) {
     console.log({ priceID });
     const stripeUserID = user?.stripeCustomerID || '';
@@ -111,8 +137,22 @@ export class StripeService {
       },
       mode: 'subscription',
       return_url: `${this.frontEndUrl}/settings/membership/thank-you?session_id={CHECKOUT_SESSION_ID}`,
+      expand: ['subscription'],
     });
 
-    return { checkoutSessionClientSecret: checkoutSession.client_secret };
+    console.log({ checkoutSession });
+
+    await this.prisma.subscription.create({
+      data: {
+        planID: planDetails.id,
+        userID: user.id,
+        stripeSessionID: checkoutSession.id,
+        status: 'checkout',
+      },
+    });
+
+    return {
+      checkoutSessionClientSecret: checkoutSession.client_secret,
+    };
   }
 }

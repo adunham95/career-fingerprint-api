@@ -42,17 +42,27 @@ export class AchievementController {
     return this.achievementService.findAll();
   }
 
+  //TODO pagination
   @Get('my')
   @UseGuards(JwtAuthGuard)
   findMyAchievements(
     @Req() req: Request,
-    @Query() query: { includeLinked: string },
+    @Query()
+    query: {
+      includeLinked?: string;
+      jobPositionID?: string;
+      educationID?: string;
+    },
   ) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
     }
     return this.achievementService.findMy(
       req.user.id,
+      {
+        jobPositionID: query.jobPositionID || null,
+        educationID: query.educationID || null,
+      },
       query.includeLinked === 'true',
     );
   }

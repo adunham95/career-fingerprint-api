@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateAchievementDto } from './dto/create-achievement.dto';
 import { UpdateAchievementDto } from './dto/update-achievement.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class AchievementService {
@@ -41,9 +42,27 @@ export class AchievementService {
   }
 
   // TODO pagination
-  findMy(userID: number, includeLinked: boolean = false) {
+  findMy(
+    userID: number,
+    whereOptions: { jobPositionID: string | null; educationID: string | null },
+    includeLinked: boolean = false,
+  ) {
+    const where: Prisma.AchievementWhereInput = {};
+
+    console.log({ whereOptions });
+
+    if (whereOptions.jobPositionID) {
+      where.jobPositionID = whereOptions.jobPositionID;
+    }
+
+    if (whereOptions.educationID) {
+      where.educationID = whereOptions.educationID;
+    }
+
+    console.log({ where });
+
     return this.prisma.achievement.findMany({
-      where: { userID },
+      where: { userID, ...where },
       orderBy: { startDate: 'desc' },
       include: {
         jobPosition: includeLinked && { select: { name: true } },

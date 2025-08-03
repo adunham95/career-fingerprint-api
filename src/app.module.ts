@@ -22,6 +22,7 @@ import { HighlightsModule } from './highlights/highlights.module';
 import { PrepModule } from './prep/prep.module';
 import { AchievementTagsModule } from './achievement-tags/achievement-tags.module';
 import { FeedbackModule } from './feedback/feedback.module';
+import { TasksModule } from './tasks/tasks.module';
 import path from 'path';
 
 @Module({
@@ -77,6 +78,7 @@ import path from 'path';
     PrepModule,
     AchievementTagsModule,
     FeedbackModule,
+    TasksModule,
   ],
   controllers: [AppController],
   providers: [AppService],

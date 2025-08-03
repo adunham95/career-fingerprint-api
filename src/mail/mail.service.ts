@@ -52,18 +52,38 @@ export class MailService {
     //     resetPasswordLink: `${process.env.APP_URL}/reset-password?email=${email}&token=${token}`,
     //   },
     // })
-    // // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
     // .catch((e) => console.log({ e }));
   }
 
-  async sendPreviewEmail() {
+  sendPreviewEmail() {
+    return (
+      this.mailerService
+        .sendMail({
+          to: 'no-reply@career-fingerprint.com',
+          template: 'password-reset',
+          subject: 'Preview Email',
+          context: {
+            resetPasswordLink: `example.com`,
+          },
+        })
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        .catch((e) => console.log({ e }))
+    );
+  }
+
+  async sendWeeklyReminderEmail(params: {
+    to: string;
+    context: { firstName: string };
+  }) {
     await this.mailerService
       .sendMail({
-        to: 'no-reply@career-fingerprint.com',
-        template: 'password-reset',
-        subject: 'Preview Email',
+        to: params.to,
+        template: 'weekly-reminder',
+        subject: 'Weekly Reminder Email',
         context: {
-          resetPasswordLink: `example.com`,
+          ...params.context,
+          weeklyLink: `${process.env.APP_URL}/dashboard/weekly`,
         },
       })
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment

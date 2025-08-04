@@ -20,11 +20,14 @@ export class MailController {
 
   @Get('preview')
   async sendPreview() {
-    await this.mailService.sendWeeklyReminderEmail({
-      to: 'adunham95@gmail.com',
-      context: {
-        firstName: 'Adrain',
-      },
-    });
+    await this.mailService
+      .sendPreviewEmail
+      //   {
+      //   to: 'adunham95@gmail.com',
+      //   context: {
+      //     firstName: 'Adrain',
+      //   },
+      // }
+      ();
   }
 }

@@ -1,0 +1,60 @@
+html
+  head
+    meta(charset='UTF-8')
+    meta(name='viewport', content='width=device-width, initial-scale=1.0')
+  body(
+    style='margin: 0; padding: 0; background-color: #fdfaf9; font-family: Arial, sans-serif'
+  )
+  include header.pug
+
+  table(
+    width='100%',
+    cellpadding='0',
+    cellspacing='0',
+    border='0',
+    style='padding: 20px 0'
+  )
+    tr
+      td(align='center')
+        table(
+          width='600',
+          cellpadding='0',
+          cellspacing='0',
+          border='0',
+          style='border-radius: 8px; overflow: hidden'
+        )
+          tr
+            td(style='padding: 20px 30px 0 30px')
+              p(
+                style='color: #333; font-size: 16px; margin: 0 0 10px 0; font-weight: bold'
+              ) Hi #{ firstName },
+          tr
+            td(style='padding: 20px 30px 0 30px')
+              p(
+                style='color: #333; font-size: 16px; margin: 0 0 10px 0; font-weight: bold'
+              ) Welcome to Career Fingerprint! We're excited to help you take control of your career story.
+              p(
+                style='color: #333; font-size: 16px; margin: 0 0 10px 0; font-weight: bold'
+              ) Whether you’re tracking accomplishments, refining your resume, or preparing for your next interview, you’re in the right place. Your career deserves more than scattered notes and outdated documents. Now you have one place to organize everything that makes you stand out.
+          tr
+            td(style='padding: 20px 30px 0 30px')
+              p(
+                style='color: #333; font-size: 16px; margin: 0 0 10px 0; font-weight: bold'
+              ) Welcome to Career Fingerprint! We're excited to help you take control of your career story.
+              ul
+                li Log your wins: Add job accomplishments as they happen
+                li Track interviews: Keep notes and insights in one place
+                li Build your resume: Quickly turn your work into polished applications
+
+          tr
+            td(style='padding: 20px 30px 0 30px')
+              p(
+                style='color: #333; font-size: 16px; margin: 0 0 10px 0; font-weight: bold'
+              ) You’ve just taken a smart step toward owning your professional journey. We’re here to support you every step of the way.
+          tr
+            td(style='padding: 20px 30px 0 30px')
+              p(
+                style='color: #333; font-size: 16px; margin: 0 0 10px 0; font-weight: bold'
+              ) Let’s get started,</br>The Career Fingerprint Team
+
+  include footer.pug

@@ -3,6 +3,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma, User } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import { StripeService } from 'src/stripe/stripe.service';
+import { MailService } from 'src/mail/mail.service';
 
 export const roundsOfHashing = 10;
 
@@ -11,6 +12,7 @@ export class UsersService {
   constructor(
     private prisma: PrismaService,
     private stripeService: StripeService,
+    private readonly mailService: MailService,
   ) {}
 
   async user(
@@ -62,6 +64,11 @@ export class UsersService {
     });
 
     await this.stripeService.newStripeCustomer(user);
+
+    await this.mailService.sendWelcomeEmail({
+      to: user.email,
+      context: { firstName: user.firstName },
+    });
 
     return user;
   }

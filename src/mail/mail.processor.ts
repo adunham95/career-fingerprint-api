@@ -89,4 +89,69 @@ export class MailProcessor {
       console.log(`❎ Email not sent`, error);
     }
   }
+
+  @Process('weeklyEmail')
+  async weeklyEmail(
+    job: Job<{
+      to: string;
+      context: { firstName: string; weeklyLink: string };
+    }>,
+  ) {
+    const {
+      to,
+      context: { firstName, weeklyLink },
+    } = job.data;
+
+    const template = 'weekly-reminder';
+    const subject = 'Weekly Reminder Email';
+
+    console.log(`📧 Sending email to ${to}`);
+
+    try {
+      await this.mailerService.sendMail({
+        to: [to],
+        template,
+        subject,
+        context: {
+          firstName,
+          weeklyLink,
+        },
+      });
+      console.log(`✅ Email sent to ${to}`);
+    } catch (error) {
+      console.log(`❎ Email not sent`, error);
+    }
+  }
+
+  @Process('welcomeEmail')
+  async welcomeEmail(
+    job: Job<{
+      to: string;
+      context: { firstName: string };
+    }>,
+  ) {
+    const {
+      to,
+      context: { firstName },
+    } = job.data;
+
+    const template = 'welcome';
+    const subject = 'Welcome to Career Fingerprint';
+
+    console.log(`📧 Sending email to ${to}`);
+
+    try {
+      await this.mailerService.sendMail({
+        to: [to],
+        template,
+        subject,
+        context: {
+          firstName,
+        },
+      });
+      console.log(`✅ Email sent to ${to}`);
+    } catch (error) {
+      console.log(`❎ Email not sent`, error);
+    }
+  }
 }

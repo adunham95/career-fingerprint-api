@@ -20,11 +20,10 @@ services:
   - type: keyvalue
     name: thunder
     ipAllowList: []
-    plan: pro # Default: starter
+    plan: starter # Default: starter
     previewPlan: starter # Default: use the value for 'plan'
 
 databases:
   - name: prod
-    databaseName: postgres-db
     plan: free
     ipAllowList: []

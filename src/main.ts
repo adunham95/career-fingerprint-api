@@ -18,7 +18,7 @@ async function bootstrap() {
   // TODO convert to ENV
 
   app.enableCors({
-    origin: 'http://localhost:5173', // your frontend URL
+    origin: process.env.FRONT_END_URL, // your frontend URL
     credentials: true,
   });
 

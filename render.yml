@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: career-fingerprint-api
+    env: node
+    plan: starter
+    buildCommand: yarn install && yarn build
+    startCommand: node dist/main
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: postgres-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: redis
+          type: redis
+          property: connectionString
+      - key: NODE_ENV
+        value: production
+
+  - type: postgres
+    name: postgres-db
+    plan: starter
+    properties:
+      ipAllowList: []
+
+  - type: redis
+    name: redis
+    plan: starter

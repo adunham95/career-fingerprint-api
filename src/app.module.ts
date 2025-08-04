@@ -66,12 +66,7 @@ import path from 'path';
       },
     }),
     BullModule.forRoot({
-      redis: {
-        host: process.env.REDIS_HOST,
-        port: parseInt(process.env.REDIS_PORT || '3000'),
-        username: process.env.REDIS_USERNAME,
-        password: process.env.REDIS_PASSWORD,
-      },
+      redis: process.env.REDIS_URL,
     }),
     NotesModule,
     HighlightsModule,

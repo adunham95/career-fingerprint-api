@@ -4,7 +4,7 @@ services:
     runtime: 'node'
     plan: starter
     buildCommand: yarn install && yarn build
-    startCommand: node main
+    startCommand: yarn start:prod
     envVars:
       - key: DATABASE_URL
         fromDatabase:

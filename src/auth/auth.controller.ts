@@ -38,7 +38,7 @@ export class AuthController {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 1000 * 60 * 60 * 24 * 7,
-      domain: '.careerfingerprint.app',
+      domain: process.env.COOKIE_DOMAIN,
     });
     return { accessToken };
   }

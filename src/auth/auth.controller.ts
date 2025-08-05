@@ -72,6 +72,7 @@ export class AuthController {
   logout(@Req() req: Request, @Res({ passthrough: true }) response: Response) {
     response.cookie('accessToken', '', {
       httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: -1,
       domain: process.env.COOKIE_DOMAIN,

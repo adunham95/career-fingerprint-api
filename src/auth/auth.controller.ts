@@ -40,7 +40,7 @@ export class AuthController {
     response.cookie('accessToken', accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 1000 * 60 * 60 * 24 * 7,
       domain: process.env.COOKIE_DOMAIN,
     });
@@ -72,8 +72,7 @@ export class AuthController {
   logout(@Req() req: Request, @Res({ passthrough: true }) response: Response) {
     response.cookie('accessToken', '', {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: -1,
       domain: process.env.COOKIE_DOMAIN,
     });

@@ -75,6 +75,7 @@ export class AuthController {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: -1,
+      domain: process.env.COOKIE_DOMAIN,
     });
     return { success: true };
   }

@@ -1,12 +1,19 @@
-import { NestFactory } from '@nestjs/core';
+import { HttpAdapterHost, NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import * as express from 'express';
+import { SentryFilter } from './sentry/sentry.filter.js';
+import { initializeSentry } from './instrument';
 
 async function bootstrap() {
+  initializeSentry();
+
   const app = await NestFactory.create(AppModule);
+
+  const { httpAdapter } = app.get(HttpAdapterHost);
+  app.useGlobalFilters(new SentryFilter(httpAdapter));
 
   // Stripe webhook needs raw body
   app.use('/webhook', express.raw({ type: 'application/json' }));

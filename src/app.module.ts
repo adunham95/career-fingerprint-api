@@ -24,9 +24,12 @@ import { AchievementTagsModule } from './achievement-tags/achievement-tags.modul
 import { FeedbackModule } from './feedback/feedback.module';
 import { TasksModule } from './tasks/tasks.module';
 import path from 'path';
+import { SentryGlobalFilter, SentryModule } from '@sentry/nestjs/setup';
+import { APP_FILTER } from '@nestjs/core';
 
 @Module({
   imports: [
+    SentryModule.forRoot(),
     UsersModule,
     AuthModule,
     JobPositionsModule,
@@ -76,6 +79,12 @@ import path from 'path';
     TasksModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    {
+      provide: APP_FILTER,
+      useClass: SentryGlobalFilter,
+    },
+    AppService,
+  ],
 })
 export class AppModule {}

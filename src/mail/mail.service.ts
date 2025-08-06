@@ -81,4 +81,11 @@ export class MailService {
   }) {
     await this.mailQueue.add('welcomeEmail', params);
   }
+
+  async sendTrialAlmostOver(params: {
+    to: string;
+    context: { firstName: string };
+  }) {
+    await this.mailQueue.add('trialAlmostOver', params);
+  }
 }

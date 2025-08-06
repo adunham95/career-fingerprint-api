@@ -7,11 +7,13 @@ import { StripeWebhookController } from './stripe.webhook.controller';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { BullModule } from '@nestjs/bull';
 import { StripeProcessor } from './stripe.processor';
+import { MailModule } from 'src/mail/mail.module';
 
 @Module({
   imports: [
     ConfigModule,
     PrismaModule,
+    MailModule,
     BullModule.registerQueue({
       name: 'stripe',
       defaultJobOptions: {

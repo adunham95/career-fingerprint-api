@@ -1,41 +1,4 @@
-// import { Controller, Header, Post, Req, Res } from '@nestjs/common';
-// import { StripeService } from './stripe.service';
-// import { Request, Response } from 'express';
-
-// @Controller('stripe')
-// export class StripeWebhookController {
-//   constructor(private readonly stripeService: StripeService) {}
-
-//   @Post('webhook')
-//   @Header('Content-Type', 'application/json')
-//   handleWebhook(@Req() req: Request, @Res() res: Response) {
-//     const sig = req.headers['stripe-signature'];
-//     const rawBody = (req as any).rawBody;
-//     let event;
-
-//     try {
-//       event = this.stripe.webhooks.constructEvent(
-//         rawBody,
-//         sig,
-//         process.env.STRIPE_WEBHOOK_SECRET,
-//       );
-//     } catch (err) {
-//       console.log(`Webhook error: ${err.message}`);
-//       return res.status(400).send(`Webhook Error: ${err.message}`);
-//     }
-
-//     switch (event.type) {
-//       case 'checkout.session.completed':
-//         const session = event.data.object;
-//         // Handle checkout completion
-//         break;
-//       // ... other cases
-//     }
-
-//     res.json({ received: true });
-//   }
-// }
-
+import { MailService } from 'src/mail/mail.service';
 import {
   Controller,
   Post,
@@ -46,18 +9,18 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { PrismaService } from 'src/prisma/prisma.service';
 import Stripe from 'stripe';
 
 @Controller('webhook')
 export class StripeWebhookController {
-  // constructor(@Inject('STRIPE_CLIENT') private readonly stripe: Stripe) {}
   private stripe: Stripe;
 
   constructor(
     @Inject('STRIPE_API_SECRET')
     private readonly secretKey: string,
-    @Inject('FRONT_END_URL')
-    private readonly frontEndUrl: string,
+    private prisma: PrismaService,
+    private mailService: MailService,
   ) {
     this.stripe = new Stripe(this.secretKey, {
       apiVersion: '2025-05-28.basil',
@@ -65,7 +28,7 @@ export class StripeWebhookController {
   }
 
   @Post()
-  handleStripeWebhook(
+  async handleStripeWebhook(
     @Req() req: Request,
     @Res() res: Response,
     @Headers('stripe-signature') signature: string,
@@ -84,19 +47,36 @@ export class StripeWebhookController {
         signature,
         endpointSecret,
       );
-    } catch (err) {
-      console.error('Webhook Error:', err?.message);
-      return res.status(400).send(`Webhook Error: ${err?.message}`);
+    } catch (error) {
+      if (error instanceof TypeError) {
+        console.error('Webhook Error:', error?.message);
+        return { success: false, message: error?.message };
+      } else if (error instanceof Error) {
+        console.error('Webhook Error:', error?.message);
+        return { success: false, message: error?.message };
+      } else {
+        console.error('Webhook Error', error);
+        return { success: false };
+      }
     }
     // 🎯 Handle the event
     switch (event.type) {
       case 'customer.updated':
-        const customerUpdated = event.data.object;
-        console.log('✅ Customer Updated:', customerUpdated);
+        // const customerUpdated = event.data.object;
+        // console.log('✅ Customer Updated:', customerUpdated);
         // Then define and call a function to handle the event customer.updated
         break;
       case 'checkout.session.completed': {
         const session = event.data.object;
+
+        await this.prisma.subscription.updateMany({
+          where: {
+            stripeSessionID: session.id,
+          },
+          data: {
+            status: 'active',
+          },
+        });
         console.log('✅ Checkout complete:', session);
         break;
       }
@@ -113,20 +93,54 @@ export class StripeWebhookController {
       case 'customer.subscription.created': {
         const newSubscription = event.data.object;
         console.log('✅ New Subscription:', newSubscription);
+        if (newSubscription.metadata.userID && newSubscription.metadata.planID)
+          await this.prisma.subscription.create({
+            data: {
+              userID: parseInt(newSubscription.metadata.userID),
+              planID: newSubscription.metadata.planID,
+              stripeSubId: newSubscription.id,
+              status: 'active',
+            },
+          });
         break;
       }
       case 'customer.subscription.updated': {
         const newSubscription = event.data.object;
+
         console.log('✅ New Subscription:', newSubscription);
         break;
       }
       case 'customer.subscription.deleted': {
-        const newSubscription = event.data.object;
-        console.log('✅ New Subscription:', newSubscription);
+        const subscription = event.data.object;
+        await this.prisma.subscription.updateMany({
+          where: {
+            stripeSubId: subscription.id,
+          },
+          data: {
+            status: 'canceled-stripe',
+          },
+        });
+        console.log('✅ New Subscription:', subscription);
         break;
       }
       case 'customer.subscription.trial_will_end': {
-        console.log('trial will end');
+        const subscription = event.data.object;
+        console.log('trial will end', subscription);
+
+        const subscriptionDetails = await this.prisma.subscription.findFirst({
+          where: {
+            stripeSubId: subscription.id,
+          },
+          include: {
+            user: { select: { email: true, firstName: true } },
+            plan: { select: { name: true } },
+          },
+        });
+
+        if (subscriptionDetails) {
+          // TODO handle send wait emails
+        }
+
         break;
       }
       default:

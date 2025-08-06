@@ -22,6 +22,25 @@ export class ResumeService {
     return this.prisma.resume.findFirst({ where: { id } });
   }
 
+  async duplicateResume(id: string) {
+    const selectedResume = await this.prisma.resume.findFirst({
+      where: { id },
+    });
+
+    if (!selectedResume) {
+      throw Error('Missing resume');
+    }
+
+    const newResume = await this.prisma.resume.create({
+      data: {
+        name: `${selectedResume?.name} copy`,
+        userID: selectedResume?.userID || 1,
+      },
+    });
+
+    return newResume;
+  }
+
   update(id: string, updateResumeDto: UpdateResumeDto) {
     return this.prisma.resume.update({ where: { id }, data: updateResumeDto });
   }

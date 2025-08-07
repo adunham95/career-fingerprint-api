@@ -31,7 +31,10 @@ export class AuthController {
     @Body() { email, password }: LoginDto,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const { accessToken } = await this.authService.loginUser(email, password);
+    const { accessToken, user } = await this.authService.loginUser(
+      email,
+      password,
+    );
     console.log({
       accessToken,
       secure: process.env.NODE_ENV === 'production',
@@ -44,7 +47,7 @@ export class AuthController {
       maxAge: 1000 * 60 * 60 * 24 * 7,
       domain: process.env.COOKIE_DOMAIN,
     });
-    return { accessToken };
+    return { accessToken, user };
   }
 
   @Post('request-reset')

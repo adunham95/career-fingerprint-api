@@ -154,4 +154,71 @@ export class MailProcessor {
       console.log(`❎ Email not sent`, error);
     }
   }
+
+  @Process('trialAlmostOver')
+  async trialAlmostOver(
+    job: Job<{
+      to: string;
+      context: { firstName: string };
+    }>,
+  ) {
+    const {
+      to,
+      context: { firstName },
+    } = job.data;
+
+    const template = 'trial-almost-over';
+    const subject = 'Your Career Fingerprint Trial is almost over';
+
+    console.log(`📧 Sending email to ${to}`);
+
+    try {
+      await this.mailerService.sendMail({
+        to: [to],
+        template,
+        subject,
+        context: {
+          firstName,
+          updateCCLink: `${process.env.APP_URL}/settings/membership`,
+        },
+      });
+      console.log(`✅ Email sent to ${to}`);
+    } catch (error) {
+      console.log(`❎ Email not sent`, error);
+    }
+  }
+
+  @Process('premiumWelcome')
+  async premiumWelcome(
+    job: Job<{
+      to: string;
+      context: { firstName: string };
+    }>,
+  ) {
+    const {
+      to,
+      context: { firstName },
+    } = job.data;
+
+    const template = 'account-upgraded';
+    const subject =
+      'Congratulations Your Career Fingerprint, has been upgraded ';
+
+    console.log(`📧 Sending email to ${to}`);
+
+    try {
+      await this.mailerService.sendMail({
+        to: [to],
+        template,
+        subject,
+        context: {
+          firstName,
+          myAccountLink: `${process.env.APP_URL}/dashboard`,
+        },
+      });
+      console.log(`✅ Email sent to ${to}`);
+    } catch (error) {
+      console.log(`❎ Email not sent`, error);
+    }
+  }
 }

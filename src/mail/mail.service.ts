@@ -51,10 +51,11 @@ export class MailService {
       this.mailerService
         .sendMail({
           to: 'no-reply@career-fingerprint.com',
-          template: 'welcome',
+          template: 'account-upgraded',
           subject: 'Preview Email',
           context: {
             resetPasswordLink: `example.com`,
+            firstName: 'Adrian',
           },
         })
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -87,5 +88,12 @@ export class MailService {
     context: { firstName: string };
   }) {
     await this.mailQueue.add('trialAlmostOver', params);
+  }
+
+  async sendPremiumIntoEmail(params: {
+    to: string;
+    context: { firstName: string };
+  }) {
+    await this.mailQueue.add('premiumWelcome', params);
   }
 }

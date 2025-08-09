@@ -1,0 +1,45 @@
+html
+  head
+    meta(charset='UTF-8')
+    meta(name='viewport', content='width=device-width, initial-scale=1.0')
+  body(
+    style='margin: 0; padding: 0; background-color: #fdfaf9; font-family: Arial, sans-serif'
+  )
+  include header.pug
+
+  table(
+    width='100%',
+    cellpadding='0',
+    cellspacing='0',
+    border='0',
+    style='padding: 20px 0'
+  )
+    tr
+      td(align='center')
+        table(
+          width='600',
+          cellpadding='0',
+          cellspacing='0',
+          border='0',
+          style='border-radius: 8px; overflow: hidden'
+        )
+          tr
+            td(style='padding: 20px 30px 0 30px')
+              p(
+                style='color: #333; font-size: 16px; margin: 0 0 10px 0; font-weight: bold'
+              ) Hi #{ firstName },
+          tr
+            td(style='padding: 20px 30px 0 30px')
+              p(
+                style='color: #333; font-size: 16px; margin: 0 0 10px 0; font-weight: bold'
+              ) Great news, your account has been successfully upgraded.
+              p(
+                style='color: #333; font-size: 16px; margin: 0 0 10px 0; font-weight: bold'
+              ) You now have access to the meeting kit, weekly meeting emails, and meeting prep.
+          tr
+            td(style='padding: 20px 30px 30px 30px; text-align: center')
+              a(
+                href=myAccountLink,
+                style='background-color: #ff7a8a; color: #000000; text-decoration: none; padding: 12px 24px; border-radius: 6px; display: inline-block; font-weight: bold'
+              ) Explore My Account
+  include footer.pug

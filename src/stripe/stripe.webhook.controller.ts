@@ -69,14 +69,29 @@ export class StripeWebhookController {
       case 'checkout.session.completed': {
         const session = event.data.object;
 
-        await this.prisma.subscription.updateMany({
-          where: {
-            stripeSessionID: session.id,
+        const subscription = await this.prisma.subscription.updateManyAndReturn(
+          {
+            where: {
+              stripeSessionID: session.id,
+            },
+            data: {
+              status: 'active',
+            },
+            include: {
+              user: true,
+            },
           },
-          data: {
-            status: 'active',
-          },
-        });
+        );
+
+        const user = subscription?.[0].user;
+
+        if (user) {
+          await this.mailService.sendPremiumIntoEmail({
+            to: user.email,
+            context: { firstName: user.firstName },
+          });
+        }
+
         console.log('✅ Checkout complete:', session);
         break;
       }

@@ -68,6 +68,12 @@ export class MeetingsController {
     return this.meetingsService.findMinePrevious(req.user.id, query);
   }
 
+  @Get('job-application/:id')
+  @UseGuards(JwtAuthGuard)
+  findRelatedToJobApplication(@Param('id') id: string) {
+    return this.meetingsService.findRelatedToJob(id);
+  }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   findOne(@Param('id') id: string, @Query() query: SingleMeetingQueryDto) {

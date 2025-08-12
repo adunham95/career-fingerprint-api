@@ -18,8 +18,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL") // uses connection pooling
+  provider = "postgresql"
+  url      = env("DATABASE_URL") // uses connection pooling
 }
 
 model User {
@@ -49,6 +49,7 @@ model User {
   highlights       Highlight[]
   prepAnswers      PrepAnswer[]
   achievementTags  AchievementTag[]
+  coverLetter      CoverLetter[]
 
   @@index([email])
 }
@@ -263,6 +264,7 @@ model JobApplication {
   meetings          Meeting[]
   prepAnswer        PrepAnswer[]
   migrated          Boolean      @default(false)
+  coverLetter       CoverLetter?
 }
 
 model Meeting {
@@ -351,4 +353,19 @@ model Feedback {
   device   String
   rating   Int
   contact  Boolean
+}
+
+model CoverLetter {
+  id             String          @id @default(uuid())
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  userID         Int
+  user           User            @relation(fields: [userID], references: [id])
+  to             String?         @default("Hiring Manager")
+  message        String
+  default        Boolean         @default(false)
+  jobAppID       String?         @unique
+  jobApplication JobApplication? @relation(fields: [jobAppID], references: [id])
+
+  @@index([jobAppID])
 }

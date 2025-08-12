@@ -26,6 +26,7 @@ import { TasksModule } from './tasks/tasks.module';
 import path from 'path';
 import { SentryGlobalFilter, SentryModule } from '@sentry/nestjs/setup';
 import { APP_FILTER } from '@nestjs/core';
+import { CoverLettersModule } from './cover-letters/cover-letters.module';
 
 @Module({
   imports: [
@@ -77,6 +78,7 @@ import { APP_FILTER } from '@nestjs/core';
     AchievementTagsModule,
     FeedbackModule,
     TasksModule,
+    CoverLettersModule,
   ],
   controllers: [AppController],
   providers: [

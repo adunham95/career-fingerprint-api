@@ -93,6 +93,20 @@ export class MeetingsService {
     });
   }
 
+  findRelatedToJob(jobAppID: string) {
+    return this.prisma.meeting.findMany({
+      where: {
+        jobAppID,
+        time: {
+          lt: new Date(),
+        },
+      },
+      orderBy: {
+        time: 'asc',
+      },
+    });
+  }
+
   async findOne(id: string, query?: SingleMeetingQueryDto) {
     const meeting = await this.prisma.meeting.findUnique({
       where: { id },
@@ -132,15 +146,6 @@ export class MeetingsService {
           },
           take: 1,
         },
-        // prepAnswers: {
-        //   where: {
-        //     OR: [
-        //       { jobApplicationID: meeting.jobAppID, userID: meeting.userID },
-        //       { meetingID: meeting.id, userID: meeting.userID },
-        //     ],
-        //   },
-        //   include: { question: true },
-        // },
       };
     }
 

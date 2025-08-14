@@ -10,12 +10,13 @@ import {
   Req,
   HttpException,
   HttpStatus,
+  Res,
 } from '@nestjs/common';
 import { CoverLettersService } from './cover-letters.service';
 import { CreateCoverLetterDto } from './dto/create-cover-letter.dto';
 import { UpdateCoverLetterDto } from './dto/update-cover-letter.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 
 @Controller('cover-letters')
 export class CoverLettersController {
@@ -54,6 +55,18 @@ export class CoverLettersController {
   @UseGuards(JwtAuthGuard)
   findOneWithJob(@Param('jobAppID') id: string) {
     return this.coverLettersService.findOneFromJob(id);
+  }
+
+  @Get('jobApp/:jobAppID/pdf')
+  @UseGuards(JwtAuthGuard)
+  async findOneWithJobMakePDF(
+    @Param('jobAppID') id: string,
+    @Res() res: Response,
+  ) {
+    const stream = await this.coverLettersService.findOneFromJobBuildPDF(id);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="resume-${id}.pdf"`);
+    return stream.pipe(res);
   }
 
   @Patch('jobApp/:jobAppID')

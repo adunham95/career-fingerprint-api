@@ -27,6 +27,8 @@ import path from 'path';
 import { SentryGlobalFilter, SentryModule } from '@sentry/nestjs/setup';
 import { APP_FILTER } from '@nestjs/core';
 import { CoverLettersModule } from './cover-letters/cover-letters.module';
+import { PdfService } from './pdf/pdf.service';
+import { PdfModule } from './pdf/pdf.module';
 
 @Module({
   imports: [
@@ -79,6 +81,7 @@ import { CoverLettersModule } from './cover-letters/cover-letters.module';
     FeedbackModule,
     TasksModule,
     CoverLettersModule,
+    PdfModule,
   ],
   controllers: [AppController],
   providers: [
@@ -87,6 +90,7 @@ import { CoverLettersModule } from './cover-letters/cover-letters.module';
       useClass: SentryGlobalFilter,
     },
     AppService,
+    PdfService,
   ],
 })
 export class AppModule {}

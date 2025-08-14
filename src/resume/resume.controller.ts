@@ -10,13 +10,14 @@ import {
   Req,
   HttpException,
   HttpStatus,
+  Res,
 } from '@nestjs/common';
 import { ResumeService } from './resume.service';
 import { CreateResumeDto } from './dto/create-resume.dto';
 import { UpdateResumeDto } from './dto/update-resume.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 
 @Controller('resume')
 export class ResumeController {
@@ -50,6 +51,14 @@ export class ResumeController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.resumeService.findOne(id);
+  }
+
+  @Get(':id/pdf')
+  async findOneForPDF(@Param('id') id: string, @Res() res: Response) {
+    const stream = await this.resumeService.findOneAndBuildPDF(id);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="resume-${id}.pdf"`);
+    return stream.pipe(res);
   }
 
   @Get(':id/duplicate')

@@ -2,10 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { CreateResumeDto } from './dto/create-resume.dto';
 import { UpdateResumeDto } from './dto/update-resume.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { PdfService } from 'src/pdf/pdf.service';
 
 @Injectable()
 export class ResumeService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private readonly pdfService: PdfService,
+  ) {}
   create(createResumeDto: CreateResumeDto) {
     return this.prisma.resume.create({ data: createResumeDto });
   }
@@ -20,6 +24,35 @@ export class ResumeService {
 
   findOne(id: string) {
     return this.prisma.resume.findFirst({ where: { id } });
+  }
+
+  async findOneAndBuildPDF(id: string) {
+    const resume = await this.prisma.resume.findFirst({
+      where: { id },
+      include: { user: true },
+    });
+
+    if (!resume) {
+      throw new Error('Resume not found');
+    }
+    const jobPositions = await this.prisma.jobPosition.findMany({
+      where: { userID: resume.userID },
+      orderBy: { startDate: 'desc' },
+      include: {
+        jobOptions: {
+          where: {
+            resumeID: id,
+          },
+        },
+      },
+    });
+
+    const education = await this.prisma.education.findMany({
+      orderBy: { startDate: 'desc' },
+      where: { userID: resume.userID },
+    });
+    console.log({ resume });
+    return this.pdfService.createResume(resume, jobPositions, education);
   }
 
   async duplicateResume(id: string) {

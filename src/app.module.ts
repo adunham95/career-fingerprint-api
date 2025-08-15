@@ -29,6 +29,7 @@ import { APP_FILTER } from '@nestjs/core';
 import { CoverLettersModule } from './cover-letters/cover-letters.module';
 import { PdfService } from './pdf/pdf.service';
 import { PdfModule } from './pdf/pdf.module';
+import { BulletPointsModule } from './bullet-points/bullet-points.module';
 
 @Module({
   imports: [
@@ -82,6 +83,7 @@ import { PdfModule } from './pdf/pdf.module';
     TasksModule,
     CoverLettersModule,
     PdfModule,
+    BulletPointsModule,
   ],
   controllers: [AppController],
   providers: [

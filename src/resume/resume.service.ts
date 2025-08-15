@@ -46,6 +46,7 @@ export class ResumeService {
     const education = await this.prisma.education.findMany({
       orderBy: { startDate: 'desc' },
       where: { userID: resume.userID },
+      include: { bulletPoints: true },
     });
     console.log({ resume });
     return this.pdfService.createResume(resume, jobPositions, education);

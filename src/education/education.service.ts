@@ -18,7 +18,10 @@ export class EducationService {
   findMyEducation(userID: number) {
     return this.prisma.education.findMany({
       where: { userID },
-      include: { achievements: true },
+      include: {
+        achievements: true,
+        bulletPoints: { select: { id: true, text: true } },
+      },
     });
   }
 
@@ -26,10 +29,21 @@ export class EducationService {
     return this.prisma.education.findFirst({ where: { id } });
   }
 
-  update(id: string, updateEducationDto: UpdateEducationDto) {
+  async update(id: string, updateEducationDto: UpdateEducationDto) {
+    const { bulletPoints, ...updateEducation } = updateEducationDto;
+
+    if (bulletPoints) {
+      for (const bulletPoint of bulletPoints) {
+        await this.prisma.bulletPoint.update({
+          where: { id: bulletPoint.id },
+          data: { text: bulletPoint.text },
+        });
+      }
+    }
+
     return this.prisma.education.update({
       where: { id },
-      data: updateEducationDto,
+      data: updateEducation,
     });
   }
 

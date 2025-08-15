@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { CreateJobPositionDto } from './dto/create-job-position.dto';
+import {
+  CreateBulletPointDto,
+  CreateJobPositionDto,
+} from './dto/create-job-position.dto';
 import { UpdateJobPositionDto } from './dto/update-job-position.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 
@@ -14,6 +17,10 @@ export class JobPositionsService {
       createJobPositionDto.endDate = new Date(createJobPositionDto.endDate);
     }
     return this.prisma.jobPosition.create({ data: createJobPositionDto });
+  }
+
+  createBulletPoint(createBulletPointDto: CreateBulletPointDto) {
+    return this.prisma.bulletPoint.create({ data: createBulletPointDto });
   }
 
   async createFromJobApplication(userID: number, jobApplicationID: string) {
@@ -53,7 +60,10 @@ export class JobPositionsService {
     return this.prisma.jobPosition.findMany({
       where: { userID },
       orderBy: { startDate: { sort: 'desc', nulls: 'last' } },
-      include: { achievements: true },
+      include: {
+        achievements: true,
+        bulletPoints: { select: { text: true, id: true } },
+      },
     });
   }
 
@@ -61,20 +71,35 @@ export class JobPositionsService {
     return this.prisma.jobPosition.findFirst({ where: { id } });
   }
 
-  update(id: string, updateJobPositionDto: UpdateJobPositionDto) {
+  async update(id: string, updateJobPositionDto: UpdateJobPositionDto) {
     if (updateJobPositionDto.startDate) {
       updateJobPositionDto.startDate = new Date(updateJobPositionDto.startDate);
     }
     if (updateJobPositionDto.endDate) {
       updateJobPositionDto.endDate = new Date(updateJobPositionDto.endDate);
     }
+    const { bulletPoints, ...updateJobPosition } = updateJobPositionDto;
+
+    if (bulletPoints) {
+      for (const bulletPoint of bulletPoints) {
+        await this.prisma.bulletPoint.update({
+          where: { id: bulletPoint.id },
+          data: { text: bulletPoint.text },
+        });
+      }
+    }
+
     return this.prisma.jobPosition.update({
       where: { id },
-      data: updateJobPositionDto,
+      data: updateJobPosition,
     });
   }
 
   remove(id: string) {
     return this.prisma.jobPosition.delete({ where: { id } });
+  }
+
+  removeBulletPoint(id: string) {
+    return this.prisma.bulletPoint.delete({ where: { id } });
   }
 }

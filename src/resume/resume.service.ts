@@ -39,11 +39,7 @@ export class ResumeService {
       where: { userID: resume.userID },
       orderBy: { startDate: 'desc' },
       include: {
-        jobOptions: {
-          where: {
-            resumeID: id,
-          },
-        },
+        bulletPoints: true,
       },
     });
 

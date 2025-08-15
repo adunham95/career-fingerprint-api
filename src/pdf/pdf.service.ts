@@ -3,7 +3,7 @@ import PdfPrinter from 'pdfmake';
 import { PassThrough } from 'stream';
 import type { TDocumentDefinitions } from 'pdfmake/interfaces';
 import path from 'path';
-import { Education, JobPosition, Prisma } from '@prisma/client';
+import { Education, Prisma } from '@prisma/client';
 
 const fonts = {
   Roboto: {
@@ -49,6 +49,10 @@ type CoverLetterWithUser = Prisma.CoverLetterGetPayload<{
   include: { user: true; jobApplication: true };
 }>;
 
+type JobPositionWithBulletPoints = Prisma.JobPositionGetPayload<{
+  include: { bulletPoints: true };
+}>;
+
 @Injectable()
 export class PdfService {
   private printer: PdfPrinter;
@@ -59,7 +63,7 @@ export class PdfService {
 
   createResume(
     resumeData: ResumeWithUser,
-    jobPositions: JobPosition[],
+    jobPositions: JobPositionWithBulletPoints[],
     education: Education[],
   ) {
     const docDefinition: TDocumentDefinitions = {
@@ -133,6 +137,11 @@ export class PdfService {
               ],
             },
             { text: exp.description, style: 'jobDescription' },
+            {
+              ul: exp.bulletPoints
+                .filter((bp) => bp.text !== '')
+                .map((bp) => bp.text),
+            },
           ];
         }),
 

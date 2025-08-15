@@ -50,6 +50,7 @@ model User {
   prepAnswers      PrepAnswer[]
   achievementTags  AchievementTag[]
   coverLetter      CoverLetter[]
+  bulletPoints     BulletPoint[]
 
   @@index([email])
 }
@@ -120,34 +121,38 @@ model SubscriptionEvent {
 }
 
 model Resume {
-  id          String       @id @default(uuid())
-  name        String?
-  userID      Int
-  user        User         @relation(fields: [userID], references: [id])
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  default     Boolean      @default(false)
-  firstName   String       @default("")
-  lastName    String       @default("")
-  email       String       @default("")
-  summary     String       @default("")
-  phoneNumber String       @default("")
-  location    String       @default("")
-  website     String       @default("")
-  linkedin    String       @default("")
-  github      String       @default("")
-  title       String?
-  positions   JobOptions[]
+  id           String        @id @default(uuid())
+  name         String?
+  userID       Int
+  user         User          @relation(fields: [userID], references: [id])
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  default      Boolean       @default(false)
+  firstName    String        @default("")
+  lastName     String        @default("")
+  email        String        @default("")
+  summary      String        @default("")
+  phoneNumber  String        @default("")
+  location     String        @default("")
+  website      String        @default("")
+  linkedin     String        @default("")
+  github       String        @default("")
+  title        String?
+  positions    JobOptions[]
+  bulletPoints BulletPoint[]
 }
 
 model JobOptions {
   id                  String        @id @default(uuid())
-  resumeID            String?
-  resume              Resume?       @relation(fields: [resumeID], references: [id])
-  jobID               String?
-  job                 JobPosition?  @relation(fields: [jobID], references: [id])
+  resumeID            String
+  resume              Resume        @relation(fields: [resumeID], references: [id])
+  jobID               String
+  job                 JobPosition   @relation(fields: [jobID], references: [id])
   jobOverwrites       Json?
   visibleAchievements Achievement[] @relation("visibleAchievements")
+
+  @@unique([resumeID, jobID])
+  @@index([resumeID, jobID])
 }
 
 model JobPosition {
@@ -167,6 +172,22 @@ model JobPosition {
   projects        Project[]
   jobOptions      JobOptions[]
   meetings        Meeting[]
+  bulletPoints    BulletPoint[]
+}
+
+model BulletPoint {
+  id            String      @id @default(uuid())
+  userID        Int
+  user          User        @relation(fields: [userID], references: [id])
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  text          String
+  jobPosition   JobPosition @relation(fields: [jobPositionID], references: [id])
+  jobPositionID String
+  resumeID      String
+  resume        Resume      @relation(fields: [resumeID], references: [id])
+
+  @@index([text, resumeID])
 }
 
 model Achievement {

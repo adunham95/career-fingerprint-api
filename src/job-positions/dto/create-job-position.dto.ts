@@ -33,3 +33,18 @@ export class CreateJobPositionDto {
 
   userID: number;
 }
+
+export class CreateBulletPointDto {
+  jobPositionID: string;
+
+  @ApiProperty({ default: '' })
+  @IsString()
+  @IsOptional()
+  text: string = '';
+
+  userID: number;
+
+  @ApiProperty()
+  @IsString()
+  resumeID: string;
+}

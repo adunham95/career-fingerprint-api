@@ -34,6 +34,8 @@ export class UserEntity implements User {
 
   stripeCustomerID: string | null;
 
+  inviteCode: string | null;
+
   subscriptions?: Subscription[];
 
   subscription?: Subscription;

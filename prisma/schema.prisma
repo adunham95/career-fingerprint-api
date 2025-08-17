@@ -23,36 +23,52 @@ datasource db {
 }
 
 model User {
-  id               Int              @id @default(autoincrement())
-  firstName        String           @default("")
-  lastName         String           @default("")
-  username         String?          @unique
-  password         String
-  profileImage     String?          @default("")
-  email            String           @unique
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-  accountStatus    String           @default("active")
-  pitch            String?
-  lookingFor       String?
-  stripeCustomerID String?
-  resume           Resume[]
-  positions        JobPosition[]
-  achievements     Achievement[]
-  projects         Project[]
-  education        Education[]
-  subscriptions    Subscription[]
-  jobApplications  JobApplication[]
-  notes            Note[]
-  meetings         Meeting[]
-  resetTokens      ResetToken[]
-  highlights       Highlight[]
-  prepAnswers      PrepAnswer[]
-  achievementTags  AchievementTag[]
-  coverLetter      CoverLetter[]
-  bulletPoints     BulletPoint[]
+  id                  Int                @id @default(autoincrement())
+  firstName           String             @default("")
+  lastName            String             @default("")
+  username            String?            @unique
+  password            String
+  profileImage        String?            @default("")
+  email               String             @unique
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  accountStatus       String             @default("active")
+  pitch               String?
+  lookingFor          String?
+  stripeCustomerID    String?
+  inviteCode          String?
+  resume              Resume[]
+  positions           JobPosition[]
+  achievements        Achievement[]
+  projects            Project[]
+  education           Education[]
+  subscriptions       Subscription[]
+  jobApplications     JobApplication[]
+  notes               Note[]
+  meetings            Meeting[]
+  resetTokens         ResetToken[]
+  highlights          Highlight[]
+  prepAnswers         PrepAnswer[]
+  achievementTags     AchievementTag[]
+  coverLetter         CoverLetter[]
+  bulletPoints        BulletPoint[]
+  sentRedemptions     InviteRedemption[] @relation("InviterRedemptions")
+  receivedRedemptions InviteRedemption[] @relation("InviteeRedemptions")
 
   @@index([email])
+}
+
+model InviteRedemption {
+  id            String   @id @default(uuid())
+  inviteCode    String
+  source        String?  @default("unknown")
+  inviterUserId Int
+  inviteeUserId Int
+  redeemedAt    DateTime @default(now())
+  inviter       User     @relation("InviterRedemptions", fields: [inviterUserId], references: [id])
+  invitee       User     @relation("InviteeRedemptions", fields: [inviteeUserId], references: [id])
+
+  @@unique([inviterUserId, inviteeUserId]) // prevent duplicate self-invites
 }
 
 model ResetToken {

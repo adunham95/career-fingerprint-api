@@ -4,6 +4,7 @@ import { Prisma, User } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import { StripeService } from 'src/stripe/stripe.service';
 import { MailService } from 'src/mail/mail.service';
+import { generateInviteString } from 'src/utils/generateReadableCode';
 
 export const roundsOfHashing = 10;
 
@@ -98,9 +99,36 @@ export class UsersService {
     });
   }
 
+  async newInviteCode(id: number): Promise<string> {
+    const inviteCode = await this.generateInviteCode();
+
+    await this.prisma.user.update({
+      where: { id },
+      data: {
+        inviteCode,
+      },
+    });
+
+    return inviteCode;
+  }
+
   private async hashPassword(password: string): Promise<string> {
     const saltRounds = 10;
     return await bcrypt.hash(password, saltRounds);
+  }
+
+  private async generateInviteCode(): Promise<string> {
+    const inviteCode = generateInviteString();
+
+    const currentCodes = await this.prisma.user.count({
+      where: { inviteCode },
+    });
+
+    if (currentCodes > 0) {
+      await this.generateInviteCode();
+    }
+
+    return inviteCode;
   }
 
   generateRandomString(length) {

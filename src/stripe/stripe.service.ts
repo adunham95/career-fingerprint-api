@@ -155,4 +155,24 @@ export class StripeService {
       checkoutSessionClientSecret: checkoutSession.client_secret,
     };
   }
+
+  async updateBillingDetails(user: User) {
+    const stripeUserID = user?.stripeCustomerID || '';
+    console.log({ stripeUserID });
+    if (stripeUserID === null || stripeUserID === '') {
+      throw Error('Missing stripeUserID');
+    }
+
+    try {
+      const checkoutSession = await this.stripe.setupIntents.create({
+        customer: stripeUserID,
+        payment_method_types: ['card'],
+      });
+      return {
+        checkoutSessionClientSecret: checkoutSession.client_secret,
+      };
+    } catch (error) {
+      console.log(error);
+    }
+  }
 }

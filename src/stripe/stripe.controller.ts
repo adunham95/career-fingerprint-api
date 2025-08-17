@@ -48,6 +48,15 @@ export class StripeController {
     );
   }
 
+  @Post('update-billing')
+  @UseGuards(JwtAuthGuard)
+  updateBilling(@Req() req: Request) {
+    if (!req.user) {
+      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+    }
+    return this.stripeService.updateBillingDetails(req.user);
+  }
+
   @Get('validate/:checkoutSession')
   validateSubscription(@Param('checkoutSession') checkoutSession: string) {
     return this.stripeService.validateSubscription(checkoutSession);

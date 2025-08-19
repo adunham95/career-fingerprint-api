@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Prisma, User } from '@prisma/client';
+import { InviteRedemption, Prisma, User } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import { StripeService } from 'src/stripe/stripe.service';
 import { MailService } from 'src/mail/mail.service';
@@ -100,6 +100,15 @@ export class UsersService {
   }
 
   async newInviteCode(id: number): Promise<string> {
+    const currentUserCode = await this.prisma.user.findFirst({
+      where: { id },
+      select: { inviteCode: true },
+    });
+
+    if (currentUserCode?.inviteCode) {
+      return currentUserCode.inviteCode;
+    }
+
     const inviteCode = await this.generateInviteCode();
 
     await this.prisma.user.update({
@@ -110,6 +119,12 @@ export class UsersService {
     });
 
     return inviteCode;
+  }
+
+  async inviteCodeStats(id: number): Promise<InviteRedemption[]> {
+    return this.prisma.inviteRedemption.findMany({
+      where: { inviterUserId: id },
+    });
   }
 
   private async hashPassword(password: string): Promise<string> {

@@ -44,6 +44,15 @@ export class UsersController {
     return this.usersService.newInviteCode(req.user.id);
   }
 
+  @Get('invite-stats')
+  @UseGuards(JwtAuthGuard)
+  getInviteCodeStats(@Req() req: Request) {
+    if (!req.user) {
+      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+    }
+    return this.usersService.inviteCodeStats(req.user.id);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.usersService.user({ id: +id });

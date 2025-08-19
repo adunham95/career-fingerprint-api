@@ -59,14 +59,17 @@ model User {
 }
 
 model InviteRedemption {
-  id            String   @id @default(uuid())
+  id            String    @id @default(uuid())
   inviteCode    String
-  source        String?  @default("unknown")
+  source        String?   @default("unknown")
   inviterUserId Int
   inviteeUserId Int
-  redeemedAt    DateTime @default(now())
-  inviter       User     @relation("InviterRedemptions", fields: [inviterUserId], references: [id])
-  invitee       User     @relation("InviteeRedemptions", fields: [inviteeUserId], references: [id])
+  redeemedAt    DateTime  @default(now())
+  rewardStatus  String    @default("pending")
+  eligibleAt    DateTime?
+  creditedAt    DateTime?
+  inviter       User      @relation("InviterRedemptions", fields: [inviterUserId], references: [id])
+  invitee       User      @relation("InviteeRedemptions", fields: [inviteeUserId], references: [id])
 
   @@unique([inviterUserId, inviteeUserId]) // prevent duplicate self-invites
 }

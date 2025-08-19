@@ -164,4 +164,60 @@ export class StripeWebhookController {
 
     res.status(HttpStatus.OK).send({ received: true });
   }
+
+  async handleInvoicePaid(invoice: Stripe.Invoice) {
+    const customerId = invoice.customer as string;
+
+    const invitee = await this.prisma.user.findFirst({
+      where: { stripeCustomerID: customerId },
+      include: { receivedRedemptions: true },
+    });
+
+    if (!invitee) return;
+
+    // only first real invoice after trial counts
+    if (invoice.billing_reason !== 'subscription_cycle') return;
+
+    const redemption = invitee?.receivedRedemptions[0];
+    if (!redemption) return;
+    if (redemption.rewardStatus !== 'pending') return;
+
+    let pmId: string | null = null;
+
+    // ✅ Step 1. Verify payment method
+    if ('payment_intent' in invoice && invoice.payment_intent) {
+      const pi = await this.stripe.paymentIntents.retrieve(
+        invoice.payment_intent as string,
+      );
+      pmId = pi.payment_method as string;
+    } else if (invoice.default_payment_method) {
+      pmId = invoice.default_payment_method as string;
+    }
+
+    if (!pmId) return;
+
+    const pm = await this.stripe.paymentMethods.retrieve(pmId);
+    if (pm.card) {
+      if (pm.card.funding === 'prepaid') {
+        // mark as failed / blocked
+        await this.prisma.inviteRedemption.update({
+          where: { id: redemption.id },
+          data: { rewardStatus: 'failed' },
+        });
+        return;
+      }
+    }
+
+    // ✅ Step 2. Set delayed eligibility (7 days buffer)
+    const eligibleDate = new Date();
+    eligibleDate.setDate(eligibleDate.getDate() + 7);
+
+    await this.prisma.inviteRedemption.update({
+      where: { id: redemption.id },
+      data: {
+        rewardStatus: 'eligible',
+        eligibleAt: eligibleDate,
+      },
+    });
+  }
 }

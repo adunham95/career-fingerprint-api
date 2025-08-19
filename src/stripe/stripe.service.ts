@@ -1,5 +1,6 @@
 import { InjectQueue } from '@nestjs/bull';
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { User } from '@prisma/client';
 import { Queue } from 'bull';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -49,9 +50,14 @@ export class StripeService {
     return stripeCustomer;
   }
 
-  async createTrialSubscription(user: User, priceID: string) {
+  async createTrialSubscription(
+    user: User,
+    priceID: string,
+    inviteCode?: string,
+  ) {
     let stripeUserID = user?.stripeCustomerID || '';
     console.log({ stripeUserID });
+
     if (stripeUserID === null || stripeUserID === '') {
       console.log('need to generate stripe customer');
       const stripeCustomer = await this.stripe.customers.create({
@@ -61,13 +67,32 @@ export class StripeService {
       stripeUserID = stripeCustomer.id;
     }
 
+    let validReferralCode = false;
+
+    if (inviteCode) {
+      const codeUser = await this.prisma.user.findFirst({
+        where: { inviteCode },
+      });
+
+      if (codeUser) {
+        validReferralCode = true;
+        await this.prisma.inviteRedemption.create({
+          data: {
+            inviteCode: inviteCode,
+            inviteeUserId: codeUser?.id,
+            inviterUserId: user.id,
+          },
+        });
+      }
+    }
+
     const subscription = await this.stripe.subscriptions.create({
       customer: stripeUserID,
       items: [{ price: priceID }],
       payment_settings: {
         save_default_payment_method: 'on_subscription',
       },
-      trial_period_days: 14,
+      trial_period_days: validReferralCode ? 30 : 14,
       metadata: {
         userId: user.id,
         planKey: 'Pro',
@@ -174,5 +199,42 @@ export class StripeService {
     } catch (error) {
       console.log(error);
     }
+  }
+
+  async processEligibleRewards() {
+    const now = new Date();
+    const eligible = await this.prisma.inviteRedemption.findMany({
+      where: {
+        rewardStatus: 'eligible',
+        eligibleAt: { lte: now },
+      },
+    });
+
+    for (const redemption of eligible) {
+      const inviter = await this.prisma.user.findUnique({
+        where: { id: redemption.inviterUserId },
+      });
+      if (!inviter?.stripeCustomerID) continue;
+
+      await this.stripe.customers.createBalanceTransaction(
+        inviter.stripeCustomerID,
+        {
+          amount: 200,
+          currency: 'usd',
+          description: 'Referral reward',
+        },
+      );
+
+      await this.prisma.inviteRedemption.update({
+        where: { id: redemption.id },
+        data: { rewardStatus: 'credited', creditedAt: new Date() },
+      });
+    }
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_2AM)
+  async runDailyReferralCredits() {
+    console.log('Running daily referral credit job...');
+    await this.processEligibleRewards();
   }
 }

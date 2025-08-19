@@ -30,6 +30,7 @@ export class StripeController {
     return this.stripeService.createTrialSubscription(
       req.user,
       createStripeSubscriptionDto.priceID,
+      createStripeSubscriptionDto.inviteCode,
     );
   }
 

@@ -53,6 +53,7 @@ export class StripeService {
   async createTrialSubscription(
     user: User,
     priceID: string,
+    planID: string,
     inviteCode?: string,
   ) {
     let stripeUserID = user?.stripeCustomerID || '';
@@ -96,11 +97,19 @@ export class StripeService {
       metadata: {
         userId: user.id,
         planKey: 'Pro',
+        planID,
       },
       trial_settings: {
         end_behavior: { missing_payment_method: 'cancel' },
       },
     });
+
+    // await this.prisma.subscription.create({
+    //   data: {
+    //     stripeSubId: subscription.id,
+    //     userID: user.id,
+    //   },
+    // });
 
     return subscription;
   }

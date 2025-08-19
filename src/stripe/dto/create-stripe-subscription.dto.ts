@@ -9,6 +9,10 @@ export class CreateStripeSubscriptionDto {
 
   @ApiProperty()
   @IsString()
+  planID: string;
+
+  @ApiProperty()
+  @IsString()
   @IsOptional()
   inviteCode: string;
 

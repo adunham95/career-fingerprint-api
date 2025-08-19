@@ -27,8 +27,9 @@ export class RegisterController {
     response.cookie('accessToken', accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 day
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+      domain: process.env.COOKIE_DOMAIN,
     });
     return { accessToken, user, plan };
   }

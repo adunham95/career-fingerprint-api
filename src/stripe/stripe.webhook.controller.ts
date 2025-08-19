@@ -124,7 +124,7 @@ export class StripeWebhookController {
       case 'customer.subscription.updated': {
         const newSubscription = event.data.object;
 
-        console.log('✅ New Subscription:', newSubscription);
+        console.log('✅ Updated Subscription:', newSubscription);
         break;
       }
       case 'customer.subscription.deleted': {

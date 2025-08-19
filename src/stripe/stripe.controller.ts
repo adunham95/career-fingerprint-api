@@ -27,10 +27,9 @@ export class StripeController {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
     }
+    createStripeSubscriptionDto.user = req.user;
     return this.stripeService.createTrialSubscription(
-      req.user,
-      createStripeSubscriptionDto.priceID,
-      createStripeSubscriptionDto.inviteCode,
+      createStripeSubscriptionDto,
     );
   }
 

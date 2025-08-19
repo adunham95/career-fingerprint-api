@@ -1,3 +1,4 @@
+import { CreateStripeSubscriptionDto } from './dto/create-stripe-subscription.dto';
 import { InjectQueue } from '@nestjs/bull';
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
@@ -50,12 +51,12 @@ export class StripeService {
     return stripeCustomer;
   }
 
-  async createTrialSubscription(
-    user: User,
-    priceID: string,
-    planID: string,
-    inviteCode?: string,
-  ) {
+  async createTrialSubscription({
+    user,
+    priceID,
+    planID,
+    inviteCode,
+  }: CreateStripeSubscriptionDto) {
     let stripeUserID = user?.stripeCustomerID || '';
     console.log({ stripeUserID });
 

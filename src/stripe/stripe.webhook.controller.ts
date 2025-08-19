@@ -59,6 +59,8 @@ export class StripeWebhookController {
         return { success: false };
       }
     }
+
+    console.log('stripe events', event.type);
     // 🎯 Handle the event
     switch (event.type) {
       case 'customer.updated':

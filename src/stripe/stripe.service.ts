@@ -104,12 +104,13 @@ export class StripeService {
       },
     });
 
-    // await this.prisma.subscription.create({
-    //   data: {
-    //     stripeSubId: subscription.id,
-    //     userID: user.id,
-    //   },
-    // });
+    await this.prisma.subscription.create({
+      data: {
+        stripeSubId: subscription.id,
+        userID: user.id,
+        planID,
+      },
+    });
 
     return subscription;
   }

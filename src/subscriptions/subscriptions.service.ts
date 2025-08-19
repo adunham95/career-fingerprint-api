@@ -47,7 +47,10 @@ export class SubscriptionsService {
     const nextPlanLevel = planLevel + 1;
 
     return this.prisma.plan.findFirst({
-      where: { level: nextPlanLevel, key: 'pro-beta' },
+      where: {
+        level: nextPlanLevel,
+        key: process.env.DEFAULT_SUBSCRIPTION_KEY || 'pro',
+      },
       select: {
         annualStripePriceID: true,
         monthlyStripePriceID: true,

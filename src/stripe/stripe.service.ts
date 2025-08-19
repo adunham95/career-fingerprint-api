@@ -96,7 +96,7 @@ export class StripeService {
       },
       trial_period_days: validReferralCode ? 30 : 14,
       metadata: {
-        userId: user.id,
+        userID: user.id,
         planKey: 'Pro',
         planID,
       },
@@ -168,8 +168,9 @@ export class StripeService {
       customer: stripeUserID,
       line_items: [{ price: priceID, quantity: 1 }],
       metadata: {
-        userId: user.id,
-        planKey: planDetails?.key || 'pro',
+        userID: user.id,
+        planKey: planDetails?.key || 'Pro',
+        planID: planDetails.id,
       },
       mode: 'subscription',
       return_url: `${this.frontEndUrl}/settings/membership/thank-you?session_id={CHECKOUT_SESSION_ID}`,

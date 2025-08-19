@@ -116,7 +116,7 @@ export class StripeWebhookController {
               userID: parseInt(newSubscription.metadata.userID),
               planID: newSubscription.metadata.planID,
               stripeSubId: newSubscription.id,
-              status: 'active',
+              status: newSubscription.status,
             },
           });
         break;

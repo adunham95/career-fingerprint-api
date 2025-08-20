@@ -11,11 +11,12 @@ import {
   HttpStatus,
   UseGuards,
   Query,
+  Res,
 } from '@nestjs/common';
 import { MeetingsService } from './meetings.service';
 import { CreateMeetingDto } from './dto/create-meeting.dto';
 import { UpdateMeetingDto } from './dto/update-meeting.dto';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import {
   MeetingQueryDto,
@@ -78,6 +79,18 @@ export class MeetingsController {
   @UseGuards(JwtAuthGuard)
   findOne(@Param('id') id: string, @Query() query: SingleMeetingQueryDto) {
     return this.meetingsService.findOne(id, query);
+  }
+
+  @Get(':id/pdf')
+  @UseGuards(JwtAuthGuard)
+  async findOnePrepPdfDoc(@Param('id') id: string, @Res() res: Response) {
+    const stream = await this.meetingsService.getPrepDocPdf(id);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `inline; filename="check-sheet-${id}.pdf"`,
+    );
+    return stream.pipe(res);
   }
 
   @Patch(':id')

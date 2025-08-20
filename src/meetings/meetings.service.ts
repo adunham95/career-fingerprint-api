@@ -3,10 +3,14 @@ import { CreateMeetingDto } from './dto/create-meeting.dto';
 import { UpdateMeetingDto } from './dto/update-meeting.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SingleMeetingQueryDto } from './dto/meeting-query.dto';
+import { PdfService } from 'src/pdf/pdf.service';
 
 @Injectable()
 export class MeetingsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private readonly pdfService: PdfService,
+  ) {}
 
   create(createMeetingDto: CreateMeetingDto) {
     console.log('create meeting', CreateMeetingDto);
@@ -162,6 +166,35 @@ export class MeetingsService {
       where: { id },
       data: updateMeetingDto,
     });
+  }
+
+  async getPrepDocPdf(id: string) {
+    const meeting = await this.prisma.meeting.findFirst({
+      where: { id },
+      include: {
+        jobApp: true,
+        jobPosition: true,
+        education: true,
+      },
+    });
+
+    if (!meeting) {
+      throw new Error('Missing Meeting');
+    }
+
+    const highlights = await this.prisma.highlight.findMany({
+      where: { meetingID: id },
+      include: { notes: true, achievements: true },
+    });
+
+    const answers = await this.prisma.prepAnswer.findMany({
+      where: {
+        OR: [{ meetingID: id }, { jobApplicationID: meeting?.jobAppID }],
+      },
+      include: { question: true },
+    });
+
+    return this.pdfService.createPrepDoc(meeting, answers, highlights);
   }
 
   remove(id: number) {

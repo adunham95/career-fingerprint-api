@@ -246,12 +246,8 @@ export class StripeService {
     promoID?: string;
     priceID: string;
   }) {
-    // const { customerId, priceId, promoCodeId } = body;
-
-    // 1. Build subscription items
     const subscriptionItems = [{ price: priceID, quantity: 1 }];
 
-    // 2. Use upcoming invoice API for preview
     const invoice = await this.stripe.invoices.createPreview({
       customer: stripeCustomerID,
       subscription_details: { items: subscriptionItems },
@@ -263,14 +259,14 @@ export class StripeService {
 
     return {
       currency: invoice.currency,
-      subtotal: invoice.subtotal, // before discounts/tax
+      subtotal: invoice.subtotal,
       discounts: (invoice.total_discount_amounts ?? []).map((d) => ({
         amount: d.amount,
         discountId: d.discount,
         promoCode: d.discount,
       })),
       tax: invoice.total_taxes,
-      total: invoice.total, // final amount due
+      total: invoice.total,
       formatted: {
         subtotal: (invoice.subtotal / 100).toFixed(2),
         total: (invoice.total / 100).toFixed(2),

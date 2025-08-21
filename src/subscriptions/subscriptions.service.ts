@@ -52,6 +52,7 @@ export class SubscriptionsService {
         key: process.env.DEFAULT_SUBSCRIPTION_KEY || 'pro',
       },
       select: {
+        id: true,
         annualStripePriceID: true,
         monthlyStripePriceID: true,
         priceCents: true,

@@ -45,6 +45,7 @@ export class StripeController {
     return this.stripeService.createCheckoutSession(
       req.user,
       createCheckoutSessionDto.priceID,
+      createCheckoutSessionDto.couponID,
     );
   }
 
@@ -60,5 +61,32 @@ export class StripeController {
   @Get('validate/:checkoutSession')
   validateSubscription(@Param('checkoutSession') checkoutSession: string) {
     return this.stripeService.validateSubscription(checkoutSession);
+  }
+
+  @Post('validate-promo')
+  async validatePromo(@Body('code') code: string) {
+    return this.stripeService.validatePromo(code);
+  }
+
+  @Post('estimate')
+  @UseGuards(JwtAuthGuard)
+  async estimate(
+    @Req() req: Request,
+    @Body()
+    createEstimateDto: {
+      promoID?: string;
+      priceID: string;
+      stripeCustomerID: string;
+    },
+  ) {
+    if (!req.user) {
+      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+    }
+    if (!req.user.stripeCustomerID) {
+      console.log('User has no stripe credentials');
+      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+    }
+    createEstimateDto.stripeCustomerID = req.user.stripeCustomerID;
+    return this.stripeService.estimate(createEstimateDto);
   }
 }

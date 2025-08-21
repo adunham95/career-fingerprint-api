@@ -14,6 +14,11 @@ export class CreateStripeSubscriptionDto {
   @ApiProperty()
   @IsString()
   @IsOptional()
+  couponID: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
   inviteCode: string;
 
   user: User;

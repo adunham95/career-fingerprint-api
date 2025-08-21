@@ -142,8 +142,8 @@ export class StripeService {
     });
   }
 
-  async createCheckoutSession(user: User, priceID: string) {
-    console.log({ priceID });
+  async createCheckoutSession(user: User, priceID: string, couponID?: string) {
+    console.log({ priceID, couponID });
     const stripeUserID = user?.stripeCustomerID || '';
     console.log({ stripeUserID });
     if (stripeUserID === null || stripeUserID === '') {
@@ -172,6 +172,11 @@ export class StripeService {
         planKey: planDetails?.key || 'Pro',
         planID: planDetails.id,
       },
+      discounts: [
+        {
+          promotion_code: couponID,
+        },
+      ],
       mode: 'subscription',
       return_url: `${this.frontEndUrl}/settings/membership/thank-you?session_id={CHECKOUT_SESSION_ID}`,
       expand: ['subscription'],
@@ -211,6 +216,71 @@ export class StripeService {
     } catch (error) {
       console.log(error);
     }
+  }
+
+  async validatePromo(code: string) {
+    const promo = await this.stripe.promotionCodes.list({
+      code,
+      active: true,
+      limit: 1,
+    });
+
+    if (!promo.data.length) {
+      return { valid: false };
+    }
+
+    return {
+      valid: true,
+      details: promo.data[0].coupon,
+      id: promo.data[0].id,
+      code: promo.data[0].code,
+    };
+  }
+
+  async estimate({
+    stripeCustomerID,
+    promoID,
+    priceID,
+  }: {
+    stripeCustomerID: string;
+    promoID?: string;
+    priceID: string;
+  }) {
+    // const { customerId, priceId, promoCodeId } = body;
+
+    // 1. Build subscription items
+    const subscriptionItems = [{ price: priceID, quantity: 1 }];
+
+    // 2. Use upcoming invoice API for preview
+    const invoice = await this.stripe.invoices.createPreview({
+      customer: stripeCustomerID,
+      subscription_details: { items: subscriptionItems },
+      discounts: promoID ? [{ promotion_code: promoID }] : undefined,
+      automatic_tax: { enabled: true }, // ensures tax is included
+    });
+
+    console.log({ invoice });
+
+    return {
+      currency: invoice.currency,
+      subtotal: invoice.subtotal, // before discounts/tax
+      discounts: (invoice.total_discount_amounts ?? []).map((d) => ({
+        amount: d.amount,
+        discountId: d.discount,
+        promoCode: d.discount,
+      })),
+      tax: invoice.total_taxes,
+      total: invoice.total, // final amount due
+      formatted: {
+        subtotal: (invoice.subtotal / 100).toFixed(2),
+        total: (invoice.total / 100).toFixed(2),
+      },
+      lineItems: invoice.lines.data.map((line) => ({
+        description: line.description,
+        amount: line.amount,
+        currency: line.currency,
+      })),
+    };
   }
 
   async processEligibleRewards() {

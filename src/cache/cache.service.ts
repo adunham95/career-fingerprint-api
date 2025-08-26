@@ -24,7 +24,10 @@ export class CacheService {
     ttlSeconds = 300,
   ): Promise<T> {
     const cached = await this.get<T>(key);
-    if (cached) return cached;
+    if (cached) {
+      console.log('returning cached result', key);
+      return cached;
+    }
 
     const value = await fetchFn();
     if (value !== undefined && value !== null) {

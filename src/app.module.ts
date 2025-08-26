@@ -36,6 +36,7 @@ import { OrgModule } from './org/org.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { createKeyv } from '@keyv/redis';
 import { CacheService } from './cache/cache.service';
+import { CacheModule as CustomCacheModule } from './cache/cache.module';
 
 @Module({
   imports: [
@@ -93,12 +94,14 @@ import { CacheService } from './cache/cache.service';
     AuthCookieModule,
     OrgModule,
     CacheModule.registerAsync({
+      isGlobal: true,
       useFactory: () => {
         return {
           stores: [createKeyv(process.env.REDIS_URL)],
         };
       },
     }),
+    CustomCacheModule,
   ],
   controllers: [AppController],
   providers: [
@@ -111,6 +114,5 @@ import { CacheService } from './cache/cache.service';
     AuthCookieService,
     CacheService,
   ],
-  exports: [CacheService],
 })
 export class AppModule {}

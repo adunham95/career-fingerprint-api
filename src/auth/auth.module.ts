@@ -9,6 +9,7 @@ import { AuthController } from './auth.controller';
 import { SubscriptionsModule } from 'src/subscriptions/subscriptions.module';
 import { MailModule } from 'src/mail/mail.module';
 import { AuthCookieModule } from 'src/authcookie/authcookie.module';
+import { CacheModule } from 'src/cache/cache.module';
 
 export const jwtSecret = process.env.SECRET || '123abc';
 
@@ -24,6 +25,7 @@ export const jwtSecret = process.env.SECRET || '123abc';
     SubscriptionsModule,
     MailModule,
     AuthCookieModule,
+    CacheModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],

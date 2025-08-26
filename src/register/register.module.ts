@@ -7,6 +7,7 @@ import { AuthModule } from 'src/auth/auth.module';
 import { StripeModule } from 'src/stripe/stripe.module';
 import { AuthCookieModule } from 'src/authcookie/authcookie.module';
 import { OrgModule } from 'src/org/org.module';
+import { CacheModule } from 'src/cache/cache.module';
 
 @Module({
   controllers: [RegisterController],
@@ -18,6 +19,7 @@ import { OrgModule } from 'src/org/org.module';
     StripeModule,
     AuthCookieModule,
     OrgModule,
+    CacheModule,
   ],
 })
 export class RegisterModule {}

@@ -18,9 +18,11 @@ export class UsersService {
 
   async user(
     userWhereUniqueInput: Prisma.UserWhereUniqueInput,
+    userIncludeInput?: Prisma.UserInclude,
   ): Promise<User | null> {
     return this.prisma.user.findUnique({
       where: userWhereUniqueInput,
+      include: userIncludeInput,
     });
   }
 
@@ -64,7 +66,7 @@ export class UsersService {
       },
     });
 
-    await this.stripeService.newStripeCustomer(user);
+    await this.stripeService.newStripeCustomer({ user });
 
     await this.mailService.sendWelcomeEmail({
       to: user.email,

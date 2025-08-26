@@ -34,7 +34,10 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   async validate(payload: { userID: number }) {
     console.log('validate');
     console.log({ payload });
-    const user = await this.usersService.user({ id: payload.userID });
+    const user = await this.usersService.user(
+      { id: payload.userID },
+      { org: true },
+    );
 
     if (!user) {
       throw new UnauthorizedException();
@@ -44,7 +47,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
 
     const planLevel = subscription?.plan?.level ?? 0; // 0 = Free
 
-    // console.log({ user, planLevel });
+    console.log({ user });
 
     return { ...user, planLevel, subscription };
   }

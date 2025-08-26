@@ -123,6 +123,28 @@ async function main() {
     },
   });
 
+  await prisma.plan.upsert({
+    where: { key: 'organization' },
+    update: {
+      description: 'For people who want to elevate there career',
+      featureList: [
+        'Meeting Cheat Sheet',
+        'Meeting Prep',
+        'Reminder Achievement Emails',
+      ],
+    },
+    create: {
+      name: 'Organization',
+      key: 'organization',
+      description:
+        'For organizations to provide subscriptions to large organizations of people',
+      featureList: ['People Management', 'Subscription Management'],
+      level: 3,
+      priceCents: 1000,
+      interval: 'per 100',
+    },
+  });
+
   // Prep Question One
   await prisma.prepQuestion.upsert({
     where: { key: 'about-company' },

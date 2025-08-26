@@ -1,13 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { CreateRegisterDto } from './dto/create-register.dto';
+import {
+  CreateRegisterDto,
+  CreateRegisterOrgDto,
+} from './dto/create-register.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UsersService } from 'src/users/users.service';
 import { Plan } from '@prisma/client';
+import { OrgService } from 'src/org/org.service';
 @Injectable()
 export class RegisterService {
   constructor(
     private prisma: PrismaService,
     private users: UsersService,
+    private org: OrgService,
   ) {}
   async registerNewUser(createRegisterDto: CreateRegisterDto) {
     const newUser = await this.users.createUser({
@@ -71,5 +76,23 @@ export class RegisterService {
     }
 
     return { user: newUser, plan };
+  }
+
+  async registerNewOrg(createRegisterOrgDto: CreateRegisterOrgDto) {
+    const newUser = await this.users.createUser({
+      email: createRegisterOrgDto.email,
+      password: createRegisterOrgDto.password,
+      firstName: createRegisterOrgDto.firstName,
+      lastName: createRegisterOrgDto.lastName,
+    });
+
+    const newOrg = await this.org.create({
+      orgDomain: createRegisterOrgDto.orgDomain,
+      orgEmail: createRegisterOrgDto.orgEmail,
+      orgName: createRegisterOrgDto.orgName,
+      orgSize: createRegisterOrgDto.orgSize,
+      admin: newUser.id,
+    });
+    return { user: newUser, org: newOrg };
   }
 }

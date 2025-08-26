@@ -30,6 +30,9 @@ import { CoverLettersModule } from './cover-letters/cover-letters.module';
 import { PdfService } from './pdf/pdf.service';
 import { PdfModule } from './pdf/pdf.module';
 import { BulletPointsModule } from './bullet-points/bullet-points.module';
+import { AuthCookieService } from './authcookie/authcookie.service';
+import { AuthCookieModule } from './authcookie/authcookie.module';
+import { OrgModule } from './org/org.module';
 
 @Module({
   imports: [
@@ -84,6 +87,8 @@ import { BulletPointsModule } from './bullet-points/bullet-points.module';
     CoverLettersModule,
     PdfModule,
     BulletPointsModule,
+    AuthCookieModule,
+    OrgModule,
   ],
   controllers: [AppController],
   providers: [
@@ -93,6 +98,7 @@ import { BulletPointsModule } from './bullet-points/bullet-points.module';
     },
     AppService,
     PdfService,
+    AuthCookieService,
   ],
 })
 export class AppModule {}

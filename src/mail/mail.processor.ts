@@ -86,7 +86,8 @@ export class MailProcessor {
       });
       console.log(`✅ Email sent to ${to}`);
     } catch (error) {
-      console.log(`❎ Email not sent`, error);
+      console.log(`❌ Email not sent`, error);
+      throw error;
     }
   }
 
@@ -119,7 +120,8 @@ export class MailProcessor {
       });
       console.log(`✅ Email sent to ${to}`);
     } catch (error) {
-      console.log(`❎ Email not sent`, error);
+      console.log(`❌ Email not sent`, error);
+      throw error;
     }
   }
 
@@ -151,7 +153,8 @@ export class MailProcessor {
       });
       console.log(`✅ Email sent to ${to}`);
     } catch (error) {
-      console.log(`❎ Email not sent`, error);
+      console.log(`❌ Email not sent`, error);
+      throw error;
     }
   }
 
@@ -184,7 +187,8 @@ export class MailProcessor {
       });
       console.log(`✅ Email sent to ${to}`);
     } catch (error) {
-      console.log(`❎ Email not sent`, error);
+      console.log(`❌ Email not sent`, error);
+      throw error;
     }
   }
 
@@ -218,7 +222,8 @@ export class MailProcessor {
       });
       console.log(`✅ Email sent to ${to}`);
     } catch (error) {
-      console.log(`❎ Email not sent`, error);
+      console.log(`❌ Email not sent`, error);
+      throw error;
     }
   }
 }

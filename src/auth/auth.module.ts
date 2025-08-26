@@ -8,6 +8,7 @@ import { JwtStrategy } from './jwt.strategy';
 import { AuthController } from './auth.controller';
 import { SubscriptionsModule } from 'src/subscriptions/subscriptions.module';
 import { MailModule } from 'src/mail/mail.module';
+import { AuthCookieModule } from 'src/authcookie/authcookie.module';
 
 export const jwtSecret = process.env.SECRET || '123abc';
 
@@ -22,6 +23,7 @@ export const jwtSecret = process.env.SECRET || '123abc';
     UsersModule,
     SubscriptionsModule,
     MailModule,
+    AuthCookieModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],

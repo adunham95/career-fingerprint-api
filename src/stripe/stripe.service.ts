@@ -2,9 +2,10 @@ import { CreateStripeSubscriptionDto } from './dto/create-stripe-subscription.dt
 import { InjectQueue } from '@nestjs/bull';
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { User } from '@prisma/client';
+import { Organization, User } from '@prisma/client';
 import { Queue } from 'bull';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { UserEntity } from 'src/users/entities/user.entity';
 import Stripe from 'stripe';
 
 @Injectable()
@@ -28,27 +29,45 @@ export class StripeService {
     return this.stripe;
   }
 
-  async newStripeCustomer(
-    user: Partial<User> & Pick<User, 'id' | 'email'>,
-    address?: { county: string; postal_code: string },
-  ) {
+  async newStripeCustomer({
+    user,
+    org,
+    address,
+  }: {
+    user?: Partial<User> & Pick<User, 'id' | 'email'>;
+    org?: Partial<Organization> & Pick<Organization, 'id' | 'email'>;
+    address?: { county: string; postal_code: string };
+  }) {
     await this.stripeQueue.add('linkToStripe', {
       user,
+      org,
       address,
     });
   }
 
   async createStripeCustomer(
-    user: Partial<User> & Pick<User, 'id' | 'email'>,
+    user?: Partial<User> & Pick<User, 'id' | 'email'>,
+    org?: Partial<Organization> & Pick<Organization, 'id' | 'email'>,
     address?: { county: string; postal_code: string },
   ) {
-    const stripeCustomer = await this.stripe.customers.create({
-      email: user.email,
-      address,
-      metadata: { userID: user?.id },
-    });
+    if (user) {
+      return this.stripe.customers.create({
+        email: user.email,
+        name: `${user.firstName} ${user.lastName}`,
+        address,
+        metadata: { userID: user?.id },
+      });
+    }
+    if (org) {
+      return await this.stripe.customers.create({
+        email: org.email,
+        name: org.name,
+        address,
+        metadata: { orgID: org.id },
+      });
+    }
 
-    return stripeCustomer;
+    throw Error('No User or Org');
   }
 
   async createTrialSubscription({
@@ -142,7 +161,11 @@ export class StripeService {
     });
   }
 
-  async createCheckoutSession(user: User, priceID: string, couponID?: string) {
+  async createCheckoutSession(
+    user: UserEntity,
+    priceID: string,
+    couponID?: string,
+  ) {
     console.log({ priceID, couponID });
     const stripeUserID = user?.stripeCustomerID || '';
     console.log({ stripeUserID });
@@ -198,6 +221,69 @@ export class StripeService {
     };
   }
 
+  async createCheckoutSessionForOrg(
+    user: UserEntity,
+    priceID: string,
+    quantity: number,
+    couponID?: string,
+  ) {
+    console.log({ priceID, couponID });
+    console.log({ user });
+    const stripeUserID = user?.org?.stripeCustomerID || '';
+    console.log({ stripeUserID });
+    if (stripeUserID === null || stripeUserID === '') {
+      throw Error('Missing stripeUserID');
+    }
+
+    const planDetails = await this.prisma.plan.findFirst({
+      where: {
+        OR: [
+          { annualStripePriceID: priceID },
+          { monthlyStripePriceID: priceID },
+        ],
+      },
+    });
+
+    if (!planDetails) {
+      throw new Error(`No plan found for price ID: ${priceID}`);
+    }
+
+    const checkoutSession = await this.stripe.checkout.sessions.create({
+      ui_mode: 'custom',
+      customer: stripeUserID,
+      line_items: [{ price: priceID, quantity }],
+      metadata: {
+        userID: user.id,
+        planKey: planDetails?.key || 'Pro',
+        planID: planDetails.id,
+        orgID: user.orgID,
+      },
+      discounts: [
+        {
+          promotion_code: couponID,
+        },
+      ],
+      mode: 'subscription',
+      return_url: `${this.frontEndUrl}/org/thank-you?session_id={CHECKOUT_SESSION_ID}`,
+      expand: ['subscription'],
+    });
+
+    console.log({ checkoutSession });
+
+    await this.prisma.subscription.create({
+      data: {
+        planID: planDetails.id,
+        orgID: user.orgID,
+        stripeSessionID: checkoutSession.id,
+        status: 'checkout',
+      },
+    });
+
+    return {
+      checkoutSessionClientSecret: checkoutSession.client_secret,
+    };
+  }
+
   async updateBillingDetails(user: User) {
     const stripeUserID = user?.stripeCustomerID || '';
     console.log({ stripeUserID });
@@ -241,12 +327,14 @@ export class StripeService {
     stripeCustomerID,
     promoID,
     priceID,
+    quantity = 1,
   }: {
-    stripeCustomerID: string;
+    stripeCustomerID?: string;
     promoID?: string;
     priceID: string;
+    quantity?: number;
   }) {
-    const subscriptionItems = [{ price: priceID, quantity: 1 }];
+    const subscriptionItems = [{ price: priceID, quantity }];
 
     const invoice = await this.stripe.invoices.createPreview({
       customer: stripeCustomerID,

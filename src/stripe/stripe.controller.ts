@@ -12,7 +12,10 @@ import {
 import { StripeService } from './stripe.service';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { Request } from 'express';
-import { CreateStripeSubscriptionDto } from './dto/create-stripe-subscription.dto';
+import {
+  CreateStripeOrgSubscriptionDto,
+  CreateStripeSubscriptionDto,
+} from './dto/create-stripe-subscription.dto';
 
 @Controller('stripe')
 export class StripeController {
@@ -49,6 +52,23 @@ export class StripeController {
     );
   }
 
+  @Post('create-checkout-session/org')
+  @UseGuards(JwtAuthGuard)
+  createCheckoutOrgSession(
+    @Body() createCheckoutSessionDto: CreateStripeOrgSubscriptionDto,
+    @Req() req: Request,
+  ) {
+    if (!req.user) {
+      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+    }
+    return this.stripeService.createCheckoutSessionForOrg(
+      req.user,
+      createCheckoutSessionDto.priceID,
+      createCheckoutSessionDto.quantity,
+      createCheckoutSessionDto.couponID,
+    );
+  }
+
   @Post('update-billing')
   @UseGuards(JwtAuthGuard)
   updateBilling(@Req() req: Request) {
@@ -79,14 +99,9 @@ export class StripeController {
       stripeCustomerID: string;
     },
   ) {
-    if (!req.user) {
-      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+    if (req?.user?.stripeCustomerID) {
+      createEstimateDto.stripeCustomerID = req.user.stripeCustomerID;
     }
-    if (!req.user.stripeCustomerID) {
-      console.log('User has no stripe credentials');
-      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
-    }
-    createEstimateDto.stripeCustomerID = req.user.stripeCustomerID;
     return this.stripeService.estimate(createEstimateDto);
   }
 }

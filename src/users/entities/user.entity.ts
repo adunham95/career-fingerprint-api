@@ -1,4 +1,4 @@
-import { Subscription, User } from '@prisma/client';
+import { Organization, Subscription, User } from '@prisma/client';
 
 export class UserEntity implements User {
   constructor({ subscriptions = [], ...partial }: Partial<UserEntity>) {
@@ -35,6 +35,10 @@ export class UserEntity implements User {
   stripeCustomerID: string | null;
 
   inviteCode: string | null;
+
+  orgID: string | null;
+
+  org: Organization;
 
   subscriptions?: Subscription[];
 

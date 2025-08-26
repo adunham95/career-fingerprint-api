@@ -19,14 +19,17 @@ import {
 import { Request, Response } from 'express';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { UserEntity } from 'src/users/entities/user.entity';
+import { AuthCookieService } from 'src/authcookie/authcookie.service';
 
 @Controller('auth')
 @ApiTags('Auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private authCookieService: AuthCookieService,
+  ) {}
 
   @Post('login')
-  // @ApiOkResponse({ type: AuthEntity })
   async login(
     @Body() { email, password }: LoginDto,
     @Res({ passthrough: true }) response: Response,
@@ -40,13 +43,7 @@ export class AuthController {
       secure: process.env.NODE_ENV === 'production',
       cookieDomain: process.env.COOKIE_DOMAIN,
     });
-    response.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: 1000 * 60 * 60 * 24 * 7,
-      domain: process.env.COOKIE_DOMAIN,
-    });
+    this.authCookieService.setAuthCookie(response, accessToken);
     return { accessToken, user };
   }
 
@@ -73,13 +70,7 @@ export class AuthController {
 
   @Get('logout')
   logout(@Req() req: Request, @Res({ passthrough: true }) response: Response) {
-    response.cookie('accessToken', '', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge: -1,
-      domain: process.env.COOKIE_DOMAIN,
-    });
+    this.authCookieService.clearAuthCookie(response);
     return { success: true };
   }
 }

@@ -54,8 +54,25 @@ model User {
   bulletPoints        BulletPoint[]
   sentRedemptions     InviteRedemption[] @relation("InviterRedemptions")
   receivedRedemptions InviteRedemption[] @relation("InviteeRedemptions")
+  orgID               String?
+  org                 Organization?      @relation(fields: [orgID], references: [id])
 
   @@index([email])
+}
+
+model Organization {
+  id                   String         @id @default(uuid())
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+  name                 String
+  domain               String?
+  domainVerified       Boolean?       @default(false)
+  seatCount            Int            @default(100)
+  stripeCustomerID     String?
+  email                String
+  admins               User[]
+  managedSubscriptions Subscription[] @relation("managedSubscriptions")
+  orgSubscription      Subscription[] @relation("orgSubscription")
 }
 
 model InviteRedemption {
@@ -105,22 +122,23 @@ model Plan {
 }
 
 model Subscription {
-  id               String    @id @default(uuid())
-  userID           Int
+  id               String              @id @default(uuid())
+  userID           Int?
+  orgID            String?
   planID           String
-  status           String    @default("trialing")
-  stripeSubId      String? // Stripe subscription ID
+  status           String              @default("trialing")
+  stripeSubId      String?
   stripeSessionID  String?
   trialEndsAt      DateTime?
   currentPeriodEnd DateTime?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-
-  // Relations
-  user User @relation(fields: [userID], references: [id])
-  plan Plan @relation(fields: [planID], references: [id])
-
-  events SubscriptionEvent[]
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  user             User?               @relation(fields: [userID], references: [id])
+  org              Organization?       @relation(fields: [orgID], references: [id], "orgSubscription")
+  plan             Plan                @relation(fields: [planID], references: [id])
+  events           SubscriptionEvent[]
+  managedByID      String?
+  managedBy        Organization?       @relation(references: [id], fields: [managedByID], "managedSubscriptions")
 
   @@index([planID, stripeSubId, stripeSessionID])
 }

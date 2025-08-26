@@ -3367,7 +3367,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/pdfmake@npm:^0":
+"@types/pdfmake@npm:^0.2.11":
   version: 0.2.11
   resolution: "@types/pdfmake@npm:0.2.11"
   dependencies:
@@ -4222,7 +4222,7 @@ __metadata:
     "@types/passport": "npm:^0"
     "@types/passport-jwt": "npm:^4.0.1"
     "@types/passport-local": "npm:^1.0.38"
-    "@types/pdfmake": "npm:^0"
+    "@types/pdfmake": "npm:^0.2.11"
     "@types/stripe": "npm:^8.0.417"
     "@types/supertest": "npm:^6.0.2"
     axios: "npm:^1.11.0"
@@ -4250,7 +4250,7 @@ __metadata:
     reflect-metadata: "npm:^0.2.2"
     rxjs: "npm:^7.8.1"
     source-map-support: "npm:^0.5.21"
-    stripe: "npm:^18.2.1"
+    stripe: "npm:^18.4.0"
     supertest: "npm:^7.0.0"
     ts-jest: "npm:^29.2.5"
     ts-loader: "npm:^9.5.2"
@@ -11556,7 +11556,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"stripe@npm:*, stripe@npm:^18.2.1":
+"stripe@npm:*":
   version: 18.2.1
   resolution: "stripe@npm:18.2.1"
   dependencies:
@@ -11567,6 +11567,20 @@ __metadata:
     "@types/node":
       optional: true
   checksum: 10c0/7edef67ca27bd4e84ac24eae4e10fa1d712392c08eec62aa6748c78241ebccc2a057651716a619fcaac1b70c5f08ba5fc5adf255d67462d5a441e3a96c0dc6c5
+  languageName: node
+  linkType: hard
+
+"stripe@npm:^18.4.0":
+  version: 18.4.0
+  resolution: "stripe@npm:18.4.0"
+  dependencies:
+    qs: "npm:^6.11.0"
+  peerDependencies:
+    "@types/node": ">=12.x.x"
+  peerDependenciesMeta:
+    "@types/node":
+      optional: true
+  checksum: 10c0/abfae24fdc8a4cd96eb494f7582418c49e4db6e8dde21a9db6af8ee0ec02565f89fcf7c41902e0a555d4a733b5162702358114b3b5475343026965cb9b9f8529
   languageName: node
   linkType: hard
 

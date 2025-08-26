@@ -5,12 +5,14 @@ import { jwtSecret } from './auth.module';
 import { UsersService } from 'src/users/users.service';
 import { Request } from 'express';
 import { SubscriptionsService } from 'src/subscriptions/subscriptions.service';
+import { CacheService } from 'src/cache/cache.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(
     private usersService: UsersService,
     private subscriptionService: SubscriptionsService,
+    private cache: CacheService,
   ) {
     super({
       jwtFromRequest: (req: Request) => {
@@ -34,10 +36,9 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   async validate(payload: { userID: number }) {
     console.log('validate');
     console.log({ payload });
-    const user = await this.usersService.user(
-      { id: payload.userID },
-      { org: true },
-    );
+    const user = await this.cache.wrap(`currentUser:${payload.userID}`, () => {
+      return this.usersService.user({ id: payload.userID }, { org: true });
+    });
 
     if (!user) {
       throw new UnauthorizedException();

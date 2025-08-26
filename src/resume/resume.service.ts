@@ -3,14 +3,17 @@ import { CreateResumeDto } from './dto/create-resume.dto';
 import { UpdateResumeDto } from './dto/update-resume.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PdfService } from 'src/pdf/pdf.service';
+import { CacheService } from 'src/cache/cache.service';
 
 @Injectable()
 export class ResumeService {
   constructor(
     private prisma: PrismaService,
     private readonly pdfService: PdfService,
+    private cache: CacheService,
   ) {}
-  create(createResumeDto: CreateResumeDto) {
+  async create(createResumeDto: CreateResumeDto) {
+    await this.cache.del(`myResumes${createResumeDto.userID}`);
     return this.prisma.resume.create({ data: createResumeDto });
   }
 
@@ -19,11 +22,15 @@ export class ResumeService {
   }
 
   findMyResumes(userID: number) {
-    return this.prisma.resume.findMany({ where: { userID } });
+    return this.cache.wrap(`myResumes${userID}`, () => {
+      return this.prisma.resume.findMany({ where: { userID } });
+    });
   }
 
   findOne(id: string) {
-    return this.prisma.resume.findFirst({ where: { id } });
+    return this.cache.wrap(`resume:${id}`, () => {
+      return this.prisma.resume.findFirst({ where: { id } });
+    });
   }
 
   async findOneAndBuildPDF(id: string) {
@@ -71,11 +78,13 @@ export class ResumeService {
     return newResume;
   }
 
-  update(id: string, updateResumeDto: UpdateResumeDto) {
+  async update(id: string, updateResumeDto: UpdateResumeDto) {
+    await this.cache.del(`resume:${id}`);
     return this.prisma.resume.update({ where: { id }, data: updateResumeDto });
   }
 
-  remove(id: string) {
+  async remove(id: string) {
+    await this.cache.del(`resume:${id}`);
     return this.prisma.resume.delete({ where: { id } });
   }
 }

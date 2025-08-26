@@ -90,6 +90,8 @@ export class UsersService {
   }): Promise<User> {
     const { where, data } = params;
 
+    await this.cache.del(`currentUser:${where.id}`);
+
     if (data?.password) {
       data.password = await this.hashPassword(data.password as string);
     }
@@ -132,8 +134,10 @@ export class UsersService {
   }
 
   async inviteCodeStats(id: number): Promise<{ totalInvited: number }> {
-    const invited = await this.prisma.inviteRedemption.count({
-      where: { inviterUserId: id, rewardStatus: 'credited' },
+    const invited = await this.cache.wrap(`invitedUserStats:${id}`, () => {
+      return this.prisma.inviteRedemption.count({
+        where: { inviterUserId: id, rewardStatus: 'credited' },
+      });
     });
 
     return {

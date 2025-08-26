@@ -15,6 +15,8 @@ export class SubscriptionsService {
     const oneYearFromNow = new Date();
     oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
 
+    await this.cache.del(`activeUserSubscription:${createSubscription.userID}`);
+
     await this.prisma.subscription.create({
       data: {
         userID: createSubscription.userID,
@@ -49,6 +51,8 @@ export class SubscriptionsService {
     if (!plan) {
       throw new HttpException('Missing Plans', HttpStatus.FAILED_DEPENDENCY);
     }
+
+    await this.cache.del(`activeUserSubscription:${userID}`);
 
     return this.prisma.subscription.create({
       data: {
@@ -98,25 +102,31 @@ export class SubscriptionsService {
   }
 
   async getActive(userID: number) {
-    return await this.prisma.subscription.findFirst({
-      where: {
-        userID,
-        status: {
-          in: ['trialing', 'active', 'past_due', 'temp', 'org-managed'],
-        },
-        OR: [
-          { currentPeriodEnd: null },
-          { currentPeriodEnd: { gt: new Date() } },
-        ], // optional: time-safe check
+    return this.cache.wrap(
+      `activeUserSubscription:${userID}`,
+      () => {
+        return this.prisma.subscription.findFirst({
+          where: {
+            userID,
+            status: {
+              in: ['trialing', 'active', 'past_due', 'temp', 'org-managed'],
+            },
+            OR: [
+              { currentPeriodEnd: null },
+              { currentPeriodEnd: { gt: new Date() } },
+            ], // optional: time-safe check
+          },
+          orderBy: { createdAt: 'desc' },
+          include: { plan: true },
+        });
       },
-      orderBy: { createdAt: 'desc' },
-      include: { plan: true },
-    });
+      86400,
+    );
   }
 
   async cancelCurrentSubscription(id: string) {
     try {
-      await this.prisma.subscription.update({
+      const canceledSubscription = await this.prisma.subscription.update({
         where: {
           id,
         },
@@ -124,6 +134,9 @@ export class SubscriptionsService {
           status: 'canceled-client',
         },
       });
+      await this.cache.del(
+        `activeUserSubscription:${canceledSubscription.userID}`,
+      );
       return { success: true };
     } catch (error) {
       console.log(error);

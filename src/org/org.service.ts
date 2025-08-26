@@ -4,23 +4,28 @@ import { CreateOrgDto } from './dto/create-org.dto';
 import { UpdateOrgDto } from './dto/update-org.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { StripeService } from 'src/stripe/stripe.service';
-import { MailService } from 'src/mail/mail.service';
 import { roundUpToNext100 } from 'src/utils/roundUp100';
 import { getDomainFromEmail } from 'src/utils/getDomain';
+import { CacheService } from 'src/cache/cache.service';
 
 @Injectable()
 export class OrgService {
   constructor(
     private prisma: PrismaService,
     private stripeService: StripeService,
-    private readonly mailService: MailService,
+    private cache: CacheService,
   ) {}
 
   async create(createOrgDto: CreateOrgDto) {
-    const plan = await this.prisma.plan.findFirst({
-      where: { key: process.env.DEFAULT_SUBSCRIPTION_KEY },
-      select: { id: true },
-    });
+    const plan = await this.cache.wrap(
+      `plan:${process.env.DEFAULT_SUBSCRIPTION_KEY}`,
+      () => {
+        return this.prisma.plan.findFirst({
+          where: { key: process.env.DEFAULT_SUBSCRIPTION_KEY },
+        });
+      },
+      86400,
+    );
 
     if (!plan) {
       console.log('missingPlan', process.env.DEFAULT_SUBSCRIPTION_KEY);
@@ -73,11 +78,17 @@ export class OrgService {
     let plan: Plan | undefined | null = undefined;
 
     if (typeof org.defaultPlanID === 'string') {
-      plan = await this.prisma.plan.findFirst({
-        // TODO Figure out why this is breaking
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        where: { id: org.defaultPlanID },
-      });
+      plan = await this.cache.wrap(
+        `plan:${org.defaultPlanID}`,
+        () => {
+          return this.prisma.plan.findFirst({
+            // TODO Figure out why this is breaking
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            where: { id: org.defaultPlanID || '' },
+          });
+        },
+        86400,
+      );
     }
 
     if ((org?.seatCount || 0) > currentUsers) {

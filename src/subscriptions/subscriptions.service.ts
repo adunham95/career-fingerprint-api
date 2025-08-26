@@ -2,10 +2,14 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { FeatureFlag } from 'src/utils/featureFlags';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
+import { CacheService } from 'src/cache/cache.service';
 
 @Injectable()
 export class SubscriptionsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private cache: CacheService,
+  ) {}
 
   async createSubscription(createSubscription: CreateSubscriptionDto) {
     const oneYearFromNow = new Date();
@@ -61,7 +65,15 @@ export class SubscriptionsService {
   }
 
   findPlanByID(id: string) {
-    return this.prisma.plan.findFirst({ where: { key: id } });
+    return this.cache.wrap(
+      `plan:${id}`,
+      () => {
+        return this.prisma.plan.findFirst({
+          where: { key: id },
+        });
+      },
+      86400,
+    );
   }
 
   async findUpgradePlan(planLevel: number) {

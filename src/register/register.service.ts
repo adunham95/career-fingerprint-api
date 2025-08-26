@@ -7,6 +7,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { UsersService } from 'src/users/users.service';
 import { Plan } from '@prisma/client';
 import { OrgService } from 'src/org/org.service';
+import { CacheService } from 'src/cache/cache.service';
 
 @Injectable()
 export class RegisterService {
@@ -14,6 +15,7 @@ export class RegisterService {
     private prisma: PrismaService,
     private users: UsersService,
     private org: OrgService,
+    private cache: CacheService,
   ) {}
   async registerNewUser(createRegisterDto: CreateRegisterDto) {
     const newUser = await this.users.createUser({
@@ -45,7 +47,15 @@ export class RegisterService {
           },
         });
 
-        plan = await this.prisma.plan.findFirst({ where: { key: 'pro' } });
+        plan = await this.cache.wrap(
+          `plan:${process.env.DEFAULT_SUBSCRIPTION_KEY}`,
+          () => {
+            return this.prisma.plan.findFirst({
+              where: { key: process.env.DEFAULT_SUBSCRIPTION_KEY },
+            });
+          },
+          86400,
+        );
         break;
 
       case 'growing':
@@ -70,7 +80,15 @@ export class RegisterService {
           },
         });
 
-        plan = await this.prisma.plan.findFirst({ where: { key: 'pro' } });
+        plan = await this.cache.wrap(
+          `plan:${process.env.DEFAULT_SUBSCRIPTION_KEY}`,
+          () => {
+            return this.prisma.plan.findFirst({
+              where: { key: process.env.DEFAULT_SUBSCRIPTION_KEY },
+            });
+          },
+          86400,
+        );
         break;
       default:
         break;

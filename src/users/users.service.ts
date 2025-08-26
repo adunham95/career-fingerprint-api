@@ -5,6 +5,7 @@ import bcrypt from 'bcrypt';
 import { StripeService } from 'src/stripe/stripe.service';
 import { MailService } from 'src/mail/mail.service';
 import { generateInviteString } from 'src/utils/generateReadableCode';
+import { CacheService } from 'src/cache/cache.service';
 
 export const roundsOfHashing = 10;
 
@@ -14,6 +15,7 @@ export class UsersService {
     private prisma: PrismaService,
     private stripeService: StripeService,
     private readonly mailService: MailService,
+    private cache: CacheService,
   ) {}
 
   async user(
@@ -46,9 +48,15 @@ export class UsersService {
   async createUser(data: Prisma.UserCreateInput): Promise<User> {
     data.password = await this.hashPassword(data.password);
 
-    const freePlan = await this.prisma.plan.findFirst({
-      where: { key: 'free' }, // or { name: 'Free' }
-    });
+    const freePlan = await this.cache.wrap(
+      'plan:free',
+      () => {
+        return this.prisma.plan.findFirst({
+          where: { key: 'free' },
+        });
+      },
+      86400,
+    );
 
     if (!freePlan) {
       throw new HttpException('Missing Plans', HttpStatus.FAILED_DEPENDENCY);

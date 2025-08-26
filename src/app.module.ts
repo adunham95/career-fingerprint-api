@@ -33,6 +33,9 @@ import { BulletPointsModule } from './bullet-points/bullet-points.module';
 import { AuthCookieService } from './authcookie/authcookie.service';
 import { AuthCookieModule } from './authcookie/authcookie.module';
 import { OrgModule } from './org/org.module';
+import { CacheModule } from '@nestjs/cache-manager';
+import { createKeyv } from '@keyv/redis';
+import { CacheService } from './cache/cache.service';
 
 @Module({
   imports: [
@@ -89,6 +92,13 @@ import { OrgModule } from './org/org.module';
     BulletPointsModule,
     AuthCookieModule,
     OrgModule,
+    CacheModule.registerAsync({
+      useFactory: () => {
+        return {
+          stores: [createKeyv(process.env.REDIS_URL)],
+        };
+      },
+    }),
   ],
   controllers: [AppController],
   providers: [
@@ -99,6 +109,8 @@ import { OrgModule } from './org/org.module';
     AppService,
     PdfService,
     AuthCookieService,
+    CacheService,
   ],
+  exports: [CacheService],
 })
 export class AppModule {}

@@ -37,6 +37,9 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { createKeyv } from '@keyv/redis';
 import { CacheService } from './cache/cache.service';
 import { CacheModule as CustomCacheModule } from './cache/cache.module';
+import { HealthController } from './health/health.controller';
+import { HealthModule } from './health/health.module';
+import { TerminusModule } from '@nestjs/terminus';
 
 @Module({
   imports: [
@@ -102,8 +105,10 @@ import { CacheModule as CustomCacheModule } from './cache/cache.module';
       },
     }),
     CustomCacheModule,
+    HealthModule,
+    TerminusModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, HealthController],
   providers: [
     {
       provide: APP_FILTER,

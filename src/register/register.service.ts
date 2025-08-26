@@ -7,6 +7,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { UsersService } from 'src/users/users.service';
 import { Plan } from '@prisma/client';
 import { OrgService } from 'src/org/org.service';
+
 @Injectable()
 export class RegisterService {
   constructor(
@@ -75,7 +76,14 @@ export class RegisterService {
         break;
     }
 
-    return { user: newUser, plan };
+    const { org, plan: orgPlan } = await this.org.hasSpace(newUser.email);
+
+    return {
+      user: newUser,
+      plan: orgPlan || plan,
+      orgName: org?.name,
+      orgID: org?.id,
+    };
   }
 
   async registerNewOrg(createRegisterOrgDto: CreateRegisterOrgDto) {

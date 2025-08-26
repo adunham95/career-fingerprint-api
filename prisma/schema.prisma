@@ -69,6 +69,7 @@ model Organization {
   domainVerified       Boolean?       @default(false)
   seatCount            Int            @default(100)
   stripeCustomerID     String?
+  defaultPlanID        String?
   email                String
   admins               User[]
   managedSubscriptions Subscription[] @relation("managedSubscriptions")

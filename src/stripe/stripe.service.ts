@@ -340,7 +340,7 @@ export class StripeService {
       customer: stripeCustomerID,
       subscription_details: { items: subscriptionItems },
       discounts: promoID ? [{ promotion_code: promoID }] : undefined,
-      automatic_tax: { enabled: true }, // ensures tax is included
+      automatic_tax: { enabled: stripeCustomerID ? true : false }, // ensures tax is included
     });
 
     console.log({ invoice });

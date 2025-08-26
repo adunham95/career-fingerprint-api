@@ -21,7 +21,7 @@ export class RegisterController {
     @Body() createRegisterDto: CreateRegisterDto,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const { user, plan } =
+    const { user, plan, orgName, orgID } =
       await this.registerService.registerNewUser(createRegisterDto);
 
     const { accessToken } = await this.authService.loginUser(
@@ -30,7 +30,7 @@ export class RegisterController {
     );
 
     this.authCookieService.setAuthCookie(response, accessToken);
-    return { accessToken, user, plan };
+    return { accessToken, user, plan, orgName, orgID };
   }
 
   @Post('org')

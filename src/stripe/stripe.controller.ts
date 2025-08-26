@@ -89,7 +89,6 @@ export class StripeController {
   }
 
   @Post('estimate')
-  @UseGuards(JwtAuthGuard)
   async estimate(
     @Req() req: Request,
     @Body()

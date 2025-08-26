@@ -1,10 +1,31 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { FeatureFlag } from 'src/utils/featureFlags';
+import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 
 @Injectable()
 export class SubscriptionsService {
   constructor(private prisma: PrismaService) {}
+
+  async createSubscription(createSubscription: CreateSubscriptionDto) {
+    const oneYearFromNow = new Date();
+    oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
+
+    await this.prisma.subscription.create({
+      data: {
+        userID: createSubscription.userID,
+        managedByID: createSubscription.orgID,
+        planID: createSubscription.planID,
+        status: 'org-managed',
+        currentPeriodEnd: oneYearFromNow.toISOString(),
+      },
+    });
+
+    return await this.prisma.user.findFirst({
+      where: { id: createSubscription.userID },
+      include: { subscriptions: true },
+    });
+  }
 
   async createTempSubscription(
     priceID: string,
@@ -68,7 +89,9 @@ export class SubscriptionsService {
     return await this.prisma.subscription.findFirst({
       where: {
         userID,
-        status: { in: ['trialing', 'active', 'past_due', 'temp'] },
+        status: {
+          in: ['trialing', 'active', 'past_due', 'temp', 'org-managed'],
+        },
         OR: [
           { currentPeriodEnd: null },
           { currentPeriodEnd: { gt: new Date() } },

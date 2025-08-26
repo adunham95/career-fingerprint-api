@@ -13,14 +13,29 @@ import {
 import { SubscriptionsService } from './subscriptions.service';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { Request } from 'express';
+import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 
 @Controller('subscriptions')
 export class SubscriptionsController {
   constructor(private readonly subscriptionsService: SubscriptionsService) {}
 
+  @Post()
+  @UseGuards(JwtAuthGuard)
+  createSubscription(
+    @Body() createSubscriptionDto: CreateSubscriptionDto,
+    @Req() req: Request,
+  ) {
+    if (!req.user) {
+      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+    }
+    createSubscriptionDto.userID = req.user.id;
+
+    return this.subscriptionsService.createSubscription(createSubscriptionDto);
+  }
+
   @Post('temp-access')
   @UseGuards(JwtAuthGuard)
-  async createSubscription(
+  async createTempSubscription(
     @Body()
     { priceID, sessionID }: { priceID: string; sessionID: string },
     @Req() req: Request,

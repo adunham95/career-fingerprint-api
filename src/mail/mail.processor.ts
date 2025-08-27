@@ -129,16 +129,16 @@ export class MailProcessor {
   async welcomeEmail(
     job: Job<{
       to: string;
-      context: { firstName: string };
+      context: { firstName: string; token: string };
     }>,
   ) {
     const {
       to,
-      context: { firstName },
+      context: { firstName, token },
     } = job.data;
 
     const template = 'welcome';
-    const subject = 'Welcome to Career Fingerprint';
+    const subject = 'Start You Free Premium Trial';
 
     console.log(`📧 Sending email to ${to}`);
 
@@ -149,6 +149,7 @@ export class MailProcessor {
         subject,
         context: {
           firstName,
+          verifyLink: `${process.env.APP_URL}/verify?token=${token}`,
         },
       });
       console.log(`✅ Email sent to ${to}`);

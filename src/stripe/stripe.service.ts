@@ -74,7 +74,6 @@ export class StripeService {
     user,
     priceID,
     planID,
-    inviteCode,
   }: CreateStripeSubscriptionDto) {
     let stripeUserID = user?.stripeCustomerID || '';
     console.log({ stripeUserID });
@@ -90,21 +89,11 @@ export class StripeService {
 
     let validReferralCode = false;
 
+    const inviteCode = await this.prisma.inviteRedemption.findFirst({
+      where: { inviterUserId: user.id },
+    });
     if (inviteCode) {
-      const codeUser = await this.prisma.user.findFirst({
-        where: { inviteCode },
-      });
-
-      if (codeUser) {
-        validReferralCode = true;
-        await this.prisma.inviteRedemption.create({
-          data: {
-            inviteCode: inviteCode,
-            inviteeUserId: codeUser?.id,
-            inviterUserId: user.id,
-          },
-        });
-      }
+      validReferralCode = true;
     }
 
     const subscription = await this.stripe.subscriptions.create({

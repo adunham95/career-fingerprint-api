@@ -5,9 +5,10 @@ import {
 } from './dto/create-register.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UsersService } from 'src/users/users.service';
-import { Plan } from '@prisma/client';
+import { Plan, User } from '@prisma/client';
 import { OrgService } from 'src/org/org.service';
 import { CacheService } from 'src/cache/cache.service';
+import bcrypt from 'bcrypt';
 
 @Injectable()
 export class RegisterService {
@@ -24,6 +25,20 @@ export class RegisterService {
       firstName: createRegisterDto.firstName,
       lookingFor: createRegisterDto.lookingFor,
     });
+
+    const codeUser = await this.prisma.user.findFirst({
+      where: { inviteCode: createRegisterDto.inviteCode },
+    });
+
+    if (codeUser) {
+      await this.prisma.inviteRedemption.create({
+        data: {
+          inviteCode: createRegisterDto.inviteCode,
+          inviteeUserId: codeUser?.id,
+          inviterUserId: newUser.id,
+        },
+      });
+    }
 
     console.log({ newUser });
 
@@ -120,5 +135,41 @@ export class RegisterService {
       admin: newUser.id,
     });
     return { user: newUser, org: newOrg };
+  }
+
+  async verifyEmail(data: { token: string; user: User }) {
+    const verifyToken = await this.prisma.verifyToken.findFirst({
+      where: { userID: data.user.id },
+    });
+
+    if (!verifyToken) throw Error('Missing Verification Token');
+
+    const isPasswordValid = await bcrypt.compare(
+      data.token,
+      verifyToken?.token,
+    );
+
+    if (!isPasswordValid) {
+      throw Error('Verification Code Failed');
+    }
+
+    const plan = await this.cache.wrap(
+      `plan:${process.env.DEFAULT_SUBSCRIPTION_KEY}`,
+      () => {
+        return this.prisma.plan.findFirst({
+          where: { key: process.env.DEFAULT_SUBSCRIPTION_KEY },
+        });
+      },
+      86400,
+    );
+
+    const { org, plan: orgPlan } = await this.org.hasSpace(data.user.email);
+
+    return {
+      plan: orgPlan || plan,
+      orgID: org?.id,
+      orgName: org?.name,
+      verified: true,
+    };
   }
 }

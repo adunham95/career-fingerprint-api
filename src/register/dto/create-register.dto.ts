@@ -19,6 +19,7 @@ export class CreateRegisterDto {
   email: string;
   password: string;
   achievement: string;
+  inviteCode: string;
 }
 
 export class CreateRegisterOrgDto {

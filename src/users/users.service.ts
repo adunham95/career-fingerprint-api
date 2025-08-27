@@ -78,7 +78,10 @@ export class UsersService {
 
     await this.mailService.sendWelcomeEmail({
       to: user.email,
-      context: { firstName: user.firstName },
+      context: {
+        firstName: user.firstName,
+        token: await this.hashPassword(this.generateRandomString(10)),
+      },
     });
 
     return user;

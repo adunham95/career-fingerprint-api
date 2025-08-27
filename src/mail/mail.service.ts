@@ -78,7 +78,7 @@ export class MailService {
 
   async sendWelcomeEmail(params: {
     to: string;
-    context: { firstName: string };
+    context: { firstName: string; token: string };
   }) {
     await this.mailQueue.add('welcomeEmail', params);
   }

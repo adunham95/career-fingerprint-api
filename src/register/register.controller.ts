@@ -1,12 +1,22 @@
-import { Controller, Post, Body, Res } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Res,
+  Req,
+  HttpStatus,
+  HttpException,
+  UseGuards,
+} from '@nestjs/common';
 import { RegisterService } from './register.service';
 import {
   CreateRegisterDto,
   CreateRegisterOrgDto,
 } from './dto/create-register.dto';
 import { AuthService } from 'src/auth/auth.service';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { AuthCookieService } from 'src/authcookie/authcookie.service';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
 @Controller('register')
 export class RegisterController {
@@ -48,5 +58,14 @@ export class RegisterController {
 
     this.authCookieService.setAuthCookie(response, accessToken);
     return { accessToken, user, org };
+  }
+
+  @Post('verify')
+  @UseGuards(JwtAuthGuard)
+  verifyEmail(@Body() data: { token: string }, @Req() req: Request) {
+    if (!req.user) {
+      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+    }
+    return this.registerService.verifyEmail({ ...data, user: req.user });
   }
 }

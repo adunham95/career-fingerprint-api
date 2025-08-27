@@ -56,6 +56,7 @@ model User {
   receivedRedemptions InviteRedemption[] @relation("InviteeRedemptions")
   orgID               String?
   org                 Organization?      @relation(fields: [orgID], references: [id])
+  verifyTokens        VerifyToken[]
 
   @@index([email])
 }
@@ -99,6 +100,16 @@ model ResetToken {
   user      User     @relation(fields: [email], references: [email])
 
   @@id([token, email])
+}
+
+model VerifyToken {
+  token      String
+  expiresAt  DateTime
+  inviteCode String
+  userID     Int
+  user       User     @relation(fields: [userID], references: [id])
+
+  @@id([token, userID])
 }
 
 model Plan {

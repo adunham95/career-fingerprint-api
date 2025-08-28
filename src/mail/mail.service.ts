@@ -83,6 +83,13 @@ export class MailService {
     await this.mailQueue.add('welcomeEmail', params);
   }
 
+  async sendVerifyEmail(params: {
+    to: string;
+    context: { firstName: string; token: string };
+  }) {
+    await this.mailQueue.add('verifyEmail', params);
+  }
+
   async sendTrialAlmostOver(params: {
     to: string;
     context: { firstName: string };

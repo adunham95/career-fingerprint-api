@@ -31,7 +31,7 @@ export class RegisterController {
     @Body() createRegisterDto: CreateRegisterDto,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const { user, plan, orgName, orgID } =
+    const { user, plan } =
       await this.registerService.registerNewUser(createRegisterDto);
 
     const { accessToken } = await this.authService.loginUser(
@@ -40,7 +40,7 @@ export class RegisterController {
     );
 
     this.authCookieService.setAuthCookie(response, accessToken);
-    return { accessToken, user, plan, orgName, orgID };
+    return { accessToken, user, plan };
   }
 
   @Post('org')
@@ -62,10 +62,14 @@ export class RegisterController {
 
   @Post('verify')
   @UseGuards(JwtAuthGuard)
-  verifyEmail(@Body() data: { token: string }, @Req() req: Request) {
+  verifyEmail(
+    @Body() data: { token: string; showFreeTrial: boolean },
+    @Req() req: Request,
+  ) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
     }
+    console.log({ data });
     return this.registerService.verifyEmail({ ...data, user: req.user });
   }
 }

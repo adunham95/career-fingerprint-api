@@ -36,6 +36,8 @@ export class UserEntity implements User {
 
   inviteCode: string | null;
 
+  emailVerified: boolean;
+
   orgID: string | null;
 
   org: Organization;

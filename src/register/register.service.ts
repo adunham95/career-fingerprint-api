@@ -26,18 +26,20 @@ export class RegisterService {
       lookingFor: createRegisterDto.lookingFor,
     });
 
-    const codeUser = await this.prisma.user.findFirst({
-      where: { inviteCode: createRegisterDto.inviteCode },
-    });
-
-    if (codeUser) {
-      await this.prisma.inviteRedemption.create({
-        data: {
-          inviteCode: createRegisterDto.inviteCode,
-          inviteeUserId: codeUser?.id,
-          inviterUserId: newUser.id,
-        },
+    if (createRegisterDto.inviteCode) {
+      const codeUser = await this.prisma.user.findFirst({
+        where: { inviteCode: createRegisterDto.inviteCode },
       });
+
+      if (codeUser) {
+        await this.prisma.inviteRedemption.create({
+          data: {
+            inviteCode: createRegisterDto.inviteCode,
+            inviteeUserId: codeUser?.id,
+            inviterUserId: newUser.id,
+          },
+        });
+      }
     }
 
     console.log({ newUser });
@@ -109,13 +111,9 @@ export class RegisterService {
         break;
     }
 
-    const { org, plan: orgPlan } = await this.org.hasSpace(newUser.email);
-
     return {
       user: newUser,
-      plan: orgPlan || plan,
-      orgName: org?.name,
-      orgID: org?.id,
+      plan: plan,
     };
   }
 
@@ -137,20 +135,36 @@ export class RegisterService {
     return { user: newUser, org: newOrg };
   }
 
-  async verifyEmail(data: { token: string; user: User }) {
+  async verifyEmail(data: {
+    token: string;
+    showFreeTrial: boolean;
+    user: User;
+  }) {
     const verifyToken = await this.prisma.verifyToken.findFirst({
-      where: { userID: data.user.id },
+      where: { userID: data.user.id, expiresAt: { gt: new Date() } },
     });
 
     if (!verifyToken) throw Error('Missing Verification Token');
 
-    const isPasswordValid = await bcrypt.compare(
-      data.token,
-      verifyToken?.token,
-    );
+    const isTokenValid = await bcrypt.compare(data.token, verifyToken?.token);
 
-    if (!isPasswordValid) {
+    if (!isTokenValid) {
       throw Error('Verification Code Failed');
+    }
+
+    await this.prisma.verifyToken.deleteMany({
+      where: { userID: verifyToken.userID },
+    });
+
+    await this.prisma.user.update({
+      where: { id: data.user.id },
+      data: { emailVerified: true },
+    });
+
+    await this.cache.del(`activeUserSubscription:${data.user.id}`);
+
+    if (!data.showFreeTrial) {
+      return { verified: true };
     }
 
     const plan = await this.cache.wrap(

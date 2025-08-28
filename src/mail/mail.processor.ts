@@ -149,6 +149,40 @@ export class MailProcessor {
         subject,
         context: {
           firstName,
+          verifyLink: `${process.env.APP_URL}/verify?token=${token}&showFreeTrial=true`,
+        },
+      });
+      console.log(`✅ Email sent to ${to}`);
+    } catch (error) {
+      console.log(`❌ Email not sent`, error);
+      throw error;
+    }
+  }
+
+  @Process('verifyEmail')
+  async verifyEmail(
+    job: Job<{
+      to: string;
+      context: { firstName: string; token: string };
+    }>,
+  ) {
+    const {
+      to,
+      context: { firstName, token },
+    } = job.data;
+
+    const template = 'verify-email';
+    const subject = 'Verify your email';
+
+    console.log(`📧 Sending email to ${to}`);
+
+    try {
+      await this.mailerService.sendMail({
+        to: [to],
+        template,
+        subject,
+        context: {
+          firstName,
           verifyLink: `${process.env.APP_URL}/verify?token=${token}`,
         },
       });

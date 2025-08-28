@@ -37,6 +37,7 @@ model User {
   lookingFor          String?
   stripeCustomerID    String?
   inviteCode          String?
+  emailVerified       Boolean            @default(false)
   resume              Resume[]
   positions           JobPosition[]
   achievements        Achievement[]
@@ -105,7 +106,7 @@ model ResetToken {
 model VerifyToken {
   token      String
   expiresAt  DateTime
-  inviteCode String
+  inviteCode String?
   userID     Int
   user       User     @relation(fields: [userID], references: [id])
 

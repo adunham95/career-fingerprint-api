@@ -22,6 +22,15 @@ import { Request } from 'express';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @Get('start-verify-email')
+  @UseGuards(JwtAuthGuard)
+  startVerifyEmail(@Req() req: Request) {
+    if (!req.user) {
+      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+    }
+    return this.usersService.startEmailVerification(req.user);
+  }
+
   @Post()
   signupUser(
     @Body()

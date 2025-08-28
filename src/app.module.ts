@@ -34,7 +34,8 @@ import { AuthCookieService } from './authcookie/authcookie.service';
 import { AuthCookieModule } from './authcookie/authcookie.module';
 import { OrgModule } from './org/org.module';
 import { CacheModule } from '@nestjs/cache-manager';
-import { createKeyv } from '@keyv/redis';
+import Keyv from 'keyv';
+import KeyvRedis from '@keyv/redis';
 import { CacheService } from './cache/cache.service';
 import { CacheModule as CustomCacheModule } from './cache/cache.module';
 import { HealthController } from './health/health.controller';
@@ -100,7 +101,7 @@ import { TerminusModule } from '@nestjs/terminus';
       isGlobal: true,
       useFactory: () => {
         return {
-          stores: [createKeyv(process.env.REDIS_URL)],
+          stores: [new Keyv(new KeyvRedis(process.env.REDIS_URL))],
         };
       },
     }),

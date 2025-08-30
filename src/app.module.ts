@@ -41,6 +41,7 @@ import { CacheModule as CustomCacheModule } from './cache/cache.module';
 import { HealthController } from './health/health.controller';
 import { HealthModule } from './health/health.module';
 import { TerminusModule } from '@nestjs/terminus';
+import { ReportsModule } from './reports/reports.module';
 
 @Module({
   imports: [
@@ -108,6 +109,7 @@ import { TerminusModule } from '@nestjs/terminus';
     CustomCacheModule,
     HealthModule,
     TerminusModule,
+    ReportsModule,
   ],
   controllers: [AppController, HealthController],
   providers: [

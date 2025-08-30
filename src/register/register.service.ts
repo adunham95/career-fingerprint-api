@@ -80,7 +80,7 @@ export class RegisterService {
         await this.prisma.jobPosition.create({
           data: {
             userID: newUser.id,
-            name: createRegisterDto.position,
+            name: createRegisterDto.title,
             company: createRegisterDto.companyName,
             startDate: createRegisterDto.startDate,
             endDate:

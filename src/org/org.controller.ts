@@ -6,6 +6,7 @@ import {
   Get,
   Param,
   Query,
+  Delete,
   // Patch,
   // Param,
   // Delete,
@@ -33,6 +34,14 @@ export class OrgController {
     @Query('pageSize') pageSize = 20,
   ) {
     return this.orgService.getOrgUsers(id, Number(pageSize), Number(page));
+  }
+
+  @Delete(':orgID/user/:userID')
+  removeUserFromOrg(
+    @Param('orgID') id: string,
+    @Param('userID') userID: string,
+  ) {
+    return this.orgService.removeUserFromOrg(id, +userID);
   }
 
   // @Get()

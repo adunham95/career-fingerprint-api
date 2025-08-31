@@ -106,6 +106,7 @@ export class OrgService {
             subscriptions: {
               some: {
                 managedByID: id,
+                status: 'org-managed',
               },
             },
           },
@@ -134,6 +135,19 @@ export class OrgService {
     const totalPages = Math.ceil(totalCount / pageSize);
 
     return { totalCount, page, pageSize, users: pageUsers, totalPages };
+  }
+
+  removeUserFromOrg(orgID: string, userID: number) {
+    // Remove Cache
+    return this.prisma.subscription.updateMany({
+      where: {
+        userID,
+        managedByID: orgID,
+      },
+      data: {
+        status: 'org-admin-canceled',
+      },
+    });
   }
 
   findAll() {

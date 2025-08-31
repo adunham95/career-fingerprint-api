@@ -7,6 +7,8 @@ import {
   Param,
   Query,
   Delete,
+  UseGuards,
+  Patch,
   // Patch,
   // Param,
   // Delete,
@@ -14,6 +16,8 @@ import {
 } from '@nestjs/common';
 import { OrgService } from './org.service';
 import { CreateOrgDto } from './dto/create-org.dto';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { UpdateOrgDto } from './dto/update-org.dto';
 // import { UpdateOrgDto } from './dto/update-org.dto';
 // import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 // import { Request } from 'express';
@@ -28,6 +32,7 @@ export class OrgController {
   }
 
   @Get(':orgID/users')
+  @UseGuards(JwtAuthGuard)
   getOrgUser(
     @Param('orgID') id: string,
     @Query('page') page = 1,
@@ -37,11 +42,13 @@ export class OrgController {
   }
 
   @Get(':orgID/admins')
+  @UseGuards(JwtAuthGuard)
   getOrgAdmins(@Param('orgID') id: string) {
     return this.orgService.getOrgAdmins(id);
   }
 
   @Delete(':orgID/user/:userID')
+  @UseGuards(JwtAuthGuard)
   removeUserFromOrg(
     @Param('orgID') id: string,
     @Param('userID') userID: string,
@@ -50,6 +57,7 @@ export class OrgController {
   }
 
   @Delete(':orgID/admin/:userID')
+  @UseGuards(JwtAuthGuard)
   removeAdminFromOrg(
     @Param('orgID') id: string,
     @Param('userID') userID: string,
@@ -57,21 +65,17 @@ export class OrgController {
     return this.orgService.removeAdminFromOrg(id, +userID);
   }
 
-  // @Get()
-  // findAll() {
-  //   return this.orgService.findAll();
-  // }
-
   // @Get(':id')
   // @UseGuards(JwtAuthGuard)
   // findOne(@Param('id') id: string) {
   //   return this.orgService.findOne(id);
   // }
 
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updateOrgDto: UpdateOrgDto) {
-  //   return this.orgService.update(+id, updateOrgDto);
-  // }
+  @Patch(':id')
+  // @UseGuards(JwtAuthGuard)
+  update(@Param('id') id: string, @Body() updateOrgDto: UpdateOrgDto) {
+    return this.orgService.update(id, updateOrgDto);
+  }
 
   // @Delete(':id')
   // remove(@Param('id') id: string) {

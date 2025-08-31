@@ -188,8 +188,10 @@ export class OrgService {
   }
 
   update(id: string, updateOrgDto: UpdateOrgDto) {
-    console.log({ org: updateOrgDto });
-    return `This action updates a #${id} org`;
+    return this.prisma.organization.update({
+      where: { id },
+      data: updateOrgDto,
+    });
   }
 
   remove(id: string) {

@@ -3,6 +3,9 @@ import {
   // Get,
   Post,
   Body,
+  Get,
+  Param,
+  Query,
   // Patch,
   // Param,
   // Delete,
@@ -21,6 +24,15 @@ export class OrgController {
   @Post()
   create(@Body() createOrgDto: CreateOrgDto) {
     return this.orgService.create(createOrgDto);
+  }
+
+  @Get(':orgID/users')
+  getOrgUser(
+    @Param('orgID') id: string,
+    @Query('page') page = 1,
+    @Query('pageSize') pageSize = 20,
+  ) {
+    return this.orgService.getOrgUsers(id, Number(pageSize), Number(page));
   }
 
   // @Get()

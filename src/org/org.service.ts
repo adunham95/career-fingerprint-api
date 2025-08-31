@@ -83,7 +83,7 @@ export class OrgService {
         () => {
           return this.prisma.plan.findFirst({
             // TODO Figure out why this is breaking
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
             where: { id: org.defaultPlanID || '' },
           });
         },
@@ -95,6 +95,45 @@ export class OrgService {
       return { hasOpenSeats: true, org, plan };
     }
     return { hasOpenSeats: false, org: undefined, plan: undefined };
+  }
+
+  async getOrgUsers(id: string, pageSize = 20, page = 1) {
+    const pageUsers = await this.cache.wrap(
+      `orgUsers:${id}:page:${page}:size:${pageSize}`,
+      () =>
+        this.prisma.user.findMany({
+          where: {
+            subscriptions: {
+              some: {
+                managedByID: id,
+              },
+            },
+          },
+          skip: (page - 1) * pageSize,
+          take: pageSize,
+          orderBy: {
+            createdAt: 'desc', // consistent ordering is important
+          },
+        }),
+      600,
+    );
+
+    const totalCount = await this.cache.wrap(
+      `totalOrgUsers:${id}`,
+      () =>
+        this.prisma.user.count({
+          where: {
+            subscriptions: {
+              some: { managedByID: id },
+            },
+          },
+        }),
+      600,
+    );
+
+    const totalPages = Math.ceil(totalCount / pageSize);
+
+    return { totalCount, page, pageSize, users: pageUsers, totalPages };
   }
 
   findAll() {

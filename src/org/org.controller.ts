@@ -36,12 +36,25 @@ export class OrgController {
     return this.orgService.getOrgUsers(id, Number(pageSize), Number(page));
   }
 
+  @Get(':orgID/admins')
+  getOrgAdmins(@Param('orgID') id: string) {
+    return this.orgService.getOrgAdmins(id);
+  }
+
   @Delete(':orgID/user/:userID')
   removeUserFromOrg(
     @Param('orgID') id: string,
     @Param('userID') userID: string,
   ) {
     return this.orgService.removeUserFromOrg(id, +userID);
+  }
+
+  @Delete(':orgID/admin/:userID')
+  removeAdminFromOrg(
+    @Param('orgID') id: string,
+    @Param('userID') userID: string,
+  ) {
+    return this.orgService.removeAdminFromOrg(id, +userID);
   }
 
   // @Get()

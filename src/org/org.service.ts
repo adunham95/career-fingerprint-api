@@ -137,6 +137,21 @@ export class OrgService {
     return { totalCount, page, pageSize, users: pageUsers, totalPages };
   }
 
+  async getOrgAdmins(id: string) {
+    const admins = await this.cache.wrap(
+      `orgAdmins:${id}`,
+      () =>
+        this.prisma.user.findMany({
+          where: {
+            orgID: id,
+          },
+        }),
+      600,
+    );
+
+    return admins;
+  }
+
   removeUserFromOrg(orgID: string, userID: number) {
     // Remove Cache
     return this.prisma.subscription.updateMany({
@@ -146,6 +161,20 @@ export class OrgService {
       },
       data: {
         status: 'org-admin-canceled',
+      },
+    });
+  }
+
+  async removeAdminFromOrg(orgID: string, userID: number) {
+    await this.cache.del(`currentUser:${userID}`);
+    await this.cache.del(`orgAdmins:${orgID}`);
+    return this.prisma.user.update({
+      where: {
+        id: userID,
+        orgID: orgID,
+      },
+      data: {
+        orgID: null,
       },
     });
   }

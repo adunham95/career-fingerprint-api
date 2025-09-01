@@ -6,9 +6,19 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
 
+  @Get(':orgID')
+  @UseGuards(JwtAuthGuard)
+  async getTopEmployers(@Param('orgID') orgID: string) {
+    const topEmployers = await this.reportsService.getTopEmployers(orgID);
+    const seatUtilization = await this.reportsService.getSeatUtilization(orgID);
+    const activeVSInActive =
+      await this.reportsService.getActiveVsInactive(orgID);
+    return { topEmployers, seatUtilization, activeVSInActive };
+  }
+
   @Get(':orgID/top-employers')
   @UseGuards(JwtAuthGuard)
-  getTopEmployers(@Param('orgID') orgID: string) {
+  getReports(@Param('orgID') orgID: string) {
     return this.reportsService.getTopEmployers(orgID);
   }
 

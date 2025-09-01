@@ -3,10 +3,14 @@ import { CreateAchievementDto } from './dto/create-achievement.dto';
 import { UpdateAchievementDto } from './dto/update-achievement.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
+import { CacheService } from 'src/cache/cache.service';
 
 @Injectable()
 export class AchievementService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private cache: CacheService,
+  ) {}
 
   create(createAchievementDto: CreateAchievementDto) {
     const tags = createAchievementDto?.achievementTags || [];
@@ -42,7 +46,7 @@ export class AchievementService {
   }
 
   // TODO pagination
-  findMy(
+  async findMy(
     userID: number,
     whereOptions: { jobPositionID: string | null; educationID: string | null },
     includeLinked: boolean = false,
@@ -61,15 +65,23 @@ export class AchievementService {
 
     console.log({ where });
 
-    return this.prisma.achievement.findMany({
-      where: { userID, ...where },
-      orderBy: { startDate: 'desc' },
-      include: {
-        jobPosition: includeLinked && { select: { name: true } },
-        education: includeLinked && { select: { institution: true } },
-        tags: includeLinked && { select: { name: true, color: true } },
+    const myAchievements = await this.cache.wrap(
+      `myAchievements:${userID}`,
+      () => {
+        return this.prisma.achievement.findMany({
+          where: { userID, ...where },
+          orderBy: { startDate: 'desc' },
+          include: {
+            jobPosition: includeLinked && { select: { name: true } },
+            education: includeLinked && { select: { institution: true } },
+            tags: includeLinked && { select: { name: true, color: true } },
+          },
+        });
       },
-    });
+      600,
+    );
+
+    return myAchievements;
   }
 
   findOne(id: string) {

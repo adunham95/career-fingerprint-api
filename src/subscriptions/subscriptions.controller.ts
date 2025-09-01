@@ -30,7 +30,9 @@ export class SubscriptionsController {
     }
     createSubscriptionDto.userID = req.user.id;
 
-    return this.subscriptionsService.createSubscription(createSubscriptionDto);
+    return this.subscriptionsService.createOrgManagedSubscription(
+      createSubscriptionDto,
+    );
   }
 
   @Post('temp-access')

@@ -121,10 +121,29 @@ export class StripeWebhookController {
           });
         break;
       }
-      case 'customer.subscription.updated': {
-        const newSubscription = event.data.object;
+      // case 'customer.subscription.updated': {
+      //   const newSubscription = event.data.object;
 
-        console.log('✅ Updated Subscription:', newSubscription);
+      //   console.log('✅ Updated Subscription:', newSubscription);
+      //   break;
+      // }
+      case 'customer.subscription.updated': {
+        const subscription = event.data.object;
+
+        if (subscription.cancel_at_period_end && subscription.cancel_at) {
+          // Get the period end date
+          const endDate = new Date(subscription.cancel_at * 1000);
+          // Update your DB: mark as "canceling", store end date
+          await this.prisma.subscription.updateMany({
+            where: {
+              stripeSubId: subscription.id,
+            },
+            data: {
+              status: 'canceling',
+              trialEndsAt: endDate, // or currentPeriodEnd column
+            },
+          });
+        }
         break;
       }
       case 'customer.subscription.deleted': {

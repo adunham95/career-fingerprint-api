@@ -3,15 +3,19 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { FeatureFlag } from 'src/utils/featureFlags';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { CacheService } from 'src/cache/cache.service';
+import { StripeService } from 'src/stripe/stripe.service';
 
 @Injectable()
 export class SubscriptionsService {
   constructor(
     private prisma: PrismaService,
     private cache: CacheService,
+    private stripe: StripeService,
   ) {}
 
-  async createSubscription(createSubscription: CreateSubscriptionDto) {
+  async createOrgManagedSubscription(
+    createSubscription: CreateSubscriptionDto,
+  ) {
     const oneYearFromNow = new Date();
     oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
 
@@ -109,7 +113,14 @@ export class SubscriptionsService {
           where: {
             userID,
             status: {
-              in: ['trialing', 'active', 'past_due', 'temp', 'org-managed'],
+              in: [
+                'trialing',
+                'active',
+                'past_due',
+                'temp',
+                'org-managed',
+                'canceling',
+              ],
             },
             OR: [
               { currentPeriodEnd: null },
@@ -126,17 +137,27 @@ export class SubscriptionsService {
 
   async cancelCurrentSubscription(id: string) {
     try {
-      const canceledSubscription = await this.prisma.subscription.update({
+      const canceledSubscription = await this.prisma.subscription.findFirst({
         where: {
           id,
         },
-        data: {
-          status: 'canceled-client',
-        },
       });
+
+      if (!canceledSubscription) {
+        throw Error('No Subscription found');
+      }
+
       await this.cache.del(
         `activeUserSubscription:${canceledSubscription.userID}`,
       );
+
+      const stripeID = canceledSubscription?.stripeSubId;
+
+      console.log({ stripeID });
+
+      if (stripeID) {
+        await this.stripe.cancelSubscriptionAtPeriodEnd(stripeID);
+      }
       return { success: true };
     } catch (error) {
       console.log(error);

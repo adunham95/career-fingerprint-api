@@ -212,7 +212,9 @@ export class TasksService {
       where: {
         subscriptions: {
           some: {
-            status: { in: ['trialing', 'active', 'past_due', 'temp'] },
+            status: {
+              in: ['trialing', 'active', 'past_due', 'temp', 'canceling'],
+            },
             plan: {
               level: {
                 gt: 0,

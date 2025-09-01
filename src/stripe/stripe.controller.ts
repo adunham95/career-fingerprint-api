@@ -16,10 +16,14 @@ import {
   CreateStripeOrgSubscriptionDto,
   CreateStripeSubscriptionDto,
 } from './dto/create-stripe-subscription.dto';
+import { CacheService } from 'src/cache/cache.service';
 
 @Controller('stripe')
 export class StripeController {
-  constructor(private readonly stripeService: StripeService) {}
+  constructor(
+    private readonly stripeService: StripeService,
+    private cache: CacheService,
+  ) {}
 
   @Post('trial')
   @UseGuards(JwtAuthGuard)
@@ -79,7 +83,15 @@ export class StripeController {
   }
 
   @Get('validate/:checkoutSession')
-  validateSubscription(@Param('checkoutSession') checkoutSession: string) {
+  @UseGuards(JwtAuthGuard)
+  async validateSubscription(
+    @Param('checkoutSession') checkoutSession: string,
+    @Req() req: Request,
+  ) {
+    if (!req.user) {
+      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+    }
+    await this.cache.del(`activeUserSubscription:${req.user.id}`);
     return this.stripeService.validateSubscription(checkoutSession);
   }
 

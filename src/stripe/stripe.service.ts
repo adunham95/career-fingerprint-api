@@ -356,6 +356,12 @@ export class StripeService {
     };
   }
 
+  async cancelSubscriptionAtPeriodEnd(subscriptionId: string) {
+    return this.stripe.subscriptions.update(subscriptionId, {
+      cancel_at_period_end: true,
+    });
+  }
+
   async processEligibleRewards() {
     const now = new Date();
     const eligible = await this.prisma.inviteRedemption.findMany({

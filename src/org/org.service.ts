@@ -70,8 +70,11 @@ export class OrgService {
 
   async hasSpace(email: string) {
     const domain = getDomainFromEmail(email);
+    if (!domain) {
+      return { hasOpenSeats: false, org: undefined, plan: undefined };
+    }
     const org = await this.prisma.organization.findFirst({
-      where: { domain },
+      where: { domains: { some: { domain } } },
     });
 
     if (!org) {

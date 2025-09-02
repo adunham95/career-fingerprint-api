@@ -65,14 +65,14 @@ export class OrgController {
     return this.orgService.removeAdminFromOrg(id, +userID);
   }
 
-  // @Get(':id')
-  // @UseGuards(JwtAuthGuard)
-  // findOne(@Param('id') id: string) {
-  //   return this.orgService.findOne(id);
-  // }
+  @Get(':id')
+  @UseGuards(JwtAuthGuard)
+  findOne(@Param('id') id: string) {
+    return this.orgService.findOne(id);
+  }
 
   @Patch(':id')
-  // @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   update(@Param('id') id: string, @Body() updateOrgDto: UpdateOrgDto) {
     return this.orgService.update(id, updateOrgDto);
   }

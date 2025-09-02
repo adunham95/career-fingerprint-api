@@ -57,6 +57,7 @@ model User {
   receivedRedemptions InviteRedemption[] @relation("InviteeRedemptions")
   orgID               String?
   org                 Organization?      @relation(fields: [orgID], references: [id])
+  orgs                Organization[]     @relation("OrgAdmins")
   verifyTokens        VerifyToken[]
 
   @@index([email])
@@ -72,10 +73,24 @@ model Organization {
   seatCount            Int            @default(100)
   stripeCustomerID     String?
   defaultPlanID        String?
+  logoURL              String?
   email                String
   admins               User[]
+  orgAdmins            User[]         @relation("OrgAdmins")
   managedSubscriptions Subscription[] @relation("managedSubscriptions")
   orgSubscription      Subscription[] @relation("orgSubscription")
+  domains              Domain[]
+}
+
+model Domain {
+  id       String       @id @default(uuid())
+  domain   String
+  verified Boolean      @default(false)
+  orgID    String
+  org      Organization @relation(fields: [orgID], references: [id])
+
+  @@index([domain])
+  @@unique([domain, orgID]) // prevent duplicate self-invites
 }
 
 model InviteRedemption {

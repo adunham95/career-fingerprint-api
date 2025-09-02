@@ -36,12 +36,17 @@ export class OrgService {
         name: createOrgDto.orgName,
         seatCount: roundUpToNext100(createOrgDto.orgSize) || 0,
         email: createOrgDto.orgEmail,
-        domain: createOrgDto.orgDomain,
-        domainVerified: false,
         defaultPlanID: plan?.id,
-        admins: {
+        orgAdmins: {
           connect: { id: createOrgDto.admin },
         },
+      },
+    });
+
+    await this.prisma.domain.create({
+      data: {
+        orgID: newOrg.id,
+        domain: createOrgDto.orgDomain,
       },
     });
 
@@ -184,7 +189,10 @@ export class OrgService {
   }
 
   findOne(id: string) {
-    return `This action returns a #${id} org`;
+    return this.prisma.organization.findFirst({
+      where: { id },
+      include: { domains: true },
+    });
   }
 
   update(id: string, updateOrgDto: UpdateOrgDto) {

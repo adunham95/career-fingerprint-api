@@ -42,6 +42,8 @@ export class UserEntity implements User {
 
   org: Organization;
 
+  orgs: Organization[];
+
   subscriptions?: Subscription[];
 
   subscription?: Subscription;

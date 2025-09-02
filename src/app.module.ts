@@ -42,6 +42,7 @@ import { HealthController } from './health/health.controller';
 import { HealthModule } from './health/health.module';
 import { TerminusModule } from '@nestjs/terminus';
 import { ReportsModule } from './reports/reports.module';
+import { DomainModule } from './domain/domain.module';
 
 @Module({
   imports: [
@@ -110,6 +111,7 @@ import { ReportsModule } from './reports/reports.module';
     HealthModule,
     TerminusModule,
     ReportsModule,
+    DomainModule,
   ],
   controllers: [AppController, HealthController],
   providers: [

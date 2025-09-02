@@ -20,6 +20,7 @@ export class CreateRegisterDto {
   password: string;
   achievement: string;
   inviteCode: string;
+  orgID: string;
 }
 
 export class CreateRegisterOrgDto {

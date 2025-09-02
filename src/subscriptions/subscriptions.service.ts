@@ -19,13 +19,25 @@ export class SubscriptionsService {
     const oneYearFromNow = new Date();
     oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
 
+    if (!createSubscription.orgID) {
+      throw Error('Missing OrgID');
+    }
+
     await this.cache.del(`activeUserSubscription:${createSubscription.userID}`);
+
+    const org = await this.prisma.organization.findFirst({
+      where: { id: createSubscription.orgID },
+    });
+
+    if (!org || !org.defaultPlanID) {
+      throw Error('Missing Org');
+    }
 
     await this.prisma.subscription.create({
       data: {
         userID: createSubscription.userID,
-        managedByID: createSubscription.orgID,
-        planID: createSubscription.planID,
+        managedByID: org?.id,
+        planID: org.defaultPlanID,
         status: 'org-managed',
         currentPeriodEnd: oneYearFromNow.toISOString(),
       },

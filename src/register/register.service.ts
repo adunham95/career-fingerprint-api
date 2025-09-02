@@ -5,10 +5,11 @@ import {
 } from './dto/create-register.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UsersService } from 'src/users/users.service';
-import { Plan, User } from '@prisma/client';
+import { User } from '@prisma/client';
 import { OrgService } from 'src/org/org.service';
 import { CacheService } from 'src/cache/cache.service';
 import bcrypt from 'bcrypt';
+import { SubscriptionsService } from 'src/subscriptions/subscriptions.service';
 
 @Injectable()
 export class RegisterService {
@@ -16,6 +17,7 @@ export class RegisterService {
     private prisma: PrismaService,
     private users: UsersService,
     private org: OrgService,
+    private subscription: SubscriptionsService,
     private cache: CacheService,
   ) {}
   async registerNewUser(createRegisterDto: CreateRegisterDto) {
@@ -42,9 +44,14 @@ export class RegisterService {
       }
     }
 
-    console.log({ newUser });
+    if (createRegisterDto.orgID) {
+      await this.subscription.createOrgManagedSubscription({
+        userID: newUser.id,
+        orgID: createRegisterDto.orgID,
+      });
+    }
 
-    let plan: Plan | null = null;
+    console.log({ newUser });
 
     switch (createRegisterDto.lookingFor) {
       case 'student':
@@ -64,15 +71,6 @@ export class RegisterService {
           },
         });
 
-        plan = await this.cache.wrap(
-          `plan:${process.env.DEFAULT_SUBSCRIPTION_KEY}`,
-          () => {
-            return this.prisma.plan.findFirst({
-              where: { key: process.env.DEFAULT_SUBSCRIPTION_KEY },
-            });
-          },
-          86400,
-        );
         break;
 
       case 'growing':
@@ -97,15 +95,6 @@ export class RegisterService {
           },
         });
 
-        plan = await this.cache.wrap(
-          `plan:${process.env.DEFAULT_SUBSCRIPTION_KEY}`,
-          () => {
-            return this.prisma.plan.findFirst({
-              where: { key: process.env.DEFAULT_SUBSCRIPTION_KEY },
-            });
-          },
-          86400,
-        );
         break;
       default:
         break;
@@ -113,7 +102,6 @@ export class RegisterService {
 
     return {
       user: newUser,
-      plan: plan,
     };
   }
 

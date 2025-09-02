@@ -85,7 +85,6 @@ export class OrgController {
   }
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard)
   findOne(@Param('id') id: string) {
     return this.orgService.findOne(id);
   }

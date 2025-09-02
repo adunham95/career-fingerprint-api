@@ -268,7 +268,7 @@ export class StripeService {
     await this.prisma.subscription.create({
       data: {
         planID: planDetails.id,
-        orgID: user.orgID,
+        orgID: orgID,
         stripeSessionID: checkoutSession.id,
         status: 'checkout',
       },

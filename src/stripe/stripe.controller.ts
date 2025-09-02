@@ -69,6 +69,7 @@ export class StripeController {
       req.user,
       createCheckoutSessionDto.priceID,
       createCheckoutSessionDto.quantity,
+      createCheckoutSessionDto.orgID,
       createCheckoutSessionDto.couponID,
     );
   }

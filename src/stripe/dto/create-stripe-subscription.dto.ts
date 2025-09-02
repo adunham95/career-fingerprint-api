@@ -44,5 +44,9 @@ export class CreateStripeOrgSubscriptionDto {
   @IsOptional()
   quantity: number;
 
+  @ApiProperty()
+  @IsString()
+  orgID: string;
+
   user: User;
 }

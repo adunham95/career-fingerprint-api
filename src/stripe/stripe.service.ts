@@ -146,7 +146,7 @@ export class StripeService {
       data: {
         status: session.payment_status === 'paid' ? 'active' : 'temp',
       },
-      include: { plan: true },
+      include: { plan: true, org: { select: { id: true } } },
     });
   }
 
@@ -214,11 +214,17 @@ export class StripeService {
     user: UserEntity,
     priceID: string,
     quantity: number,
+    orgID: string,
     couponID?: string,
   ) {
     console.log({ priceID, couponID });
     console.log({ user });
-    const stripeUserID = user?.org?.stripeCustomerID || '';
+
+    const org = await this.prisma.organization.findFirst({
+      where: { id: orgID },
+    });
+
+    const stripeUserID = org?.stripeCustomerID || '';
     console.log({ stripeUserID });
     if (stripeUserID === null || stripeUserID === '') {
       throw Error('Missing stripeUserID');
@@ -245,7 +251,7 @@ export class StripeService {
         userID: user.id,
         planKey: planDetails?.key || 'Pro',
         planID: planDetails.id,
-        orgID: user.orgID,
+        orgID: orgID,
       },
       discounts: [
         {

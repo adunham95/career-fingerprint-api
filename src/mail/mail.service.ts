@@ -103,4 +103,17 @@ export class MailService {
   }) {
     await this.mailQueue.add('premiumWelcome', params);
   }
+
+  async sendAdminAddedEmail(params: {
+    to: string;
+    context: { firstName: string; orgName: string };
+  }) {
+    console.log('send admin added email');
+    await this.mailQueue.add('adminAdded', {
+      to: params.to,
+      context: {
+        ...params.context,
+      },
+    });
+  }
 }

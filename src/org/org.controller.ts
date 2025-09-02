@@ -47,6 +47,25 @@ export class OrgController {
     return this.orgService.getOrgAdmins(id);
   }
 
+  @Post(':orgID/admins')
+  @UseGuards(JwtAuthGuard)
+  newOrgAdmin(
+    @Param('orgID') id: string,
+    @Body()
+    createOrgDto: {
+      firstName?: string;
+      lastName?: string;
+      email: string;
+    },
+  ) {
+    return this.orgService.addOrgAdmin(
+      id,
+      createOrgDto.email,
+      createOrgDto.firstName,
+      createOrgDto.lastName,
+    );
+  }
+
   @Delete(':orgID/user/:userID')
   @UseGuards(JwtAuthGuard)
   removeUserFromOrg(

@@ -7,6 +7,7 @@ import { StripeService } from 'src/stripe/stripe.service';
 import { roundUpToNext100 } from 'src/utils/roundUp100';
 import { getDomainFromEmail } from 'src/utils/getDomain';
 import { CacheService } from 'src/cache/cache.service';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class OrgService {
@@ -14,6 +15,7 @@ export class OrgService {
     private prisma: PrismaService,
     private stripeService: StripeService,
     private cache: CacheService,
+    private mailService: MailService,
   ) {}
 
   async create(createOrgDto: CreateOrgDto) {
@@ -148,13 +150,62 @@ export class OrgService {
       () =>
         this.prisma.user.findMany({
           where: {
-            orgID: id,
+            orgs: {
+              some: { id },
+            },
           },
         }),
       600,
     );
 
     return admins;
+  }
+
+  async addOrgAdmin(
+    orgID: string,
+    email: string,
+    firstName?: string,
+    lastName?: string,
+  ) {
+    const user = await this.prisma.user.findFirst({ where: { email } });
+    const org = await this.prisma.organization.findFirst({
+      where: { id: orgID },
+      select: { name: true },
+    });
+    console.log({ user });
+    if (user !== null) {
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { orgs: { connect: { id: orgID } } },
+      });
+      await this.mailService.sendAdminAddedEmail({
+        to: email,
+        context: {
+          firstName: user.firstName,
+          orgName: org?.name || 'Organization',
+        },
+      });
+      return user;
+    }
+    const newUser = await this.prisma.user.create({
+      data: {
+        password: '123abc',
+        firstName,
+        lastName,
+        email,
+        orgs: {
+          connect: { id: orgID },
+        },
+      },
+    });
+    await this.mailService.sendAdminAddedEmail({
+      to: email,
+      context: {
+        firstName: newUser.firstName,
+        orgName: org?.name || 'Organization',
+      },
+    });
+    return newUser;
   }
 
   removeUserFromOrg(orgID: string, userID: number) {
@@ -176,10 +227,9 @@ export class OrgService {
     return this.prisma.user.update({
       where: {
         id: userID,
-        orgID: orgID,
       },
       data: {
-        orgID: null,
+        orgs: { disconnect: { id: orgID } },
       },
     });
   }

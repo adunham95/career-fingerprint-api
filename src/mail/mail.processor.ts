@@ -261,4 +261,35 @@ export class MailProcessor {
       throw error;
     }
   }
+
+  @Process('adminAdded')
+  async adminAdded(
+    job: Job<{
+      to: string;
+      context: { firstName: string; orgName: string };
+    }>,
+  ) {
+    const { to, context } = job.data;
+
+    const template = 'admin-added';
+    const subject = 'You have been added to a Career Fingerprint Organization ';
+
+    console.log(`📧 Sending email to ${to}`);
+
+    try {
+      await this.mailerService.sendMail({
+        to: [to],
+        template,
+        subject,
+        context: {
+          ...context,
+          loginLink: `${process.env.APP_URL}/login`,
+        },
+      });
+      console.log(`✅ Email sent to ${to}`);
+    } catch (error) {
+      console.log(`❌ Email not sent`, error);
+      throw error;
+    }
+  }
 }

@@ -36,12 +36,16 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   async validate(payload: { userID: number }) {
     console.log('validate');
     console.log({ payload });
-    const user = await this.cache.wrap(`currentUser:${payload.userID}`, () => {
-      return this.usersService.user(
-        { id: payload.userID },
-        { orgs: { select: { id: true, name: true } } },
-      );
-    });
+    // const user = await this.cache.wrap(`currentUser:${payload.userID}`, () => {
+    //   return this.usersService.user(
+    //     { id: payload.userID },
+    //     { orgs: { select: { id: true, name: true } } },
+    //   );
+    // });
+    const user = await this.usersService.user(
+      { id: payload.userID },
+      { orgs: { select: { id: true, name: true } } },
+    );
 
     if (!user) {
       throw new UnauthorizedException();
@@ -53,6 +57,9 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
 
     console.log({ user });
 
-    return { ...user, planLevel, subscription };
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...currentUser } = user;
+
+    return { ...currentUser, planLevel, subscription };
   }
 }

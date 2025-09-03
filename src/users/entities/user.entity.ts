@@ -1,4 +1,5 @@
 import { Organization, Subscription, User } from '@prisma/client';
+import { Exclude } from 'class-transformer';
 
 export class UserEntity implements User {
   constructor({ subscriptions = [], ...partial }: Partial<UserEntity>) {
@@ -10,13 +11,14 @@ export class UserEntity implements User {
   }
   id: number;
 
+  @Exclude()
   password: string;
 
   firstName: string;
 
   lastName: string;
 
-  username: string;
+  username: string | null;
 
   createdAt: Date;
 
@@ -24,13 +26,13 @@ export class UserEntity implements User {
 
   accountStatus: string;
 
-  pitch: string;
+  pitch: string | null;
 
   email: string;
 
-  lookingFor: string;
+  lookingFor: string | null;
 
-  profileImage: string;
+  profileImage: string | null;
 
   stripeCustomerID: string | null;
 

@@ -22,7 +22,7 @@ export class UsersService {
     userWhereUniqueInput: Prisma.UserWhereUniqueInput,
     userIncludeInput?: Prisma.UserInclude,
   ): Promise<User | null> {
-    return this.prisma.user.findUnique({
+    return await this.prisma.user.findUnique({
       where: userWhereUniqueInput,
       include: userIncludeInput,
     });

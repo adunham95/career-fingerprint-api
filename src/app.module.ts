@@ -43,6 +43,9 @@ import { HealthModule } from './health/health.module';
 import { TerminusModule } from '@nestjs/terminus';
 import { ReportsModule } from './reports/reports.module';
 import { DomainModule } from './domain/domain.module';
+import { SkillListController } from './skill-list/skill-list.controller';
+import { SkillListService } from './skill-list/skill-list.service';
+import { SkillListModule } from './skill-list/skill-list.module';
 
 @Module({
   imports: [
@@ -112,8 +115,9 @@ import { DomainModule } from './domain/domain.module';
     TerminusModule,
     ReportsModule,
     DomainModule,
+    SkillListModule,
   ],
-  controllers: [AppController, HealthController],
+  controllers: [AppController, HealthController, SkillListController],
   providers: [
     {
       provide: APP_FILTER,
@@ -123,6 +127,7 @@ import { DomainModule } from './domain/domain.module';
     PdfService,
     AuthCookieService,
     CacheService,
+    SkillListService,
   ],
 })
 export class AppModule {}

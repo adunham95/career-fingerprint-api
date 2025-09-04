@@ -59,8 +59,9 @@ model User {
   org                 Organization?      @relation(fields: [orgID], references: [id])
   orgs                Organization[]     @relation("OrgAdmins")
   verifyTokens        VerifyToken[]
+  skills              Skills[]
 
-  @@index([email])
+  @@index([email, inviteCode, stripeCustomerID])
 }
 
 model Organization {
@@ -80,6 +81,8 @@ model Organization {
   managedSubscriptions Subscription[] @relation("managedSubscriptions")
   orgSubscription      Subscription[] @relation("orgSubscription")
   domains              Domain[]
+
+  @@index([email, stripeCustomerID])
 }
 
 model Domain {
@@ -89,8 +92,8 @@ model Domain {
   orgID    String
   org      Organization @relation(fields: [orgID], references: [id])
 
-  @@index([domain])
   @@unique([domain, orgID]) // prevent duplicate self-invites
+  @@index([domain])
 }
 
 model InviteRedemption {
@@ -205,6 +208,7 @@ model Resume {
   title        String?
   positions    JobOptions[]
   bulletPoints BulletPoint[]
+  skills       String[]
 }
 
 model JobOptions {
@@ -277,6 +281,8 @@ model Achievement {
   resumePosition JobOptions[]     @relation("visibleAchievements")
   highlights     Highlight[]      @relation("highlightAchievements")
   tags           AchievementTag[] @relation("achievementTags")
+
+  @@index([userID])
 }
 
 model AchievementTag {
@@ -318,6 +324,8 @@ model Education {
   achievements    Achievement[]
   meetings        Meeting[]
   bulletPoints    BulletPoint[]
+
+  @@index([userID])
 }
 
 // Optional: Store webhook events for debugging
@@ -354,6 +362,8 @@ model JobApplication {
   prepAnswer        PrepAnswer[]
   migrated          Boolean      @default(false)
   coverLetter       CoverLetter?
+
+  @@index([userID])
 }
 
 model Meeting {
@@ -378,6 +388,8 @@ model Meeting {
   education     Education?      @relation(fields: [educationID], references: [id])
   highlights    Highlight[]
   prepAnswers   PrepAnswer[]
+
+  @@index([jobAppID, jobPositionID])
 }
 
 model Note {
@@ -391,6 +403,8 @@ model Note {
   meetings    Meeting?   @relation(fields: [meetingID], references: [id])
   highlightID String?
   highlight   Highlight? @relation(fields: [highlightID], references: [id])
+
+  @@index([userID, meetingID, highlightID])
 }
 
 model Highlight {
@@ -404,6 +418,8 @@ model Highlight {
   achievements Achievement[] @relation("highlightAchievements")
   meetingID    String?
   meetings     Meeting?      @relation(fields: [meetingID], references: [id])
+
+  @@index([userID, meetingID])
 }
 
 model PrepQuestion {
@@ -457,4 +473,15 @@ model CoverLetter {
   jobApplication JobApplication? @relation(fields: [jobAppID], references: [id])
 
   @@index([jobAppID])
+}
+
+model Skills {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  skillList String[]
+  userID    Int      @unique
+  user      User     @relation(fields: [userID], references: [id])
+
+  @@index([userID])
 }

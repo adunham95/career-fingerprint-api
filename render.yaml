@@ -20,8 +20,6 @@ services:
           property: connectionString
       - key: NODE_ENV
         value: production
-      - key: APP_URL
-        sync: false
       - key: FRONT_END_URL
         sync: false
       - key: STRIPE_API_KEY

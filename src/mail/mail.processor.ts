@@ -81,7 +81,7 @@ export class MailProcessor {
         template,
         subject,
         context: {
-          resetPasswordLink: `${process.env.APP_URL}/reset-password?email=${email}&token=${token}`,
+          resetPasswordLink: `${process.env.FRONT_END_URL}/reset-password?email=${email}&token=${token}`,
         },
       });
       console.log(`✅ Email sent to ${to}`);
@@ -149,7 +149,7 @@ export class MailProcessor {
         subject,
         context: {
           firstName,
-          verifyLink: `${process.env.APP_URL}/verify?token=${token}&showFreeTrial=true`,
+          verifyLink: `${process.env.FRONT_END_URL}/verify?token=${token}&showFreeTrial=true`,
         },
       });
       console.log(`✅ Email sent to ${to}`);
@@ -183,7 +183,7 @@ export class MailProcessor {
         subject,
         context: {
           firstName,
-          verifyLink: `${process.env.APP_URL}/verify?token=${token}`,
+          verifyLink: `${process.env.FRONT_END_URL}/verify?token=${token}`,
         },
       });
       console.log(`✅ Email sent to ${to}`);
@@ -217,7 +217,7 @@ export class MailProcessor {
         subject,
         context: {
           firstName,
-          updateCCLink: `${process.env.APP_URL}/settings/membership`,
+          updateCCLink: `${process.env.FRONT_END_URL}/settings/membership`,
         },
       });
       console.log(`✅ Email sent to ${to}`);
@@ -252,7 +252,7 @@ export class MailProcessor {
         subject,
         context: {
           firstName,
-          myAccountLink: `${process.env.APP_URL}/dashboard`,
+          myAccountLink: `${process.env.FRONT_END_URL}/dashboard`,
         },
       });
       console.log(`✅ Email sent to ${to}`);
@@ -283,7 +283,7 @@ export class MailProcessor {
         subject,
         context: {
           ...context,
-          loginLink: `${process.env.APP_URL}/login`,
+          loginLink: `${process.env.FRONT_END_URL}/login`,
         },
       });
       console.log(`✅ Email sent to ${to}`);

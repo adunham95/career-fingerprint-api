@@ -18,7 +18,13 @@ import { UpdateAchievementDto } from './dto/update-achievement.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { Request } from 'express';
+import { PaginationQueryDto } from 'src/dto/default-pagination-query.dto';
 
+interface MyAchievementQuery extends PaginationQueryDto {
+  includeLinked?: string;
+  jobPositionID?: string;
+  educationID?: string;
+}
 @Controller('achievement')
 export class AchievementController {
   constructor(private readonly achievementService: AchievementService) {}
@@ -42,18 +48,9 @@ export class AchievementController {
     return this.achievementService.findAll();
   }
 
-  //TODO pagination
   @Get('my')
   @UseGuards(JwtAuthGuard)
-  findMyAchievements(
-    @Req() req: Request,
-    @Query()
-    query: {
-      includeLinked?: string;
-      jobPositionID?: string;
-      educationID?: string;
-    },
-  ) {
+  findMyAchievements(@Req() req: Request, @Query() query: MyAchievementQuery) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
     }
@@ -64,6 +61,7 @@ export class AchievementController {
         educationID: query.educationID || null,
       },
       query.includeLinked === 'true',
+      { limit: query.limit, page: query.page },
     );
   }
 

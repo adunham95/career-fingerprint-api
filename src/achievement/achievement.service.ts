@@ -50,7 +50,21 @@ export class AchievementService {
     userID: number,
     whereOptions: { jobPositionID: string | null; educationID: string | null },
     includeLinked: boolean = false,
+    query?: { page?: number | string; limit?: number | string },
   ) {
+    const queryData: {
+      skip?: number;
+      take?: number;
+    } = {};
+    if (query?.limit && query.page) {
+      let { page, limit } = query;
+      page = typeof page === 'string' ? Number(page) : page;
+      limit = typeof limit === 'string' ? Number(limit) : limit;
+      const skip = (page - 1) * limit;
+      queryData.skip = skip;
+      queryData.take = limit;
+    }
+
     const where: Prisma.AchievementWhereInput = {};
 
     console.log({ whereOptions });
@@ -69,6 +83,7 @@ export class AchievementService {
       `myAchievements:${userID}`,
       () => {
         return this.prisma.achievement.findMany({
+          ...queryData,
           where: { userID, ...where },
           orderBy: { startDate: 'desc' },
           include: {

@@ -36,7 +36,7 @@ export class ResumeService {
   async findOneAndBuildPDF(id: string) {
     const resume = await this.prisma.resume.findFirst({
       where: { id },
-      include: { user: true },
+      include: { user: { include: { skills: true } } },
     });
 
     if (!resume) {

@@ -118,6 +118,7 @@ export class RegisterService {
       orgEmail: createRegisterOrgDto.orgEmail,
       orgName: createRegisterOrgDto.orgName,
       orgSize: createRegisterOrgDto.orgSize,
+      orgLogo: createRegisterOrgDto.orgLogo,
       admin: newUser.id,
     });
     return { user: newUser, org: newOrg };

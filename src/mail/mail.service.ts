@@ -71,7 +71,7 @@ export class MailService {
       to: params.to,
       context: {
         ...params.context,
-        weeklyLink: `${process.env.APP_URL}/dashboard/weekly`,
+        weeklyLink: `${process.env.FRONT_END_URL}/dashboard/weekly`,
       },
     });
   }

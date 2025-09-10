@@ -42,7 +42,7 @@ function formatDate(dateString?: string | null) {
 }
 
 type ResumeWithUser = Prisma.ResumeGetPayload<{
-  include: { user: true };
+  include: { user: { include: { skills: true } } };
 }>;
 
 type CoverLetterWithUser = Prisma.CoverLetterGetPayload<{

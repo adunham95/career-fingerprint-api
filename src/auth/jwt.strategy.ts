@@ -39,7 +39,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     const user = await this.cache.wrap(`currentUser:${payload.userID}`, () => {
       return this.usersService.user(
         { id: payload.userID },
-        { orgs: { select: { id: true, name: true } } },
+        { orgs: { select: { id: true, name: true, logoURL: true } } },
       );
     });
 

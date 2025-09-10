@@ -56,6 +56,11 @@ export class CreateRegisterOrgDto {
   orgDomain: string;
 
   @ApiProperty()
+  @IsString()
+  @IsOptional()
+  orgLogo: string;
+
+  @ApiProperty()
   @IsEmail()
   orgEmail: string;
 }

@@ -38,6 +38,7 @@ export class OrgService {
         name: createOrgDto.orgName,
         seatCount: roundUpToNext100(createOrgDto.orgSize) || 0,
         email: createOrgDto.orgEmail,
+        logoURL: createOrgDto.orgLogo,
         defaultPlanID: plan?.id,
         orgAdmins: {
           connect: { id: createOrgDto.admin },

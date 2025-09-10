@@ -20,6 +20,11 @@ export class CreateOrgDto {
   orgEmail: string;
 
   @ApiProperty()
+  @IsString()
+  @IsOptional()
+  orgLogo: string;
+
+  @ApiProperty()
   @IsOptional()
   @IsNumber()
   admin?: number;

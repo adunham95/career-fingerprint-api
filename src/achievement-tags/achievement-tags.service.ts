@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { CreateAchievementTagDto } from './dto/create-achievement-tag.dto';
-import { UpdateAchievementTagDto } from './dto/update-achievement-tag.dto';
+// import { UpdateAchievementTagDto } from './dto/update-achievement-tag.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { colorList } from './colorList';
 
@@ -8,7 +8,8 @@ import { colorList } from './colorList';
 export class AchievementTagsService {
   constructor(private prisma: PrismaService) {}
   create(createAchievementTagDto: CreateAchievementTagDto) {
-    // TODO Fix color issue
+    if (!createAchievementTagDto.name || createAchievementTagDto.name === '')
+      throw Error('Name cannot be empty');
     if (!createAchievementTagDto?.color) {
       createAchievementTagDto.color = this.generateTagColor();
     }
@@ -45,9 +46,12 @@ export class AchievementTagsService {
     return `This action returns a #${id} achievementTag`;
   }
 
-  update(id: number, updateAchievementTagDto: UpdateAchievementTagDto) {
+  update(id: number) {
     return `This action updates a #${id} achievementTag`;
   }
+  // update(id: number, updateAchievementTagDto: UpdateAchievementTagDto) {
+  //   return `This action updates a #${id} achievementTag`;
+  // }
 
   linkToAchievementID(id: string, achievementID: string) {
     return this.prisma.achievementTag.update({

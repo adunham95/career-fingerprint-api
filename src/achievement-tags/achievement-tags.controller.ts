@@ -14,7 +14,7 @@ import {
 } from '@nestjs/common';
 import { AchievementTagsService } from './achievement-tags.service';
 import { CreateAchievementTagDto } from './dto/create-achievement-tag.dto';
-import { UpdateAchievementTagDto } from './dto/update-achievement-tag.dto';
+// import { UpdateAchievementTagDto } from './dto/update-achievement-tag.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { Request } from 'express';
 
@@ -67,9 +67,10 @@ export class AchievementTagsController {
   @Patch(':id')
   update(
     @Param('id') id: string,
-    @Body() updateAchievementTagDto: UpdateAchievementTagDto,
+    // @Body() updateAchievementTagDto: UpdateAchievementTagDto,
   ) {
-    return this.achievementTagsService.update(+id, updateAchievementTagDto);
+    // return this.achievementTagsService.update(+id, updateAchievementTagDto);
+    return this.achievementTagsService.update(+id);
   }
 
   @Patch(':id/ach/:achievement_id')

@@ -314,6 +314,82 @@ export class PdfService {
     highlights: HighlightData[],
   ) {
     console.log({ meeting, prepAnswers, highlights });
+    const content: TDocumentDefinitions['content'] = [];
+    function chunkArray<T>(array: T[], size: number): T[][] {
+      const result: T[][] = [];
+      for (let i = 0; i < array.length; i += size) {
+        result.push(array.slice(i, i + size));
+      }
+      return result;
+    }
+
+    content.push(
+      { text: `${meeting.title}`, style: 'name' },
+      {
+        text: `${meeting.jobApp?.title || meeting.jobPosition?.name || meeting.education?.degree}`,
+        style: 'summary',
+      },
+    );
+
+    content.push(
+      { text: `Highlights`, style: 'sectionHeader' },
+      {
+        layout: 'lightHorizontalLines',
+        table: {
+          headerRows: 1,
+          widths: ['*', '*', '*'],
+          body: [
+            ['Highlight', 'Notes', 'Achievements'],
+            ...highlights.map((h) => [
+              { text: h.text, italics: true },
+              { text: h.notes.map((n) => `${n.note}\n`) },
+              { text: h.achievements.map((a) => `${a.myContribution}\n`) },
+            ]),
+          ],
+        },
+      },
+    );
+
+    content.push('\n');
+
+    // Prep Questions section with dynamic 3-card layout
+    content.push({ text: `Prep Questions`, style: 'sectionHeader' });
+    content.push('\n');
+
+    chunkArray(prepAnswers, 2).forEach((row) => {
+      const columns = row.map((card) => ({
+        stack: [
+          { text: card.question.question, style: 'question' },
+          { text: card.answer, style: 'answer' },
+        ],
+        style: 'card',
+        margin: [0, 0, 10, 15] as [number, number, number, number],
+      }));
+
+      content.push({ columns });
+    });
+
+    content.push({
+      stack: [
+        { text: 'Notes:', bold: true, margin: [0, 0, 0, 10] },
+        {
+          canvas: Array.from({ length: 20 }, (_, i) => ({
+            type: 'line',
+            x1: 0,
+            y1: i * 25,
+            x2: 515,
+            y2: i * 25,
+            lineWidth: 0.5,
+            lineColor: '#cccccc',
+          })),
+        },
+        '\n',
+        { text: 'Add Your Notes Here:', bold: true, margin: [0, 0, 0, 10] },
+        { qr: `https://careerfingerprint.app/meeting/${meeting.id}`, fit: 150 },
+      ],
+      margin: [0, 20, 0, 0],
+      pageBreak: 'before',
+    });
 
     const docDefinition: TDocumentDefinitions = {
       pageMargins: [40, 50, 40, 50],
@@ -326,86 +402,7 @@ export class PdfService {
           margin: [40, 0, 40, 20],
         };
       },
-      content: [
-        {
-          text: `${meeting.title}`,
-          style: 'name',
-        },
-        {
-          text: `${meeting.jobApp?.title || meeting.jobPosition?.name || meeting.education?.degree}`,
-          style: 'summary',
-        },
-        {
-          text: `Highlights`,
-          style: 'sectionHeader',
-        },
-        {
-          layout: 'lightHorizontalLines', // optional
-          table: {
-            headerRows: 1,
-            widths: ['*', '*', '*'],
-
-            body: [
-              ['Highlight', 'Notes', 'Achievements'],
-              ...highlights.map((h) => {
-                return [
-                  { text: h.text, italics: true },
-                  { text: h.notes.map((n) => `${n.note}\n`) },
-                  { text: h.achievements.map((a) => `${a.myContribution}\n`) },
-                ];
-              }),
-            ],
-          },
-        },
-        '\n',
-        {
-          text: `Prep Questions`,
-          style: 'sectionHeader',
-        },
-        ...prepAnswers.map((p) => {
-          return [
-            {
-              columns: [
-                {
-                  text: p.question.question,
-                  style: 'question',
-                },
-                {
-                  text: p.answer,
-                  style: 'answer',
-                },
-              ],
-              marginBottom: 5,
-            },
-          ];
-        }),
-
-        {
-          stack: [
-            { text: 'Notes:', bold: true, margin: [0, 0, 0, 10] },
-            {
-              // the lined section
-              canvas: Array.from({ length: 20 }, (_, i) => ({
-                type: 'line',
-                x1: 0,
-                y1: i * 25,
-                x2: 515,
-                y2: i * 25,
-                lineWidth: 0.5,
-                lineColor: '#cccccc',
-              })),
-            },
-            '\n',
-            { text: 'Add Your Notes Here:', bold: true, margin: [0, 0, 0, 10] },
-            {
-              qr: `https://careerfingerprint.app/meeting/${meeting.id}`,
-              fit: 150,
-            },
-          ],
-          margin: [0, 20, 0, 0],
-          pageBreak: 'before', // keeps it with previous content if possible
-        },
-      ],
+      content,
       styles: {
         name: { fontSize: 18, bold: true, margin: [0, 0, 0, 5] },
 

@@ -1,23 +1,12 @@
-import {
-  Controller,
-  Post,
-  Body,
-  Res,
-  Req,
-  HttpStatus,
-  HttpException,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Post, Body, Res } from '@nestjs/common';
 import { RegisterService } from './register.service';
 import {
   CreateRegisterDto,
   CreateRegisterOrgDto,
 } from './dto/create-register.dto';
 import { AuthService } from 'src/auth/auth.service';
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { AuthCookieService } from 'src/authcookie/authcookie.service';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-
 @Controller('register')
 export class RegisterController {
   constructor(
@@ -61,15 +50,13 @@ export class RegisterController {
   }
 
   @Post('verify')
-  @UseGuards(JwtAuthGuard)
-  verifyEmail(
-    @Body() data: { token: string; showFreeTrial: boolean },
-    @Req() req: Request,
-  ) {
-    if (!req.user) {
-      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
-    }
-    console.log({ data });
-    return this.registerService.verifyEmail({ ...data, user: req.user });
+  async verifyEmail(@Body() data: { token: string; showFreeTrial: boolean }) {
+    const verified = await this.registerService.verifyEmail(data);
+
+    const { accessToken } = await this.authService.loginUserByID(
+      verified.userID,
+    );
+
+    return { ...verified, accessToken };
   }
 }

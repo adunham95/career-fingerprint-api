@@ -5,10 +5,8 @@ import {
 } from './dto/create-register.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UsersService } from 'src/users/users.service';
-import { User } from '@prisma/client';
 import { OrgService } from 'src/org/org.service';
 import { CacheService } from 'src/cache/cache.service';
-import bcrypt from 'bcrypt';
 import { SubscriptionsService } from 'src/subscriptions/subscriptions.service';
 
 @Injectable()
@@ -124,36 +122,34 @@ export class RegisterService {
     return { user: newUser, org: newOrg };
   }
 
-  async verifyEmail(data: {
-    token: string;
-    showFreeTrial: boolean;
-    user: User;
-  }) {
+  async verifyEmail(data: { token: string; showFreeTrial: boolean }) {
     const verifyToken = await this.prisma.verifyToken.findFirst({
-      where: { userID: data.user.id, expiresAt: { gt: new Date() } },
+      where: { token: data.token, expiresAt: { gt: new Date() } },
     });
 
     if (!verifyToken) throw Error('Missing Verification Token');
-
-    const isTokenValid = await bcrypt.compare(data.token, verifyToken?.token);
-
-    if (!isTokenValid) {
-      throw Error('Verification Code Failed');
-    }
 
     await this.prisma.verifyToken.deleteMany({
       where: { userID: verifyToken.userID },
     });
 
+    const user = await this.prisma.user.findFirst({
+      where: { id: verifyToken.userID },
+    });
+
+    if (!user) {
+      throw Error('Missing User');
+    }
+
     await this.prisma.user.update({
-      where: { id: data.user.id },
+      where: { id: verifyToken.userID },
       data: { emailVerified: true },
     });
 
-    await this.cache.del(`activeUserSubscription:${data.user.id}`);
+    await this.cache.del(`activeUserSubscription:${verifyToken.userID}`);
 
     if (!data.showFreeTrial) {
-      return { verified: true };
+      return { verified: true, userID: verifyToken.userID };
     }
 
     const plan = await this.cache.wrap(
@@ -166,13 +162,14 @@ export class RegisterService {
       86400,
     );
 
-    const { org, plan: orgPlan } = await this.org.hasSpace(data.user.email);
+    const { org, plan: orgPlan } = await this.org.hasSpace(user.email);
 
     return {
       plan: orgPlan || plan,
       orgID: org?.id,
       orgName: org?.name,
       verified: true,
+      userID: verifyToken.userID,
     };
   }
 }

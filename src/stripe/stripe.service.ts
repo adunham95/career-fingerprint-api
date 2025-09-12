@@ -4,6 +4,7 @@ import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { Organization, User } from '@prisma/client';
 import { Queue } from 'bull';
+import { CacheService } from 'src/cache/cache.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UserEntity } from 'src/users/entities/user.entity';
 import Stripe from 'stripe';
@@ -19,6 +20,7 @@ export class StripeService {
     @Inject('FRONT_END_URL')
     private readonly frontEndUrl: string,
     private prisma: PrismaService,
+    private cache: CacheService,
   ) {
     this.stripe = new Stripe(this.secretKey, {
       apiVersion: '2025-07-30.basil',
@@ -121,6 +123,9 @@ export class StripeService {
       },
     });
 
+    await this.cache.del(`activeUserSubscription:${user.id}`);
+    await this.cache.del(`currentUser:${user.id}`);
+
     return subscription;
   }
 
@@ -138,6 +143,8 @@ export class StripeService {
     const session = await this.stripe.checkout.sessions.retrieve(sessionID, {
       expand: ['subscription'],
     });
+
+    await this.cache.del(`activeUserSubscription:${subscription.userID}`);
 
     return this.prisma.subscription.update({
       where: {

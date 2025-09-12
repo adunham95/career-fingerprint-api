@@ -80,7 +80,7 @@ export class UsersService {
       to: user.email,
       context: {
         firstName: user.firstName,
-        token: await this.createEmailValidationCode(user.id),
+        token: await this.createEmailValidationCode(user.id, true),
       },
     });
 
@@ -160,19 +160,20 @@ export class UsersService {
     return { success: true };
   }
 
-  private async createEmailValidationCode(userID: number) {
+  private async createEmailValidationCode(userID: number, extended?: boolean) {
     const now = new Date();
 
-    const tenMinutesLater = new Date(now.getTime() + 10 * 60 * 1000);
+    const expirationDate = extended
+      ? new Date(now.getTime() + 24 * 60 * 60 * 1000)
+      : new Date(now.getTime() + 10 * 60 * 1000);
 
     const token = this.generateRandomString(10);
-    const hashedToken = await this.hashPassword(token);
 
     await this.prisma.verifyToken.create({
       data: {
-        token: hashedToken,
+        token,
         userID,
-        expiresAt: tenMinutesLater.toISOString(),
+        expiresAt: expirationDate.toISOString(),
       },
     });
 

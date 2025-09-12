@@ -45,6 +45,32 @@ export class AuthService {
     };
   }
 
+  async loginUserByID(id: number) {
+    const user = await this.usersService.user({
+      id,
+      accountStatus: 'active',
+    });
+
+    console.log('loginUserByID', user);
+
+    if (!user) {
+      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+    }
+
+    const payload = {
+      username: user.username,
+      userID: user.id,
+      email: user.email,
+    };
+
+    const accessToken = this.jwtService.sign(payload);
+
+    return {
+      accessToken,
+      user,
+    };
+  }
+
   async generateResetToken(email: string) {
     const tokenData = this.generateResetTokenData();
     await this.prisma.resetToken.create({

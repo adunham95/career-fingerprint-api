@@ -3,7 +3,7 @@ import PdfPrinter from 'pdfmake';
 import { PassThrough } from 'stream';
 import type { TDocumentDefinitions } from 'pdfmake/interfaces';
 import path from 'path';
-import { Prisma } from '@prisma/client';
+import { Prisma, Skills } from '@prisma/client';
 
 const fonts = {
   Roboto: {
@@ -85,6 +85,7 @@ export class PdfService {
     resumeData: ResumeWithUser,
     jobPositions: JobPositionWithBulletPoints[],
     education: EducationWithBulletPoints[],
+    skills: Skills | null,
   ) {
     const docDefinition: TDocumentDefinitions = {
       pageMargins: [40, 50, 40, 50],
@@ -115,6 +116,15 @@ export class PdfService {
         '\n',
         {
           text: resumeData.summary,
+          style: 'summary',
+        },
+        '\n',
+        {
+          text: 'Skills',
+          style: 'sectionHeader',
+        },
+        {
+          text: skills?.skillList.join(', ') || '',
           style: 'summary',
         },
         '\n',

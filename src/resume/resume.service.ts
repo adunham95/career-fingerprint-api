@@ -55,8 +55,17 @@ export class ResumeService {
       where: { userID: resume.userID },
       include: { bulletPoints: true },
     });
+
+    const skills = await this.prisma.skills.findFirst({
+      where: { userID: resume.userID },
+    });
     console.log({ resume });
-    return this.pdfService.createResume(resume, jobPositions, education);
+    return this.pdfService.createResume(
+      resume,
+      jobPositions,
+      education,
+      skills,
+    );
   }
 
   async duplicateResume(id: string) {

@@ -37,7 +37,7 @@ export class OrgService {
       data: {
         name: createOrgDto.orgName,
         seatCount: roundUpToNext100(createOrgDto.orgSize) || 0,
-        email: createOrgDto.orgEmail,
+        email: createOrgDto.orgEmail.toLowerCase(),
         logoURL: createOrgDto.orgLogo,
         defaultPlanID: plan?.id,
         orgAdmins: {
@@ -196,7 +196,7 @@ export class OrgService {
         password: '123abc',
         firstName,
         lastName,
-        email,
+        email: email.toLowerCase(),
         orgs: {
           connect: { id: orgID },
         },

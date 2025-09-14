@@ -17,7 +17,7 @@ export class AuthService {
 
   async loginUser(email: string, pass: string) {
     const user = await this.usersService.user({
-      email,
+      email: email.toLowerCase(),
       accountStatus: 'active',
     });
 
@@ -75,7 +75,7 @@ export class AuthService {
     const tokenData = this.generateResetTokenData();
     await this.prisma.resetToken.create({
       data: {
-        email,
+        email: email.toLowerCase(),
         token: tokenData.token,
         expiresAt: tokenData.expiresAt,
       },
@@ -91,7 +91,11 @@ export class AuthService {
 
   async resetFromToken(email: string, password: string, token: string) {
     const tokenData = await this.prisma.resetToken.findFirst({
-      where: { email, token, expiresAt: { gte: new Date() } },
+      where: {
+        email: email.toLowerCase(),
+        token,
+        expiresAt: { gte: new Date() },
+      },
     });
 
     if (!tokenData) {
@@ -100,13 +104,13 @@ export class AuthService {
     }
 
     await this.usersService.updateUser({
-      where: { email },
+      where: { email: email.toLowerCase() },
       data: { password },
     });
 
     await this.prisma.resetToken.delete({
       where: {
-        token_email: { token, email },
+        token_email: { token, email: email.toLowerCase() },
       },
     });
     return true;

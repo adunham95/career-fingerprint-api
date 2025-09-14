@@ -48,6 +48,8 @@ export class UsersService {
   async createUser(data: Prisma.UserCreateInput): Promise<User> {
     data.password = await this.hashPassword(data.password);
 
+    data.email = data.email.toLowerCase();
+
     const freePlan = await this.cache.wrap(
       'plan:free',
       () => {

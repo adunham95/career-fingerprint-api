@@ -41,10 +41,18 @@ export class NotesService {
       throw new Error('Not Found');
     }
 
+    console.log({ meetingID, jobAppID: meeting.jobAppID });
+
+    const orConditions: any[] = [{ id: meetingID }];
+
+    if (meeting.jobAppID) {
+      orConditions.push({ jobAppID: meeting.jobAppID });
+    }
+
     return this.prisma.note.findMany({
       where: {
         meetings: {
-          OR: [{ id: meetingID }, { jobAppID: meeting.jobAppID }],
+          OR: orConditions,
         },
         AND: { highlightID: null },
       },

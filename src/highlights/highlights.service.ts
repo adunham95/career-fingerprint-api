@@ -57,9 +57,17 @@ export class HighlightsService {
       throw new Error('Not Found');
     }
 
+    console.log({ meetingID, jobAppID: meeting.jobAppID });
+
+    const orConditions: any[] = [{ id: meetingID }];
+
+    if (meeting.jobAppID) {
+      orConditions.push({ jobAppID: meeting.jobAppID });
+    }
+
     return this.prisma.highlight.findMany({
       where: {
-        meetings: { OR: [{ id: meetingID }, { jobAppID: meeting.jobAppID }] },
+        meetings: { OR: orConditions },
       },
       include: { notes: true, achievements: true },
       orderBy: { createdAt: 'asc' },

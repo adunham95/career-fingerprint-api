@@ -101,9 +101,6 @@ export class MeetingsService {
     return this.prisma.meeting.findMany({
       where: {
         jobAppID,
-        time: {
-          lt: new Date(),
-        },
       },
       orderBy: {
         time: 'asc',

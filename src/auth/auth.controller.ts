@@ -34,17 +34,12 @@ export class AuthController {
     @Body() { email, password }: LoginDto,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const { accessToken, user } = await this.authService.loginUser(
-      email,
-      password,
-    );
-    console.log({
-      accessToken,
-      secure: process.env.NODE_ENV === 'production',
-      cookieDomain: process.env.COOKIE_DOMAIN,
-    });
+    const { accessToken, user, sessionToken, refreshToken } =
+      await this.authService.loginUser(email, password);
     this.authCookieService.setAuthCookie(response, accessToken);
-    return { accessToken, user };
+    this.authCookieService.setSessionCookie(response, sessionToken);
+    this.authCookieService.setRefreshCookie(response, refreshToken);
+    return { user };
   }
 
   @Post('request-reset')
@@ -72,5 +67,28 @@ export class AuthController {
   logout(@Req() req: Request, @Res({ passthrough: true }) response: Response) {
     this.authCookieService.clearAuthCookie(response);
     return { success: true };
+  }
+
+  @Post('refresh')
+  async refresh(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    console.log('refreshing');
+    console.log(req.cookies.refreshToken);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const refreshToken: string = req.cookies?.['refreshToken'];
+    console.log(refreshToken, 'refreshToken');
+    if (!refreshToken) {
+      throw new HttpException('No refresh token', HttpStatus.UNAUTHORIZED);
+    }
+
+    const { sessionToken, user } =
+      await this.authService.refreshTokens(refreshToken);
+
+    // issue new short-term session
+    this.authCookieService.setSessionCookie(res, sessionToken);
+
+    return { user };
   }
 }

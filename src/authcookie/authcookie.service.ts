@@ -38,4 +38,29 @@ export class AuthCookieService {
       maxAge: -1,
     });
   }
+
+  setSessionCookie(res: Response, token: string) {
+    res.cookie('sessionToken', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      domain: process.env.COOKIE_DOMAIN,
+      maxAge: 1000 * 60 * 15, // 15 minutes
+    });
+  }
+
+  setRefreshCookie(res: Response, token: string) {
+    res.cookie('refreshToken', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      domain: process.env.COOKIE_DOMAIN,
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+    });
+  }
+
+  clearCookies(res: Response) {
+    res.clearCookie('sessionToken');
+    res.clearCookie('refreshToken');
+  }
 }

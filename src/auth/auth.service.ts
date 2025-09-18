@@ -5,6 +5,8 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma/prisma.service';
 import crypto from 'crypto';
 import { MailService } from 'src/mail/mail.service';
+import { User } from '@prisma/client';
+import { refreshSecret, sessionSecret } from './auth.module';
 
 @Injectable()
 export class AuthService {
@@ -32,16 +34,18 @@ export class AuthService {
     }
 
     const payload = {
-      username: user.username,
       userID: user.id,
-      email: user.email,
     };
 
     const accessToken = this.jwtService.sign(payload);
 
+    const { sessionToken, refreshToken } = this.generateTokens(user);
+
     return {
       accessToken,
       user,
+      sessionToken,
+      refreshToken,
     };
   }
 
@@ -57,17 +61,17 @@ export class AuthService {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
     }
 
-    const payload = {
-      username: user.username,
+    const accessToken = this.jwtService.sign({
       userID: user.id,
-      email: user.email,
-    };
+    });
 
-    const accessToken = this.jwtService.sign(payload);
+    const { sessionToken, refreshToken } = this.generateTokens(user);
 
     return {
       accessToken,
       user,
+      sessionToken,
+      refreshToken,
     };
   }
 
@@ -121,6 +125,48 @@ export class AuthService {
       message: 'Logout successful',
       statusCode: HttpStatus.OK,
     };
+  }
+
+  private generateTokens(user: User) {
+    const payload = {
+      userID: user.id,
+    };
+
+    const sessionToken = this.jwtService.sign(payload, {
+      secret: sessionSecret,
+      expiresIn: '15m',
+    });
+
+    const refreshToken = this.jwtService.sign(payload, {
+      secret: refreshSecret,
+      expiresIn: '7d',
+    });
+
+    return { refreshToken, sessionToken, user };
+  }
+
+  async refreshTokens(refreshToken: string) {
+    try {
+      const payload: { userID: number } = this.jwtService.verify(refreshToken, {
+        secret: refreshSecret,
+      });
+
+      const user = await this.usersService.user({
+        id: payload.userID,
+        accountStatus: 'active',
+      });
+
+      if (!user) throw new Error('User not found');
+
+      const tokens = this.generateTokens(user);
+
+      console.log('tokens', tokens);
+
+      return tokens;
+    } catch (e) {
+      console.log(e);
+      throw new HttpException('Invalid refresh token', HttpStatus.UNAUTHORIZED);
+    }
   }
 
   private generateResetTokenData(): {

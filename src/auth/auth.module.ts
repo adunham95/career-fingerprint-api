@@ -12,6 +12,8 @@ import { AuthCookieModule } from 'src/authcookie/authcookie.module';
 import { CacheModule } from 'src/cache/cache.module';
 
 export const jwtSecret = process.env.SECRET || '123abc';
+export const sessionSecret = process.env.SESSION_SECRET || '123abc';
+export const refreshSecret = process.env.REFRESH_SECRET || '123abc';
 
 @Module({
   imports: [

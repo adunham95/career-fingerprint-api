@@ -107,6 +107,7 @@ export class UsersService {
   }
 
   async deleteUser(id: number): Promise<User> {
+    await this.cache.del(`currentUser:${id}`);
     return this.prisma.user.update({
       where: { id },
       data: {

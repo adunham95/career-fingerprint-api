@@ -75,7 +75,7 @@ export class UsersController {
     });
   }
 
-  @Delete(':id')
+  @Delete()
   @UseGuards(JwtAuthGuard)
   remove(@Req() req: Request) {
     if (!req.user) {

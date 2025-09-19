@@ -1,15 +1,14 @@
-import { Optional } from '@nestjs/common';
 import { ApiProperty } from '@nestjs/swagger';
 import { Prisma } from '@prisma/client';
 import { IsEmail, IsOptional, IsString, MinLength } from 'class-validator';
 
 export class CreateUserDto implements Prisma.UserCreateInput {
   @ApiProperty()
-  @Optional()
+  @IsOptional()
   @IsString()
   firstName?: string;
 
-  @Optional()
+  @IsOptional()
   @IsString()
   @ApiProperty()
   lastName?: string;
@@ -28,7 +27,7 @@ export class CreateUserDto implements Prisma.UserCreateInput {
   @IsEmail()
   email: string;
 
-  @Optional()
+  @IsOptional()
   @IsString()
   @ApiProperty()
   orgID?: string;

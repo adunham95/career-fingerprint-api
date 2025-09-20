@@ -1,3 +1,4 @@
+import { InjectQueue } from '@nestjs/bull';
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { Queue } from 'bull';
@@ -8,7 +9,7 @@ export class AccountCleanUpService {
   private readonly logger = new Logger(AccountCleanUpService.name);
   constructor(
     private readonly prisma: PrismaService,
-    private readonly cleanupQueue: Queue,
+    @InjectQueue('cleanup') private cleanupQueue: Queue,
   ) {}
 
   @Cron('0 2 * * 6') // Saturdays at 2 AM

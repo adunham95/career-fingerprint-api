@@ -46,6 +46,8 @@ import { DomainModule } from './domain/domain.module';
 import { SkillListController } from './skill-list/skill-list.controller';
 import { SkillListService } from './skill-list/skill-list.service';
 import { SkillListModule } from './skill-list/skill-list.module';
+import { AccountCleanUpService } from './account-clean-up/account-clean-up.service';
+import { AccountCleanUpModule } from './account-clean-up/account-clean-up.module';
 
 @Module({
   imports: [
@@ -116,6 +118,7 @@ import { SkillListModule } from './skill-list/skill-list.module';
     ReportsModule,
     DomainModule,
     SkillListModule,
+    AccountCleanUpModule,
   ],
   controllers: [AppController, HealthController, SkillListController],
   providers: [
@@ -128,6 +131,7 @@ import { SkillListModule } from './skill-list/skill-list.module';
     AuthCookieService,
     CacheService,
     SkillListService,
+    AccountCleanUpService,
   ],
 })
 export class AppModule {}

@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
@@ -8,6 +8,7 @@ import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
@@ -51,7 +52,7 @@ export class AuthService {
       accountStatus: 'active',
     });
 
-    console.log('loginUserByID', user);
+    this.logger.debug('loginUserByID', user);
 
     if (!user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -85,7 +86,7 @@ export class AuthService {
       to: email,
       context: { email, token: tokenData.token },
     });
-    console.log(tokenData.token);
+    this.logger.verbose('Token Data', { tokenData });
     return true;
   }
 
@@ -99,7 +100,7 @@ export class AuthService {
     });
 
     if (!tokenData) {
-      console.log('no token data');
+      this.logger.warn('No token data');
       return false;
     }
 

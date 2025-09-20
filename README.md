@@ -96,3 +96,35 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+
+# 📝 NestJS Logger Best Practices
+
+Logging is essential for monitoring, debugging, and maintaining your NestJS application.  
+This guide explains how to use NestJS’ built-in `Logger` effectively.
+
+---
+
+## 📌 Log Levels and Usage
+
+NestJS provides five log levels. Use them consistently for clear and useful logs.
+
+| Level          | Purpose                                   | When to Use                                             |
+| -------------- | ----------------------------------------- | ------------------------------------------------------- |
+| **log** (info) | General information about normal app flow | Startup messages, user actions, business events         |
+| **error**      | Critical issues that failed               | Exceptions, DB/API failures, unhandled errors           |
+| **warn**       | Potential problems or risky situations    | Deprecated usage, near rate limits, missing config      |
+| **debug**      | Developer-focused details                 | Variable states, request/response bodies, complex flows |
+| **verbose**    | Extremely detailed traces                 | Step-by-step workflow tracking, framework-level details |
+
+---
+
+## 🚦 Environment-Based Guidelines
+
+- **Production**:  
+  Enable only `log`, `warn`, and `error` to keep logs clean and focused.
+- **Development**:  
+  Enable all levels (`log`, `error`, `warn`, `debug`, `verbose`) for deeper insight.
+- **Testing**:  
+  Keep logs minimal (`error` only) unless debugging test failures.
+
+---

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { CreateAchievementDto } from './dto/create-achievement.dto';
 import { UpdateAchievementDto } from './dto/update-achievement.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -7,6 +7,7 @@ import { CacheService } from 'src/cache/cache.service';
 
 @Injectable()
 export class AchievementService {
+  private readonly logger = new Logger(AchievementService.name);
   constructor(
     private prisma: PrismaService,
     private cache: CacheService,
@@ -67,7 +68,7 @@ export class AchievementService {
 
     const where: Prisma.AchievementWhereInput = {};
 
-    console.log({ whereOptions });
+    this.logger.verbose('Where Options', { whereOptions });
 
     if (whereOptions.jobPositionID) {
       where.jobPositionID = whereOptions.jobPositionID;
@@ -77,7 +78,7 @@ export class AchievementService {
       where.educationID = whereOptions.educationID;
     }
 
-    console.log({ where });
+    this.logger.verbose('Where options after added', { where });
 
     const myAchievements = await this.cache.wrap(
       `myAchievements:${userID}`,

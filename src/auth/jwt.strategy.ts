@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-jwt';
 import { jwtSecret } from './auth.module';
@@ -9,6 +9,7 @@ import { CacheService } from 'src/cache/cache.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
+  private readonly logger = new Logger(JwtStrategy.name);
   constructor(
     private usersService: UsersService,
     private subscriptionService: SubscriptionsService,
@@ -16,14 +17,15 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   ) {
     super({
       jwtFromRequest: (req: Request) => {
-        console.log('jwt from request', req.cookies);
+        this.logger.verbose('request cookies', req.cookies);
         if (req?.cookies?.accessToken) {
-          console.log('has cookie');
+          this.logger.debug('Has Access Token Cookie');
           return req.cookies.accessToken as string;
         }
 
         const authHeader = req?.headers?.authorization;
         if (authHeader?.startsWith('Bearer ')) {
+          this.logger.debug('Has Bearer Token');
           return authHeader.slice(7);
         }
 
@@ -34,8 +36,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   }
 
   async validate(payload: { userID: number }) {
-    console.log('validate');
-    console.log({ payload });
+    this.logger.debug('validate', payload);
     const user = await this.cache.wrap(`currentUser:${payload.userID}`, () => {
       return this.usersService.user(
         { id: payload.userID },
@@ -51,8 +52,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
 
     const planLevel = subscription?.plan?.level ?? 0; // 0 = Free
 
-    console.log({ user });
-
+    this.logger.debug('current user details', user);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...currentUser } = user;
 

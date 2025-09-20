@@ -4,6 +4,7 @@ import {
   Get,
   HttpException,
   HttpStatus,
+  Logger,
   Post,
   Req,
   Res,
@@ -24,6 +25,7 @@ import { AuthCookieService } from 'src/authcookie/authcookie.service';
 @Controller('auth')
 @ApiTags('Auth')
 export class AuthController {
+  private readonly logger = new Logger(AuthController.name);
   constructor(
     private readonly authService: AuthService,
     private authCookieService: AuthCookieService,
@@ -38,7 +40,7 @@ export class AuthController {
       email,
       password,
     );
-    console.log({
+    this.logger.verbose('login response', {
       accessToken,
       secure: process.env.NODE_ENV === 'production',
       cookieDomain: process.env.COOKIE_DOMAIN,

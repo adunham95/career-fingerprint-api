@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { CreateHighlightDto } from './dto/create-highlight.dto';
 import { UpdateHighlightDto } from './dto/update-highlight.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class HighlightsService {
+  private readonly logger = new Logger(HighlightsService.name);
   constructor(private prisma: PrismaService) {}
   async create(createHighlightDto: CreateHighlightDto) {
     const data: { userID: number; text: string; meetingID: string } = {
@@ -44,6 +45,7 @@ export class HighlightsService {
   }
 
   findAll() {
+    this.logger.warn('Missing Find All Action');
     return `This action returns all highlights`;
   }
 
@@ -57,7 +59,10 @@ export class HighlightsService {
       throw new Error('Not Found');
     }
 
-    console.log({ meetingID, jobAppID: meeting.jobAppID });
+    this.logger.debug('findForMeeting', {
+      meetingID,
+      jobAppID: meeting.jobAppID,
+    });
 
     const orConditions: any[] = [{ id: meetingID }];
 

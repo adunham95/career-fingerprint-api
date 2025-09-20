@@ -1,9 +1,10 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, Logger } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 
 @Injectable()
 export class CacheService {
+  private readonly logger = new Logger(CacheService.name);
   constructor(@Inject(CACHE_MANAGER) private cache: Cache) {}
 
   async get<T>(key: string): Promise<T | null> {
@@ -25,7 +26,7 @@ export class CacheService {
   ): Promise<T> {
     const cached = await this.get<T>(key);
     if (cached) {
-      console.log('returning cached result', key);
+      this.logger.debug('Returning Cached Result', key);
       return cached;
     }
 

@@ -1,6 +1,12 @@
 import { CreateStripeSubscriptionDto } from './dto/create-stripe-subscription.dto';
 import { InjectQueue } from '@nestjs/bull';
-import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Inject,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { Organization, User } from '@prisma/client';
 import { Queue } from 'bull';
@@ -12,6 +18,7 @@ import Stripe from 'stripe';
 @Injectable()
 export class StripeService {
   private stripe: Stripe;
+  private readonly logger = new Logger(StripeService.name);
 
   constructor(
     @InjectQueue('stripe') private stripeQueue: Queue,
@@ -412,7 +419,7 @@ export class StripeService {
 
   @Cron(CronExpression.EVERY_DAY_AT_2AM)
   async runDailyReferralCredits() {
-    console.log('Running daily referral credit job...');
+    this.logger.log('Running daily referral credit job...');
     await this.processEligibleRewards();
   }
 }

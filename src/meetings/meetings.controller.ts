@@ -55,7 +55,7 @@ export class MeetingsController {
 
   @Get('my/upcoming')
   @UseGuards(JwtAuthGuard)
-  @Header('Cache-Control', 'private, max-age=30')
+  @Header('Cache-Control', 'private, max-age=10')
   findMineUpcoming(@Req() req: Request, @Query() query: MeetingQueryDto) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -65,7 +65,7 @@ export class MeetingsController {
 
   @Get('my/previous')
   @UseGuards(JwtAuthGuard)
-  @Header('Cache-Control', 'private, max-age=30')
+  @Header('Cache-Control', 'private, max-age=10')
   findMinePrevious(@Req() req: Request, @Query() query: MeetingQueryDto) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);

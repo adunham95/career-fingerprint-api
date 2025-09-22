@@ -55,13 +55,15 @@ export class MeetingsService {
       queryData.take = limit;
     }
 
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+
     return this.prisma.meeting.findMany({
       ...queryData,
       where: {
         userID,
         // title: { not: null },
         time: {
-          gte: new Date(),
+          gte: tenMinutesAgo,
         },
       },
       orderBy: {

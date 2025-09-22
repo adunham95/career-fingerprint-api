@@ -9,6 +9,7 @@ import {
   Delete,
   UseGuards,
   Patch,
+  Header,
   // Patch,
   // Param,
   // Delete,
@@ -33,6 +34,7 @@ export class OrgController {
 
   @Get(':orgID/users')
   @UseGuards(JwtAuthGuard)
+  @Header('Cache-Control', 'private, max-age=30')
   getOrgUser(
     @Param('orgID') id: string,
     @Query('page') page = 1,
@@ -43,6 +45,7 @@ export class OrgController {
 
   @Get(':orgID/admins')
   @UseGuards(JwtAuthGuard)
+  @Header('Cache-Control', 'private, max-age=30')
   getOrgAdmins(@Param('orgID') id: string) {
     return this.orgService.getOrgAdmins(id);
   }
@@ -85,6 +88,7 @@ export class OrgController {
   }
 
   @Get(':id')
+  @Header('Cache-Control', 'private, max-age=30')
   findOne(@Param('id') id: string) {
     return this.orgService.findOne(id);
   }

@@ -11,6 +11,7 @@ import {
   HttpException,
   HttpStatus,
   Query,
+  Header,
 } from '@nestjs/common';
 import { AchievementService } from './achievement.service';
 import { CreateAchievementDto } from './dto/create-achievement.dto';
@@ -50,6 +51,7 @@ export class AchievementController {
 
   @Get('my')
   @UseGuards(JwtAuthGuard)
+  @Header('Cache-Control', 'private, max-age=30')
   findMyAchievements(@Req() req: Request, @Query() query: MyAchievementQuery) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -67,6 +69,7 @@ export class AchievementController {
 
   @Get(':id')
   @UseGuards(JwtAuthGuard)
+  @Header('Cache-Control', 'private, max-age=30')
   @ApiBearerAuth()
   findOne(@Param('id') id: string) {
     return this.achievementService.findOne(id);

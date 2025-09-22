@@ -12,6 +12,7 @@ import {
   UseGuards,
   Query,
   Res,
+  Header,
 } from '@nestjs/common';
 import { MeetingsService } from './meetings.service';
 import { CreateMeetingDto } from './dto/create-meeting.dto';
@@ -44,6 +45,7 @@ export class MeetingsController {
 
   @Get('my')
   @UseGuards(JwtAuthGuard)
+  @Header('Cache-Control', 'private, max-age=30')
   findMine(@Req() req: Request, @Query() query: MeetingQueryDto) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -53,6 +55,7 @@ export class MeetingsController {
 
   @Get('my/upcoming')
   @UseGuards(JwtAuthGuard)
+  @Header('Cache-Control', 'private, max-age=30')
   findMineUpcoming(@Req() req: Request, @Query() query: MeetingQueryDto) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -62,6 +65,7 @@ export class MeetingsController {
 
   @Get('my/previous')
   @UseGuards(JwtAuthGuard)
+  @Header('Cache-Control', 'private, max-age=30')
   findMinePrevious(@Req() req: Request, @Query() query: MeetingQueryDto) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -77,6 +81,7 @@ export class MeetingsController {
 
   @Get(':id')
   @UseGuards(JwtAuthGuard)
+  @Header('Cache-Control', 'private, max-age=30')
   findOne(@Param('id') id: string, @Query() query: SingleMeetingQueryDto) {
     return this.meetingsService.findOne(id, query);
   }

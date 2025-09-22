@@ -10,6 +10,7 @@ import {
   HttpException,
   HttpStatus,
   UseGuards,
+  Header,
 } from '@nestjs/common';
 import { JobApplicationsService } from './job-applications.service';
 import { CreateJobApplicationDto } from './dto/create-job-application.dto';
@@ -42,6 +43,7 @@ export class JobApplicationsController {
   }
 
   @Get('my')
+  @Header('Cache-Control', 'private, max-age=30')
   @UseGuards(JwtAuthGuard)
   findMy(@Req() req: Request) {
     if (!req.user) {
@@ -51,6 +53,7 @@ export class JobApplicationsController {
   }
 
   @Get(':id')
+  @Header('Cache-Control', 'private, max-age=30')
   @UseGuards(JwtAuthGuard)
   findOne(@Param('id') id: string) {
     return this.jobApplicationsService.findOne(id);

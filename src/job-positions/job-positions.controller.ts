@@ -10,6 +10,7 @@ import {
   Req,
   HttpException,
   HttpStatus,
+  Header,
 } from '@nestjs/common';
 import { JobPositionsService } from './job-positions.service';
 import {
@@ -74,6 +75,7 @@ export class JobPositionsController {
   }
 
   @Get('my')
+  @Header('Cache-Control', 'private, max-age=30')
   @UseGuards(JwtAuthGuard)
   async findMyJobs(@Req() req: Request) {
     if (!req.user) {
@@ -84,6 +86,7 @@ export class JobPositionsController {
   }
 
   @Get(':id')
+  @Header('Cache-Control', 'private, max-age=30')
   findOne(@Param('id') id: string) {
     return this.jobPositionsService.findOne(id);
   }

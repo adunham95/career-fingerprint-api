@@ -10,6 +10,7 @@ import {
   HttpException,
   HttpStatus,
   UseGuards,
+  Header,
 } from '@nestjs/common';
 import { EducationService } from './education.service';
 import { CreateEducationDto } from './dto/create-education.dto';
@@ -37,6 +38,7 @@ export class EducationController {
   }
 
   @Get('my')
+  @Header('Cache-Control', 'private, max-age=30')
   @UseGuards(JwtAuthGuard)
   findMyEducation(@Req() req: Request) {
     if (!req.user) {
@@ -47,6 +49,7 @@ export class EducationController {
   }
 
   @Get(':id')
+  @Header('Cache-Control', 'private, max-age=30')
   findOne(@Param('id') id: string) {
     return this.educationService.findOne(id);
   }

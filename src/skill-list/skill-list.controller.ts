@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Header,
   HttpException,
   HttpStatus,
   Post,
@@ -33,6 +34,7 @@ export class SkillListController {
 
   @Get('/my')
   @UseGuards(JwtAuthGuard)
+  @Header('Cache-Control', 'private, max-age=30')
   mySkillList(@Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);

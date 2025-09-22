@@ -11,6 +11,7 @@ import {
   HttpException,
   HttpStatus,
   Query,
+  Header,
 } from '@nestjs/common';
 import { AchievementTagsService } from './achievement-tags.service';
 import { CreateAchievementTagDto } from './dto/create-achievement-tag.dto';
@@ -60,6 +61,7 @@ export class AchievementTagsController {
   }
 
   @Get(':id')
+  @Header('Cache-Control', 'private, max-age=30')
   findOne(@Param('id') id: string) {
     return this.achievementTagsService.findOne(+id);
   }

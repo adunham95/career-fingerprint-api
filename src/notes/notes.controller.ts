@@ -11,11 +11,12 @@ import {
   HttpException,
   HttpStatus,
   UseGuards,
+  Res,
 } from '@nestjs/common';
 import { NotesService } from './notes.service';
 import { CreateNoteDto } from './dto/create-note.dto';
 import { UpdateNoteDto } from './dto/update-note.dto';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 
 @Controller('notes')
 export class NotesController {
@@ -58,6 +59,15 @@ export class NotesController {
   @UseGuards(JwtAuthGuard)
   findMeetingNOtes(@Param('id') id: string) {
     return this.notesService.findByMeeting(id);
+  }
+
+  @Get('meeting/:id/pdf')
+  @UseGuards(JwtAuthGuard)
+  async findOneNotesPdfDoc(@Param('id') id: string, @Res() res: Response) {
+    const stream = await this.notesService.getMeetingNotesDocPdf(id);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="${id}-notes.pdf"`);
+    return stream.pipe(res);
   }
 
   @Get(':id')

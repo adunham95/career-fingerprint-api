@@ -19,7 +19,7 @@ export class CreateAchievementDto {
   @ApiProperty()
   @IsString()
   @IsOptional()
-  jobID?: string;
+  jobPositionID?: string;
 
   @ApiProperty()
   @IsString()

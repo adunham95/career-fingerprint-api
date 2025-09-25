@@ -1,6 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { CreateAchievementDto } from './dto/create-achievement.dto';
-import { UpdateAchievementDto } from './dto/update-achievement.dto';
+import {
+  mapAchievementUpdateDto,
+  UpdateAchievementDto,
+} from './dto/update-achievement.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { CacheService } from 'src/cache/cache.service';
@@ -107,7 +110,7 @@ export class AchievementService {
   update(id: string, updateAchievementDto: UpdateAchievementDto) {
     return this.prisma.achievement.update({
       where: { id },
-      data: updateAchievementDto,
+      data: mapAchievementUpdateDto(updateAchievementDto),
     });
   }
 

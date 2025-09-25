@@ -42,6 +42,12 @@ export class UserEntity implements User {
 
   orgID: string | null;
 
+  timezone: string;
+
+  preferredDay: number;
+
+  nextSendAt: Date | null;
+
   org: Organization;
 
   orgs: Organization[];

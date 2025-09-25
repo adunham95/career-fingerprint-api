@@ -24,6 +24,7 @@ export class RegisterService {
       password: createRegisterDto.password,
       firstName: createRegisterDto.firstName,
       lookingFor: createRegisterDto.lookingFor,
+      timezone: createRegisterDto.timezone,
     });
 
     if (createRegisterDto.inviteCode) {

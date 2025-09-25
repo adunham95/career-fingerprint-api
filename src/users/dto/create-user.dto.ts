@@ -31,4 +31,9 @@ export class CreateUserDto implements Prisma.UserCreateInput {
   @IsString()
   @ApiProperty()
   orgID?: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiProperty()
+  timezone?: string;
 }

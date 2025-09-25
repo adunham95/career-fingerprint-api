@@ -15,10 +15,15 @@ export class TasksController {
     this.logger.log('Daily job at 5 AM');
   }
 
-  /**  Runs friday at 9:00 AM EST  */
-  @Cron('0  9 * * 5', { name: 'sendWeeklyEmail', timeZone: 'America/New_York' })
+  /**  Runs friday every hour  */
+  @Cron('0 * * * 5', { name: 'sendWeeklyEmail' })
   async handleSendWeeklyEmails() {
     await this.tasksService.runWeeklyEmailSend();
+  }
+
+  @Cron('0 0 * * 1-5', { name: 'scheduleWeeklyEmail' })
+  async handleGenerateMissingUpcomingWeeklyEmails() {
+    await this.tasksService.scheduleWeeklyEmailSend();
   }
   // ─── Interval & Timeout ────────────────────────────────────────────────────
 

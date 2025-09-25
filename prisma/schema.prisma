@@ -38,6 +38,9 @@ model User {
   stripeCustomerID    String?
   inviteCode          String?
   emailVerified       Boolean            @default(false)
+  timezone            String             @default("America/New_York")
+  nextSendAt          DateTime? // in UTC
+  preferredDay        Int                @default(5)
   resume              Resume[]
   positions           JobPosition[]
   achievements        Achievement[]

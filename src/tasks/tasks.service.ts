@@ -3,6 +3,7 @@ import { SchedulerRegistry } from '@nestjs/schedule';
 import { CronJob } from 'cron';
 import { MailService } from 'src/mail/mail.service';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { getNextPreferredSendTime } from 'src/utils/nestFridayAt9UTC';
 
 function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
@@ -210,6 +211,7 @@ export class TasksService {
   async runWeeklyEmailSend() {
     const premiumUsers = await this.prisma.user.findMany({
       where: {
+        nextSendAt: { lte: new Date() },
         subscriptions: {
           some: {
             status: {
@@ -224,23 +226,76 @@ export class TasksService {
         },
       },
       select: {
+        id: true,
         firstName: true,
         email: true,
+        timezone: true,
+        preferredDay: true,
       },
     });
 
-    const promises = premiumUsers.map(
-      async (user) =>
-        await this.mailService.sendWeeklyReminderEmail({
-          to: user.email,
-          context: {
-            firstName: user.firstName,
+    const promises = premiumUsers.map(async (user) => {
+      await this.mailService.sendWeeklyReminderEmail({
+        to: user.email,
+        context: {
+          firstName: user.firstName,
+        },
+      });
+      const nextSendAt = getNextPreferredSendTime(
+        user.timezone,
+        user.preferredDay,
+      );
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { nextSendAt },
+      });
+    });
+
+    await Promise.all(promises);
+
+    // console.log({ resolved });
+  }
+
+  async scheduleWeeklyEmailSend() {
+    this.logger.log('Schedule Weekly Email Send Started');
+    const premiumUsers = await this.prisma.user.findMany({
+      where: {
+        OR: [{ nextSendAt: null }, { nextSendAt: { lt: new Date() } }],
+        subscriptions: {
+          some: {
+            status: {
+              in: ['trialing', 'active', 'past_due', 'temp', 'canceling'],
+            },
+            plan: {
+              level: {
+                gt: 0,
+              },
+            },
           },
-        }),
+        },
+      },
+      select: {
+        id: true,
+        timezone: true,
+        preferredDay: true,
+      },
+    });
+
+    const promises = premiumUsers.map(async (user) => {
+      const nextSendAt = getNextPreferredSendTime(
+        user.timezone,
+        user.preferredDay,
+      );
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { nextSendAt },
+      });
+    });
+
+    await Promise.all(promises);
+
+    this.logger.log(
+      `Schedule Weekly Email Send Finished. Updated ${premiumUsers.length} users`,
     );
-
-    const resolved = await Promise.all(promises);
-
-    console.log({ resolved });
   }
 }

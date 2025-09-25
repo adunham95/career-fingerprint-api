@@ -21,6 +21,7 @@ export class CreateRegisterDto {
   achievement: string;
   inviteCode: string;
   orgID: string;
+  timezone: string;
 }
 
 export class CreateRegisterOrgDto {

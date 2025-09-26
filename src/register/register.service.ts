@@ -63,6 +63,7 @@ export class RegisterService {
             currentPosition: true,
             achievements: {
               create: {
+                startDate: new Date().toISOString(),
                 userID: newUser.id,
                 myContribution: createRegisterDto.achievement,
               },
@@ -87,6 +88,7 @@ export class RegisterService {
             currentPosition: true,
             achievements: {
               create: {
+                startDate: new Date().toISOString(),
                 userID: newUser.id,
                 myContribution: createRegisterDto.achievement,
               },

@@ -23,7 +23,7 @@ export class StripeWebhookController {
     private mailService: MailService,
   ) {
     this.stripe = new Stripe(this.secretKey, {
-      apiVersion: '2025-07-30.basil',
+      apiVersion: '2025-08-27.basil',
     });
   }
 

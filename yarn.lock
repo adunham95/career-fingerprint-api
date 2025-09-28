@@ -4365,7 +4365,7 @@ __metadata:
     reflect-metadata: "npm:^0.2.2"
     rxjs: "npm:^7.8.1"
     source-map-support: "npm:^0.5.21"
-    stripe: "npm:^18.4.0"
+    stripe: "npm:^18.5.0"
     supertest: "npm:^7.0.0"
     ts-jest: "npm:^29.2.5"
     ts-loader: "npm:^9.5.2"
@@ -11709,9 +11709,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"stripe@npm:^18.4.0":
-  version: 18.4.0
-  resolution: "stripe@npm:18.4.0"
+"stripe@npm:^18.5.0":
+  version: 18.5.0
+  resolution: "stripe@npm:18.5.0"
   dependencies:
     qs: "npm:^6.11.0"
   peerDependencies:
@@ -11719,7 +11719,7 @@ __metadata:
   peerDependenciesMeta:
     "@types/node":
       optional: true
-  checksum: 10c0/abfae24fdc8a4cd96eb494f7582418c49e4db6e8dde21a9db6af8ee0ec02565f89fcf7c41902e0a555d4a733b5162702358114b3b5475343026965cb9b9f8529
+  checksum: 10c0/59dfab7310f10fe579766f6f2d3572818437e4adcc7291704ad4f362d74dc422128c0fdaae8ebfcdef6448c235da674cb4684d041a56199739afd81d2a33f999
   languageName: node
   linkType: hard
 

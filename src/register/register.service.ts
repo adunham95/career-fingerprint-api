@@ -23,6 +23,7 @@ export class RegisterService {
       email: createRegisterDto.email,
       password: createRegisterDto.password,
       firstName: createRegisterDto.firstName,
+      lastName: createRegisterDto.lastName,
       lookingFor: createRegisterDto.lookingFor,
       timezone: createRegisterDto.timezone,
     });

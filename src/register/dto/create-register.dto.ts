@@ -9,6 +9,7 @@ import {
 
 export class CreateRegisterDto {
   firstName: string;
+  lastName: string;
   lookingFor: string;
   companyName: string;
   title: string;

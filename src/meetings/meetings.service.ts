@@ -13,9 +13,11 @@ export class MeetingsService {
   ) {}
 
   create(createMeetingDto: CreateMeetingDto) {
-    console.log('create meeting', CreateMeetingDto);
+    console.log('create meeting', createMeetingDto);
+    const title =
+      createMeetingDto.title ?? `Untitled Meeting ${new Date().toISOString()}`;
 
-    return this.prisma.meeting.create({ data: createMeetingDto });
+    return this.prisma.meeting.create({ data: { ...createMeetingDto, title } });
   }
 
   findAll() {

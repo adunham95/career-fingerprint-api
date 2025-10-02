@@ -21,9 +21,11 @@ import { Request, Response } from 'express';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { UserEntity } from 'src/users/entities/user.entity';
 import { AuthCookieService } from 'src/authcookie/authcookie.service';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 
 @Controller('auth')
 @ApiTags('Auth')
+@UseGuards(ThrottlerGuard)
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
   constructor(
@@ -32,6 +34,7 @@ export class AuthController {
   ) {}
 
   @Post('login')
+  @Throttle({ default: { limit: 3, ttl: 60000 } }) // max 3 login attempts per minute per IP
   async login(
     @Body() { email, password }: LoginDto,
     @Res({ passthrough: true }) response: Response,

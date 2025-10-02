@@ -5,6 +5,7 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma/prisma.service';
 import crypto from 'crypto';
 import { MailService } from 'src/mail/mail.service';
+import { FailedLoginService } from './failed-login.service';
 
 @Injectable()
 export class AuthService {
@@ -14,23 +15,36 @@ export class AuthService {
     private jwtService: JwtService,
     private prisma: PrismaService,
     private mail: MailService,
+    private failedLoginService: FailedLoginService,
   ) {}
 
   async loginUser(email: string, pass: string) {
+    if (await this.failedLoginService.isBlocked(email)) {
+      throw new HttpException(
+        'Too many failed login attempts. Please try again later.',
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
+
     const user = await this.usersService.user({
       email: email.toLowerCase(),
       accountStatus: 'active',
     });
 
     if (!user) {
+      await this.failedLoginService.recordFailure(email);
+
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
     }
 
     const isPasswordValid = await bcrypt.compare(pass, user.password);
 
     if (!isPasswordValid) {
+      await this.failedLoginService.recordFailure(email);
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
     }
+
+    await this.failedLoginService.resetFailures(email);
 
     const payload = {
       username: user.username,

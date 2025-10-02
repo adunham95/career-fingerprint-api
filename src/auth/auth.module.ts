@@ -10,6 +10,7 @@ import { SubscriptionsModule } from 'src/subscriptions/subscriptions.module';
 import { MailModule } from 'src/mail/mail.module';
 import { AuthCookieModule } from 'src/authcookie/authcookie.module';
 import { CacheModule } from 'src/cache/cache.module';
+import { FailedLoginService } from './failed-login.service';
 
 export const jwtSecret = process.env.SECRET || '123abc';
 
@@ -28,7 +29,7 @@ export const jwtSecret = process.env.SECRET || '123abc';
     CacheModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, FailedLoginService],
   exports: [AuthService],
 })
 export class AuthModule {}

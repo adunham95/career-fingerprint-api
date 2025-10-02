@@ -47,6 +47,7 @@ import { SkillListController } from './skill-list/skill-list.controller';
 import { SkillListService } from './skill-list/skill-list.service';
 import { SkillListModule } from './skill-list/skill-list.module';
 import { AccountCleanUpModule } from './account-clean-up/account-clean-up.module';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
@@ -118,6 +119,12 @@ import { AccountCleanUpModule } from './account-clean-up/account-clean-up.module
     DomainModule,
     SkillListModule,
     AccountCleanUpModule,
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60, // time window in seconds
+        limit: 5, // max 5 requests per ttl
+      },
+    ]),
   ],
   controllers: [AppController, HealthController, SkillListController],
   providers: [

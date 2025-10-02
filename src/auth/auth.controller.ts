@@ -21,11 +21,12 @@ import { Request, Response } from 'express';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { UserEntity } from 'src/users/entities/user.entity';
 import { AuthCookieService } from 'src/authcookie/authcookie.service';
-import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
+import { Throttle } from '@nestjs/throttler';
+import { CustomThrottlerGuard } from './custom-throttler.guard';
 
 @Controller('auth')
 @ApiTags('Auth')
-@UseGuards(ThrottlerGuard)
+@UseGuards(CustomThrottlerGuard)
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
   constructor(

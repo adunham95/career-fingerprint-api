@@ -5,41 +5,97 @@ html
   body(
     style='margin: 0; padding: 0; background-color: #fdfaf9; font-family: Arial, sans-serif'
   )
-  include header.pug
+    include header.pug
 
-  table(
-    width='100%',
-    cellpadding='0',
-    cellspacing='0',
-    border='0',
-    style='padding: 20px 0'
-  )
-    tr
-      td(align='center')
-        table(
-          width='600',
-          cellpadding='0',
-          cellspacing='0',
-          border='0',
-          style='border-radius: 8px; overflow: hidden'
-        )
-          tr
-            td(style='padding: 20px 30px 0 30px')
-              p(
-                style='color: #333; font-size: 16px; margin: 0 0 10px 0; font-weight: bold'
-              ) Hi #{ firstName },
-          tr
-            td(style='padding: 20px 30px 0 30px')
-              p(
-                style='color: #333; font-size: 16px; margin: 0 0 10px 0; font-weight: bold'
-              ) Your week has been full of effort. Now is your chance to capture the wins.
-              p(
-                style='color: #333; font-size: 16px; margin: 0 0 10px 0; font-weight: bold'
-              ) Take 2–3 minutes to log what you accomplished this week. It doesn’t have to be perfect, just honest.
-          tr
-            td(style='padding: 20px 30px 30px 30px; text-align: center')
-              a(
-                href=weeklyLink,
-                style='background-color: #ff7a8a; color: #000000; text-decoration: none; padding: 12px 24px; border-radius: 6px; display: inline-block; font-weight: bold'
-              ) Add your achievements
-  include footer.pug
+    table(
+      width='100%',
+      cellpadding='0',
+      cellspacing='0',
+      border='0',
+      style='padding: 20px 0'
+    )
+      tr
+        td(align='center')
+          table(
+            width='600',
+            cellpadding='0',
+            cellspacing='0',
+            border='0',
+            style='border-radius: 8px; overflow: hidden; background-color: #ffffff'
+          )
+            // Greeting
+            tr
+              td(style='padding: 20px 30px 0 30px')
+                p(
+                  style='color: #333; font-size: 16px; margin: 0 0 10px 0; font-weight: bold'
+                ) Hi #{ firstName },
+
+            // Main intro
+            tr
+              td(style='padding: 20px 30px 0 30px')
+                p(
+                  style='color: #333; font-size: 16px; margin: 0 0 10px 0; font-weight: bold'
+                ) Your week has been full of effort — now’s your chance to capture the wins.
+                p(style='color: #333; font-size: 16px; margin: 0 0 10px 0') Take 2–3 minutes to log what you accomplished this week. It doesn’t have to be perfect — just honest.
+
+            // Reflection purpose
+            tr
+              td(style='padding: 10px 30px 0 30px')
+                p(
+                  style='color: #555; font-size: 14px; margin: 10px 0 0 0; line-height: 1.5'
+                )
+                  | Reflection isn’t just about remembering what you did — it helps you see how far you’ve come and builds confidence for what’s next.
+
+            // Weekly prompts
+            tr
+              td(style='padding: 15px 30px 0 30px')
+                p(style='color: #555; font-size: 14px; margin: 0 0 5px 0') Need a spark? Try writing about:
+                ul(
+                  style='color: #555; font-size: 14px; padding-left: 20px; margin: 5px 0'
+                )
+                  li Something you solved or improved this week
+                  li A moment you felt proud or recognized
+                  li A skill you used or grew
+
+            // 🔥 Streak section
+            tr
+              td(style='padding: 20px 30px 0 30px; text-align: center')
+                if streakCount && streakCount > 0
+                  p(
+                    style='color: #333; font-size: 15px; margin: 0; font-weight: bold'
+                  ) You're on a #{ streakCount }-week streak!
+                  p(
+                    style='color: #555; font-size: 14px; margin: 5px 0 0 0; line-height: 1.4'
+                  ) Keeping this habit builds momentum — each reflection makes your story stronger.
+                else
+                  p(
+                    style='color: #333; font-size: 15px; margin: 0; font-weight: bold'
+                  ) Start your reflection streak today!
+                  p(
+                    style='color: #555; font-size: 14px; margin: 5px 0 0 0; line-height: 1.4'
+                  ) Each weekly reflection adds a chapter to your career story.
+
+            // CTA button
+            tr
+              td(style='padding: 25px 30px 30px 30px; text-align: center')
+                a(
+                  href=weeklyLink,
+                  style='background-color: #ff7a8a; color: #000000; text-decoration: none; padding: 12px 24px; border-radius: 6px; display: inline-block; font-weight: bold'
+                ) Add your achievements
+
+            // Testimonial
+            //- tr
+            //-   td(style='padding: 20px 30px 0 30px')
+            //-     blockquote(
+            //-       style='margin: 20px 0; color: #666; font-style: italic; border-left: 4px solid #ff7a8a; padding-left: 10px'
+            //-     )
+            //-       | “Writing my weekly wins has made my performance reviews so much easier.” – Career Fingerprint user
+
+            // Tip footer
+            tr
+              td(style='padding: 10px 30px 20px 30px')
+                p(
+                  style='color: #777; font-size: 13px; text-align: center; margin-top: 10px'
+                ) Tip: Add a quick Friday reminder to your calendar — reflection only takes 3 minutes, but its impact lasts much longer.
+
+    include footer.pug

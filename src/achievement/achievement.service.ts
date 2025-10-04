@@ -7,6 +7,7 @@ import {
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { CacheService } from 'src/cache/cache.service';
+import { DateTime } from 'luxon';
 
 @Injectable()
 export class AchievementService {
@@ -116,5 +117,48 @@ export class AchievementService {
 
   remove(id: string) {
     return this.prisma.achievement.delete({ where: { id } });
+  }
+
+  async getWeeklyStreak(userId: number, timeZone = 'UTC'): Promise<number> {
+    const now = DateTime.now().setZone(timeZone);
+
+    // We'll look back 8 weeks for safety margin (can increase if needed)
+    const startRange = now.minus({ weeks: 8 }).startOf('week');
+
+    // 1. Fetch all achievements from the past 8 weeks
+    const achievements = await this.prisma.achievement.findMany({
+      where: {
+        userID: userId,
+        createdAt: {
+          gte: startRange.toJSDate(),
+        },
+      },
+      select: { createdAt: true },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!achievements.length) return 0;
+
+    // 2. Group achievements by ISO week number + year
+    const weeksWithAchievements = new Set<string>();
+    for (const { createdAt } of achievements) {
+      const week = DateTime.fromJSDate(createdAt).setZone(timeZone);
+      const key = `${week.weekYear}-${week.weekNumber}`; // ex: "2025-40"
+      weeksWithAchievements.add(key);
+    }
+
+    // 3. Walk backward week-by-week from the current week
+    let streak = 0;
+    for (let i = 0; i < 8; i++) {
+      const weekToCheck = now.minus({ weeks: i });
+      const key = `${weekToCheck.weekYear}-${weekToCheck.weekNumber}`;
+      if (weeksWithAchievements.has(key)) {
+        streak++;
+      } else {
+        break; // Streak ends when a week has no achievements
+      }
+    }
+
+    return streak;
   }
 }

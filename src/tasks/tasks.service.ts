@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { CronJob } from 'cron';
+import { AchievementService } from 'src/achievement/achievement.service';
 import { MailService } from 'src/mail/mail.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { getNextPreferredSendTime } from 'src/utils/nestFridayAt9UTC';
@@ -16,6 +17,7 @@ export class TasksService {
     private readonly schedulerRegistry: SchedulerRegistry,
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
+    private readonly achService: AchievementService,
   ) {}
 
   createCronJob(
@@ -217,11 +219,6 @@ export class TasksService {
             status: {
               in: ['trialing', 'active', 'past_due', 'temp', 'canceling'],
             },
-            plan: {
-              level: {
-                gt: 0,
-              },
-            },
           },
         },
       },
@@ -235,10 +232,15 @@ export class TasksService {
     });
 
     const promises = premiumUsers.map(async (user) => {
+      const streakCount = await this.achService.getWeeklyStreak(
+        user.id,
+        user.timezone,
+      );
       await this.mailService.sendWeeklyReminderEmail({
         to: user.email,
         context: {
           firstName: user.firstName,
+          streakCount,
         },
       });
       const nextSendAt = getNextPreferredSendTime(
@@ -258,18 +260,13 @@ export class TasksService {
 
   async scheduleWeeklyEmailSend() {
     this.logger.log('Schedule Weekly Email Send Started');
-    const premiumUsers = await this.prisma.user.findMany({
+    const users = await this.prisma.user.findMany({
       where: {
         OR: [{ nextSendAt: null }, { nextSendAt: { lt: new Date() } }],
         subscriptions: {
           some: {
             status: {
               in: ['trialing', 'active', 'past_due', 'temp', 'canceling'],
-            },
-            plan: {
-              level: {
-                gt: 0,
-              },
             },
           },
         },
@@ -281,7 +278,7 @@ export class TasksService {
       },
     });
 
-    const promises = premiumUsers.map(async (user) => {
+    const promises = users.map(async (user) => {
       const nextSendAt = getNextPreferredSendTime(
         user.timezone,
         user.preferredDay,
@@ -295,7 +292,7 @@ export class TasksService {
     await Promise.all(promises);
 
     this.logger.log(
-      `Schedule Weekly Email Send Finished. Updated ${premiumUsers.length} users`,
+      `Schedule Weekly Email Send Finished. Updated ${users.length} users`,
     );
   }
 }

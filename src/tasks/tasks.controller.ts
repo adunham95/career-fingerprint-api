@@ -16,8 +16,8 @@ export class TasksController {
   }
 
   /**  Runs friday every hour  */
-  // @Cron('0 * * * 5', { name: 'sendWeeklyEmail' })
-  @Cron('0/5 * * * *', { name: 'sendWeeklyEmail' })
+  @Cron('0 * * * 5', { name: 'sendWeeklyEmail' })
+  // @Cron('0/5 * * * *', { name: 'sendWeeklyEmail' })
   async handleSendWeeklyEmails() {
     await this.tasksService.runWeeklyEmailSend();
   }

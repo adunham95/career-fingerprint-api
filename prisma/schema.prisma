@@ -63,6 +63,7 @@ model User {
   orgs                Organization[]     @relation("OrgAdmins")
   verifyTokens        VerifyToken[]
   skills              Skills[]
+  redeemedFreeTrial   Boolean            @default(false)
 
   @@index([email, inviteCode, stripeCustomerID])
 }

@@ -55,4 +55,6 @@ export class UserEntity implements User {
   subscriptions?: Subscription[];
 
   subscription?: Subscription;
+
+  redeemedFreeTrial: boolean;
 }

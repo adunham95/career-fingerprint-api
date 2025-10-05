@@ -197,12 +197,12 @@ export class MailProcessor {
   async trialAlmostOver(
     job: Job<{
       to: string;
-      context: { firstName: string };
+      context: { firstName: string; daysLeft: number };
     }>,
   ) {
     const {
       to,
-      context: { firstName },
+      context: { firstName, daysLeft },
     } = job.data;
 
     const template = 'trial-almost-over';
@@ -217,6 +217,7 @@ export class MailProcessor {
         subject,
         context: {
           firstName,
+          daysLeft,
           updateCCLink: `${process.env.FRONT_END_URL}/settings/membership`,
         },
       });

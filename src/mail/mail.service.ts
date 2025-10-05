@@ -92,7 +92,7 @@ export class MailService {
 
   async sendTrialAlmostOver(params: {
     to: string;
-    context: { firstName: string };
+    context: { firstName: string; daysLeft: number };
   }) {
     await this.mailQueue.add('trialAlmostOver', params);
   }

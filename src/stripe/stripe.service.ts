@@ -14,6 +14,7 @@ import { CacheService } from 'src/cache/cache.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UserEntity } from 'src/users/entities/user.entity';
 import Stripe from 'stripe';
+import { DateTime } from 'luxon';
 
 @Injectable()
 export class StripeService {
@@ -87,6 +88,10 @@ export class StripeService {
     let stripeUserID = user?.stripeCustomerID || '';
     console.log({ stripeUserID });
 
+    if (user.redeemedFreeTrial) {
+      throw Error('Cannot Redeem More Than 1 Free Trial');
+    }
+
     if (stripeUserID === null || stripeUserID === '') {
       console.log('need to generate stripe customer');
       const stripeCustomer = await this.stripe.customers.create({
@@ -122,12 +127,20 @@ export class StripeService {
       },
     });
 
+    const trialExpiration = DateTime.now().plus({
+      days: validReferralCode ? 30 : 14,
+    });
     await this.prisma.subscription.create({
       data: {
-        stripeSubId: subscription.id,
+        trialEndsAt: trialExpiration.toJSDate(),
         userID: user.id,
         planID,
       },
+    });
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { redeemedFreeTrial: true },
     });
 
     await this.cache.del(`activeUserSubscription:${user.id}`);

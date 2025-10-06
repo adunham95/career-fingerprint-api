@@ -43,7 +43,7 @@ export class UsersController {
   @Get()
   @UseGuards(JwtAuthGuard, PlatformAdminGuard)
   findAll() {
-    return this.usersService.users({});
+    return this.usersService.users({ orderBy: { createdAt: 'desc' } });
   }
 
   @Get('new-invite-code')

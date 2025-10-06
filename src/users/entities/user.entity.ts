@@ -57,4 +57,6 @@ export class UserEntity implements User {
   subscription?: Subscription;
 
   redeemedFreeTrial: boolean;
+
+  userType: string;
 }

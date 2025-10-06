@@ -17,6 +17,7 @@ import { User as UserModel } from '@prisma/client';
 import { CreateUserDto } from './dto/create-user.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { Request } from 'express';
+import { PlatformAdminGuard } from 'src/auth/platform-admin.guard';
 
 @Controller('users')
 export class UsersController {
@@ -40,6 +41,7 @@ export class UsersController {
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard, PlatformAdminGuard)
   findAll() {
     return this.usersService.users({});
   }

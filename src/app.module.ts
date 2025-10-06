@@ -48,6 +48,7 @@ import { SkillListService } from './skill-list/skill-list.service';
 import { SkillListModule } from './skill-list/skill-list.module';
 import { AccountCleanUpModule } from './account-clean-up/account-clean-up.module';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -125,6 +126,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
         limit: 5, // max 5 requests per ttl
       },
     ]),
+    AdminModule,
   ],
   controllers: [AppController, HealthController, SkillListController],
   providers: [

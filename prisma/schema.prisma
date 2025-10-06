@@ -64,6 +64,7 @@ model User {
   verifyTokens        VerifyToken[]
   skills              Skills[]
   redeemedFreeTrial   Boolean            @default(false)
+  userType            String             @default("user")
 
   @@index([email, inviteCode, stripeCustomerID])
 }

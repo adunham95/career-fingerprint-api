@@ -25,6 +25,7 @@ interface MyAchievementQuery extends PaginationQueryDto {
   includeLinked?: string;
   jobPositionID?: string;
   educationID?: string;
+  tagID?: string;
 }
 @Controller('achievement')
 export class AchievementController {
@@ -61,6 +62,7 @@ export class AchievementController {
       {
         jobPositionID: query.jobPositionID || null,
         educationID: query.educationID || null,
+        tagID: query.tagID || null,
       },
       query.includeLinked === 'true',
       { limit: query.limit, page: query.page },

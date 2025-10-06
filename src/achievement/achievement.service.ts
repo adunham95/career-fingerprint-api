@@ -53,7 +53,11 @@ export class AchievementService {
   // TODO pagination
   async findMy(
     userID: number,
-    whereOptions: { jobPositionID: string | null; educationID: string | null },
+    whereOptions: {
+      jobPositionID: string | null;
+      educationID: string | null;
+      tagID: string | null;
+    },
     includeLinked: boolean = false,
     query?: { page?: number | string; limit?: number | string },
   ) {
@@ -80,6 +84,10 @@ export class AchievementService {
 
     if (whereOptions.educationID) {
       where.educationID = whereOptions.educationID;
+    }
+
+    if (whereOptions.tagID) {
+      where.tags = { some: { id: whereOptions.tagID } };
     }
 
     this.logger.verbose('Where options after added', { where });

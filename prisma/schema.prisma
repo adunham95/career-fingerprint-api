@@ -212,22 +212,38 @@ model Resume {
   linkedin     String        @default("")
   github       String        @default("")
   title        String?
-  positions    JobOptions[]
+  positions    JobOption[]
+  education    EduOption[]
   bulletPoints BulletPoint[]
   skills       String[]
 }
 
-model JobOptions {
+model JobOption {
   id                  String        @id @default(uuid())
   resumeID            String
   resume              Resume        @relation(fields: [resumeID], references: [id])
   jobID               String
   job                 JobPosition   @relation(fields: [jobID], references: [id])
   jobOverwrites       Json?
-  visibleAchievements Achievement[] @relation("visibleAchievements")
+  description         String        @default("")
+  visibleAchievements Achievement[] @relation("visibleAchievements")  // Depreciated
+  bulletPoints        BulletPoint[]
 
   @@unique([resumeID, jobID])
   @@index([resumeID, jobID])
+}
+
+model EduOption {
+  id                  String        @id @default(uuid())
+  resumeID            String
+  resume              Resume        @relation(fields: [resumeID], references: [id])
+  eduID               String
+  edu                 Education     @relation(fields: [eduID], references: [id])
+  description         String        @default("")
+  bulletPoints        BulletPoint[]
+
+  @@unique([resumeID, eduID])
+  @@index([resumeID, eduID])
 }
 
 model JobPosition {
@@ -245,7 +261,7 @@ model JobPosition {
   location        String        @default("")
   achievements    Achievement[]
   projects        Project[]
-  jobOptions      JobOptions[]
+  jobOptions      JobOption[]
   meetings        Meeting[]
   bulletPoints    BulletPoint[]
 }
@@ -263,30 +279,34 @@ model BulletPoint {
   jobPositionID String?
   resumeID      String
   resume        Resume       @relation(fields: [resumeID], references: [id])
+  jobOptionID   String?
+  jobOption     JobOption?   @relation(fields: [jobOptionID], references: [id])
+  eduOptionID   String?
+  eduOption     EduOption?   @relation(fields: [eduOptionID], references: [id])
 
   @@index([text, resumeID])
 }
 
 model Achievement {
-  id             String           @id @default(uuid())
-  userID         Int
-  user           User             @relation(fields: [userID], references: [id])
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  description    String?
-  result         String?
-  myContribution String?
-  projectID      String?
-  startDate      DateTime?
-  endDate        DateTime?
-  project        Project?         @relation(fields: [projectID], references: [id])
-  jobPositionID  String?
-  jobPosition    JobPosition?     @relation(fields: [jobPositionID], references: [id])
-  educationID    String?
-  education      Education?       @relation(fields: [educationID], references: [id])
-  resumePosition JobOptions[]     @relation("visibleAchievements")
-  highlights     Highlight[]      @relation("highlightAchievements")
-  tags           AchievementTag[] @relation("achievementTags")
+  id                String           @id @default(uuid())
+  userID            Int
+  user              User             @relation(fields: [userID], references: [id])
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  description       String?
+  result            String?
+  myContribution    String?
+  projectID         String?
+  startDate         DateTime?
+  endDate           DateTime?
+  project           Project?         @relation(fields: [projectID], references: [id])
+  jobPositionID     String?
+  jobPosition       JobPosition?     @relation(fields: [jobPositionID], references: [id])
+  educationID       String?
+  education         Education?       @relation(fields: [educationID], references: [id])
+  resumePosition    JobOption[]      @relation("visibleAchievements")  // Depreciated
+  highlights        Highlight[]      @relation("highlightAchievements")
+  tags              AchievementTag[] @relation("achievementTags")
 
   @@index([userID])
 }
@@ -330,6 +350,7 @@ model Education {
   achievements    Achievement[]
   meetings        Meeting[]
   bulletPoints    BulletPoint[]
+  eduOptions      EduOption[]
 
   @@index([userID])
 }

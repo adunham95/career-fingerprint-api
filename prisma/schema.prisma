@@ -70,22 +70,23 @@ model User {
 }
 
 model Organization {
-  id                   String         @id @default(uuid())
-  createdAt            DateTime       @default(now())
-  updatedAt            DateTime       @updatedAt
+  id                   String            @id @default(uuid())
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
   name                 String
   domain               String?
-  domainVerified       Boolean?       @default(false)
-  seatCount            Int            @default(100)
+  domainVerified       Boolean?          @default(false)
+  seatCount            Int               @default(100)
   stripeCustomerID     String?
   defaultPlanID        String?
   logoURL              String?
   email                String
   admins               User[]
-  orgAdmins            User[]         @relation("OrgAdmins")
-  managedSubscriptions Subscription[] @relation("managedSubscriptions")
-  orgSubscription      Subscription[] @relation("orgSubscription")
+  orgAdmins            User[]            @relation("OrgAdmins")
+  managedSubscriptions Subscription[]    @relation("managedSubscriptions")
+  orgSubscription      Subscription[]    @relation("orgSubscription")
   domains              Domain[]
+  weeklyReport         OrgWeeklyReport[]
 
   @@index([email, stripeCustomerID])
 }
@@ -489,4 +490,25 @@ model Skills {
   user      User     @relation(fields: [userID], references: [id])
 
   @@index([userID])
+}
+
+model OrgWeeklyReport {
+  id           String       @id @default(uuid())
+  orgID        String
+  organization Organization @relation(fields: [orgID], references: [id])
+
+  weekStart DateTime
+  weekEnd   DateTime
+
+  totalAchievements      Int   @default(0)
+  avgAchievementsPerUser Float @default(0)
+
+  topTags      Json // [{ tagName, count }]
+  topEmployers Json // [{ company, count, currentPositions }]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([orgID, weekStart])
+  @@index([orgID, weekStart])
 }

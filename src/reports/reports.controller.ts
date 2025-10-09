@@ -33,4 +33,10 @@ export class ReportsController {
   getActiveVsInactive(@Param('orgID') orgID: string) {
     return this.reportsService.getActiveVsInactive(orgID);
   }
+
+  @Get(':orgID/weekly')
+  @UseGuards(JwtAuthGuard)
+  getWeekly(@Param('orgID') orgID: string) {
+    return this.reportsService.getWeeklyReportCached(orgID);
+  }
 }

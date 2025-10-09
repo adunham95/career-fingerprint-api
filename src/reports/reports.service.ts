@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CacheService } from 'src/cache/cache.service';
+import { DateTime } from 'luxon';
 
 @Injectable()
 export class ReportsService {
@@ -34,7 +35,16 @@ export class ReportsService {
           where: { id: orgID },
           select: { seatCount: true, _count: { select: { admins: true } } },
         });
-        const users = await this.prisma.user.count({ where: { orgID } });
+        const users = await this.prisma.user.count({
+          where: {
+            subscriptions: {
+              some: {
+                managedByID: orgID,
+                status: 'org-managed',
+              },
+            },
+          },
+        });
         return {
           seatsUsed: users,
           seatLimit: org?.seatCount ?? 0,
@@ -67,7 +77,115 @@ export class ReportsService {
 
         return { activeUsers, inactiveUsers, totalUsers };
       },
-      600, // cache 10 mins
+      1, // cache 10 mins
     );
+  }
+
+  async getWeeklyReportCached(orgID: string) {
+    return this.generateWeeklyReport(orgID);
+    // const key = `weeklyReport:${orgID}:${DateTime.now().weekNumber}`;
+    // return this.cache.wrap(
+    //   key,
+    //   () => {
+    //     return this.generateWeeklyReport(orgID);
+    //   },
+    //   1,
+    // ); // TTL 5 min
+  }
+
+  async generateWeeklyReport(orgID: string) {
+    const now = DateTime.now();
+
+    // Monday of this week
+    const weekStart = now.set({ weekday: 1 }).startOf('day');
+
+    // Sunday of this week
+    const weekEnd = now.set({ weekday: 7 }).endOf('day');
+
+    const [achievements, jobPositions] = await Promise.all([
+      this.prisma.achievement.findMany({
+        where: {
+          createdAt: { gte: weekStart.toJSDate(), lt: weekEnd.toJSDate() },
+          user: {
+            subscriptions: {
+              some: {
+                managedByID: orgID,
+                status: 'org-managed',
+              },
+            },
+          },
+        },
+        include: { user: true, tags: true },
+      }),
+      this.prisma.jobPosition.findMany({
+        where: {
+          user: {
+            subscriptions: {
+              some: {
+                managedByID: orgID,
+                status: 'org-managed',
+              },
+            },
+          },
+          currentPosition: true,
+        },
+      }),
+    ]);
+
+    console.log(jobPositions);
+
+    // ---- Totals and averages ----
+    const totalAchievements = achievements.length;
+    const uniqueUsers = new Set(achievements.map((a) => a.userID)).size;
+    const avgAchievementsPerUser = uniqueUsers
+      ? totalAchievements / uniqueUsers
+      : 0;
+
+    // ---- Top tags ----
+    const tagCounts: Record<string, number> = {};
+    for (const a of achievements) {
+      for (const tag of a.tags) {
+        tagCounts[tag.name] = (tagCounts[tag.name] || 0) + 1;
+      }
+    }
+    const topTags = Object.entries(tagCounts)
+      .map(([tagName, count]) => ({ tagName, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
+    // ---- Top employers ----
+    const employerCounts = jobPositions.reduce(
+      (acc, job) => {
+        if (!job.company) return acc;
+        acc[job.company] = (acc[job.company] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
+
+    const topEmployers = Object.entries(employerCounts)
+      .map(([company, count]) => ({ company, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
+    // ---- Save or return ----
+    return this.prisma.orgWeeklyReport.upsert({
+      where: { orgID_weekStart: { orgID, weekStart: weekStart.toJSDate() } },
+      update: {
+        totalAchievements,
+        avgAchievementsPerUser,
+        topTags,
+        topEmployers,
+      },
+      create: {
+        orgID,
+        weekStart: weekStart.toJSDate(),
+        weekEnd: weekEnd.toJSDate(),
+        totalAchievements,
+        avgAchievementsPerUser,
+        topTags,
+        topEmployers,
+      },
+    });
   }
 }

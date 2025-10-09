@@ -18,6 +18,11 @@ export class MailService {
     to: string;
     context: ISendMailOptions['context'];
   }) {
+    // Skip emails to @demo.com
+    if (params.to.endsWith('@demo.com')) {
+      return;
+    }
+
     await this.mailQueue.add('sendECardNotification', {
       to: params.to,
       template: params.template,

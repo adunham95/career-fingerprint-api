@@ -50,11 +50,11 @@ type CoverLetterWithUser = Prisma.CoverLetterGetPayload<{
 }>;
 
 type JobPositionWithBulletPoints = Prisma.JobPositionGetPayload<{
-  include: { bulletPoints: true };
+  // include: { bulletPoints: true };
 }>;
 
 type EducationWithBulletPoints = Prisma.EducationGetPayload<{
-  include: { bulletPoints: true };
+  // include: { bulletPoints: true };
 }>;
 
 type MeetingDetails = Prisma.MeetingGetPayload<{
@@ -162,11 +162,6 @@ export class PdfService {
               ],
             },
             { text: exp.description, style: 'jobDescription' },
-            {
-              ul: exp.bulletPoints
-                .filter((bp) => bp.text !== '')
-                .map((bp) => bp.text),
-            },
           ];
         }),
 
@@ -201,9 +196,6 @@ export class PdfService {
             ],
           },
           { text: edu.institution, style: 'jobDescription' },
-          {
-            ul: edu.bulletPoints?.map((bp) => bp.text),
-          },
         ]),
       ],
 

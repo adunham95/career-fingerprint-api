@@ -195,118 +195,92 @@ model SubscriptionEvent {
 }
 
 model Resume {
+  id            String         @id @default(uuid())
+  name          String?
+  userID        Int
+  user          User           @relation(fields: [userID], references: [id])
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  default       Boolean        @default(false)
+  firstName     String         @default("")
+  lastName      String         @default("")
+  email         String         @default("")
+  summary       String         @default("")
+  phoneNumber   String         @default("")
+  location      String         @default("")
+  website       String         @default("")
+  linkedin      String         @default("")
+  github        String         @default("")
+  title         String?
+  resumeObjects ResumeObject[]
+  skills        String[]
+}
+
+model ResumeObject {
   id           String        @id @default(uuid())
-  name         String?
-  userID       Int
-  user         User          @relation(fields: [userID], references: [id])
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  default      Boolean       @default(false)
-  firstName    String        @default("")
-  lastName     String        @default("")
-  email        String        @default("")
-  summary      String        @default("")
-  phoneNumber  String        @default("")
-  location     String        @default("")
-  website      String        @default("")
-  linkedin     String        @default("")
-  github       String        @default("")
-  title        String?
-  positions    JobOption[]
-  education    EduOption[]
+  resumeID     String
+  resume       Resume        @relation(fields: [resumeID], references: [id])
+  jobID        String?
+  job          JobPosition?  @relation(fields: [jobID], references: [id])
+  eduID        String?
+  edu          Education?    @relation(fields: [eduID], references: [id])
   bulletPoints BulletPoint[]
-  skills       String[]
-}
+  description  String        @default("")
 
-model JobOption {
-  id                  String        @id @default(uuid())
-  resumeID            String
-  resume              Resume        @relation(fields: [resumeID], references: [id])
-  jobID               String
-  job                 JobPosition   @relation(fields: [jobID], references: [id])
-  jobOverwrites       Json?
-  description         String        @default("")
-  visibleAchievements Achievement[] @relation("visibleAchievements")  // Depreciated
-  bulletPoints        BulletPoint[]
-
-  @@unique([resumeID, jobID])
-  @@index([resumeID, jobID])
-}
-
-model EduOption {
-  id                  String        @id @default(uuid())
-  resumeID            String
-  resume              Resume        @relation(fields: [resumeID], references: [id])
-  eduID               String
-  edu                 Education     @relation(fields: [eduID], references: [id])
-  description         String        @default("")
-  bulletPoints        BulletPoint[]
-
-  @@unique([resumeID, eduID])
-  @@index([resumeID, eduID])
+  @@index([resumeID, jobID, eduID])
 }
 
 model JobPosition {
-  id              String        @id @default(uuid())
+  id              String         @id @default(uuid())
   userID          Int
-  user            User          @relation(fields: [userID], references: [id])
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  name            String        @default("")
-  description     String        @default("")
+  user            User           @relation(fields: [userID], references: [id])
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  name            String         @default("")
+  description     String         @default("")
   startDate       DateTime?
   endDate         DateTime?
-  currentPosition Boolean       @default(false)
-  company         String        @default("")
-  location        String        @default("")
+  currentPosition Boolean        @default(false)
+  company         String         @default("")
+  location        String         @default("")
   achievements    Achievement[]
   projects        Project[]
-  jobOptions      JobOption[]
+  jobOptions      ResumeObject[]
   meetings        Meeting[]
-  bulletPoints    BulletPoint[]
 }
 
 model BulletPoint {
-  id            String       @id @default(uuid())
-  userID        Int
-  user          User         @relation(fields: [userID], references: [id])
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  text          String
-  educationID   String?
-  eduction      Education?   @relation(fields: [educationID], references: [id])
-  jobPosition   JobPosition? @relation(fields: [jobPositionID], references: [id])
-  jobPositionID String?
-  resumeID      String
-  resume        Resume       @relation(fields: [resumeID], references: [id])
-  jobOptionID   String?
-  jobOption     JobOption?   @relation(fields: [jobOptionID], references: [id])
-  eduOptionID   String?
-  eduOption     EduOption?   @relation(fields: [eduOptionID], references: [id])
+  id             String       @id @default(uuid())
+  userID         Int
+  user           User         @relation(fields: [userID], references: [id])
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  text           String
+  resumeObjectID String
+  resumeObject   ResumeObject @relation(fields: [resumeObjectID], references: [id])
 
-  @@index([text, resumeID])
+  @@index([text])
 }
 
 model Achievement {
-  id                String           @id @default(uuid())
-  userID            Int
-  user              User             @relation(fields: [userID], references: [id])
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
-  description       String?
-  result            String?
-  myContribution    String?
-  projectID         String?
-  startDate         DateTime?
-  endDate           DateTime?
-  project           Project?         @relation(fields: [projectID], references: [id])
-  jobPositionID     String?
-  jobPosition       JobPosition?     @relation(fields: [jobPositionID], references: [id])
-  educationID       String?
-  education         Education?       @relation(fields: [educationID], references: [id])
-  resumePosition    JobOption[]      @relation("visibleAchievements")  // Depreciated
-  highlights        Highlight[]      @relation("highlightAchievements")
-  tags              AchievementTag[] @relation("achievementTags")
+  id             String           @id @default(uuid())
+  userID         Int
+  user           User             @relation(fields: [userID], references: [id])
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  description    String?
+  result         String?
+  myContribution String?
+  projectID      String?
+  startDate      DateTime?
+  endDate        DateTime?
+  project        Project?         @relation(fields: [projectID], references: [id])
+  jobPositionID  String?
+  jobPosition    JobPosition?     @relation(fields: [jobPositionID], references: [id])
+  educationID    String?
+  education      Education?       @relation(fields: [educationID], references: [id])
+  highlights     Highlight[]      @relation("highlightAchievements")
+  tags           AchievementTag[] @relation("achievementTags")
 
   @@index([userID])
 }
@@ -336,21 +310,20 @@ model Project {
 }
 
 model Education {
-  id              String        @id @default(uuid())
-  userID          Int
-  user            User          @relation(fields: [userID], references: [id])
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  institution     String        @default("")
-  degree          String        @default("")
-  description     String        @default("")
-  startDate       DateTime?
-  endDate         DateTime?
-  currentPosition Boolean       @default(false)
-  achievements    Achievement[]
-  meetings        Meeting[]
-  bulletPoints    BulletPoint[]
-  eduOptions      EduOption[]
+  id               String         @id @default(uuid())
+  userID           Int
+  user             User           @relation(fields: [userID], references: [id])
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  institution      String         @default("")
+  degree           String         @default("")
+  description      String         @default("")
+  startDate        DateTime?
+  endDate          DateTime?
+  currentPosition  Boolean        @default(false)
+  achievements     Achievement[]
+  meetings         Meeting[]
+  eduResumeObjects ResumeObject[]
 
   @@index([userID])
 }

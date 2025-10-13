@@ -13,10 +13,7 @@ import {
   Header,
 } from '@nestjs/common';
 import { JobPositionsService } from './job-positions.service';
-import {
-  CreateBulletPointDto,
-  CreateJobPositionDto,
-} from './dto/create-job-position.dto';
+import { CreateJobPositionDto } from './dto/create-job-position.dto';
 import { UpdateJobPositionDto } from './dto/update-job-position.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
@@ -40,19 +37,19 @@ export class JobPositionsController {
     return this.jobPositionsService.create(createJobPositionDto);
   }
 
-  @Post(':id/bullet-point')
-  @UseGuards(JwtAuthGuard)
-  createBulletPoint(
-    @Body() createBulletPointDto: CreateBulletPointDto,
-    @Req() req: Request,
-  ) {
-    if (!req.user) {
-      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
-    }
-    createBulletPointDto.userID = req.user.id;
-    createBulletPointDto.jobPositionID = req.params.id;
-    return this.jobPositionsService.createBulletPoint(createBulletPointDto);
-  }
+  // @Post(':id/bullet-point')
+  // @UseGuards(JwtAuthGuard)
+  // createBulletPoint(
+  //   @Body() createBulletPointDto: CreateBulletPointDto,
+  //   @Req() req: Request,
+  // ) {
+  //   if (!req.user) {
+  //     throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+  //   }
+  //   createBulletPointDto.userID = req.user.id;
+  //   createBulletPointDto.jobPositionID = req.params.id;
+  //   return this.jobPositionsService.createBulletPoint(createBulletPointDto);
+  // }
 
   @Post('application')
   @UseGuards(JwtAuthGuard)

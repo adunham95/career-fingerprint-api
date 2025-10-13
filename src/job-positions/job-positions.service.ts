@@ -1,8 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  CreateBulletPointDto,
-  CreateJobPositionDto,
-} from './dto/create-job-position.dto';
+import { CreateJobPositionDto } from './dto/create-job-position.dto';
 import { UpdateJobPositionDto } from './dto/update-job-position.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 
@@ -17,10 +14,6 @@ export class JobPositionsService {
       createJobPositionDto.endDate = new Date(createJobPositionDto.endDate);
     }
     return this.prisma.jobPosition.create({ data: createJobPositionDto });
-  }
-
-  createBulletPoint(createBulletPointDto: CreateBulletPointDto) {
-    return this.prisma.bulletPoint.create({ data: createBulletPointDto });
   }
 
   async createFromJobApplication(userID: number, jobApplicationID: string) {
@@ -62,7 +55,6 @@ export class JobPositionsService {
       orderBy: { startDate: { sort: 'desc', nulls: 'last' } },
       include: {
         achievements: true,
-        bulletPoints: { select: { text: true, id: true } },
       },
     });
   }

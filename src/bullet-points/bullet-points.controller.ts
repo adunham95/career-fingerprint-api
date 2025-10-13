@@ -26,6 +26,7 @@ export class BulletPointsController {
     @Body() createBulletPointDto: CreateBulletPointDto,
     @Req() req: Request,
   ) {
+    console.log('createBulletPoint', createBulletPointDto);
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
     }

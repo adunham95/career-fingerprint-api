@@ -44,7 +44,7 @@ export class CreateBulletPointDto {
 
   userID: number;
 
-  @ApiProperty()
-  @IsString()
-  resumeID: string;
+  // @ApiProperty()
+  // @IsString()
+  // resumeID: string;
 }

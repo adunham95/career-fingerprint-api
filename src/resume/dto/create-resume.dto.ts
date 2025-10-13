@@ -9,3 +9,8 @@ export class CreateResumeDto {
 
   userID: number;
 }
+
+export class CreateResumeObjectDto {
+  jobPositionID?: string;
+  educationID?: string;
+}

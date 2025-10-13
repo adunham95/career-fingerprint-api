@@ -4,13 +4,7 @@ import { IsOptional, IsString } from 'class-validator';
 export class CreateBulletPointDto {
   @ApiProperty()
   @IsString()
-  @IsOptional()
-  jobPositionID: string;
-
-  @ApiProperty()
-  @IsString()
-  @IsOptional()
-  educationID: string;
+  resumeObjectID: string;
 
   @ApiProperty({ default: '' })
   @IsString()
@@ -18,8 +12,4 @@ export class CreateBulletPointDto {
   text: string = '';
 
   userID: number;
-
-  @ApiProperty()
-  @IsString()
-  resumeID: string;
 }

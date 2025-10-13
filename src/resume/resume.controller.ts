@@ -13,7 +13,10 @@ import {
   Res,
 } from '@nestjs/common';
 import { ResumeService } from './resume.service';
-import { CreateResumeDto } from './dto/create-resume.dto';
+import {
+  CreateResumeDto,
+  CreateResumeObjectDto,
+} from './dto/create-resume.dto';
 import { UpdateResumeDto } from './dto/update-resume.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
@@ -61,6 +64,21 @@ export class ResumeController {
     return stream.pipe(res);
   }
 
+  @Get(':id/objects')
+  getObjectsForResume(@Param('id') id: string) {
+    return this.resumeService.findResumeObjects(id);
+  }
+
+  @Get(':id/job-positions')
+  getJobPositionsForResume(@Param('id') id: string) {
+    return this.resumeService.findJobObject(id);
+  }
+
+  @Get(':id/education')
+  getEducationForResume(@Param('id') id: string) {
+    return this.resumeService.findEduObject(id);
+  }
+
   @Get(':id/duplicate')
   duplicateResume(@Param('id') id: string) {
     return this.resumeService.duplicateResume(id);
@@ -69,6 +87,14 @@ export class ResumeController {
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateResumeDto: UpdateResumeDto) {
     return this.resumeService.update(id, updateResumeDto);
+  }
+
+  @Post(':id/resume-object')
+  updateResumeWithJob(
+    @Param('id') id: string,
+    @Body() createResumeObjectDto: CreateResumeObjectDto,
+  ) {
+    return this.resumeService.createResumeObject(id, createResumeObjectDto);
   }
 
   @Delete(':id')

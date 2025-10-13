@@ -20,7 +20,7 @@ export class EducationService {
       where: { userID },
       include: {
         achievements: true,
-        bulletPoints: { select: { id: true, text: true } },
+        // bulletPoints: { select: { id: true, text: true } },
       },
     });
   }

@@ -224,7 +224,7 @@ model ResumeObject {
   job          JobPosition?  @relation(fields: [jobID], references: [id])
   eduID        String?
   edu          Education?    @relation(fields: [eduID], references: [id])
-  bulletPoints BulletPoint[]
+  bulletPoints BulletPoint[] 
   description  String        @default("")
 
   @@index([resumeID, jobID, eduID])
@@ -257,7 +257,7 @@ model BulletPoint {
   updatedAt      DateTime     @updatedAt
   text           String
   resumeObjectID String
-  resumeObject   ResumeObject @relation(fields: [resumeObjectID], references: [id])
+  resumeObject   ResumeObject @relation(fields: [resumeObjectID], references: [id],  onDelete: Cascade)
 
   @@index([text])
 }

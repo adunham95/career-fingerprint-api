@@ -139,6 +139,10 @@ export class ResumeService {
     return this.prisma.resume.delete({ where: { id } });
   }
 
+  async removeJobObject(id: string) {
+    return this.prisma.resumeObject.delete({ where: { id } });
+  }
+
   async createResumeObject(
     resumeID: string,
     { jobPositionID, educationID }: CreateResumeObjectDto,
@@ -176,7 +180,6 @@ export class ResumeService {
   }
 
   async updateResumeObject(
-    id: string,
     resumeObjectID: string,
     updateResumeObjectDto: UpdateResumeObjectDto,
   ) {

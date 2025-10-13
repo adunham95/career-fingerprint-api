@@ -17,7 +17,10 @@ import {
   CreateResumeDto,
   CreateResumeObjectDto,
 } from './dto/create-resume.dto';
-import { UpdateResumeDto } from './dto/update-resume.dto';
+import {
+  UpdateResumeDto,
+  UpdateResumeObjectDto,
+} from './dto/update-resume.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { Request, Response } from 'express';
@@ -90,15 +93,31 @@ export class ResumeController {
   }
 
   @Post(':id/resume-object')
-  updateResumeWithJob(
+  createResumeObject(
     @Param('id') id: string,
     @Body() createResumeObjectDto: CreateResumeObjectDto,
   ) {
     return this.resumeService.createResumeObject(id, createResumeObjectDto);
   }
 
+  @Patch('resume-object/:objID')
+  updateResumeWithJob(
+    @Param('objID') resumeObjectID: string,
+    @Body() createResumeObjectDto: UpdateResumeObjectDto,
+  ) {
+    return this.resumeService.updateResumeObject(
+      resumeObjectID,
+      createResumeObjectDto,
+    );
+  }
+
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.resumeService.remove(id);
+  }
+
+  @Delete('resume-object/:objID')
+  removeJobObject(@Param('objID') id: string) {
+    return this.resumeService.removeJobObject(id);
   }
 }

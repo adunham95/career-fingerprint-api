@@ -23,7 +23,44 @@ export class ResumeService {
     const name =
       createResumeDto.name ?? `Untitled Resume ${new Date().toISOString()}`;
     await this.cache.del(`myResumes${createResumeDto.userID}`);
-    return this.prisma.resume.create({ data: { ...createResumeDto, name } });
+
+    const resume = await this.prisma.resume.create({
+      data: { ...createResumeDto, name },
+    });
+
+    const myJobs = await this.prisma.jobPosition.findMany({
+      where: { userID: createResumeDto.userID || 1 },
+      select: { description: true, id: true },
+    });
+
+    for (let index = 0; index < myJobs.length; index++) {
+      const element = myJobs[index];
+      await this.prisma.resumeObject.create({
+        data: {
+          resumeID: resume.id,
+          jobID: element.id,
+          description: element.description,
+        },
+      });
+    }
+
+    const myEducation = await this.prisma.education.findMany({
+      where: { userID: createResumeDto.userID },
+      select: { description: true, id: true },
+    });
+
+    for (let index = 0; index < myEducation.length; index++) {
+      const element = myEducation[index];
+      await this.prisma.resumeObject.create({
+        data: {
+          resumeID: resume.id,
+          eduID: element.id,
+          description: element.description,
+        },
+      });
+    }
+
+    return resume;
   }
 
   findAll() {
@@ -119,12 +156,36 @@ export class ResumeService {
       throw Error('Missing resume');
     }
 
+    const name = selectedResume?.name
+      ? `${selectedResume?.name} copy`
+      : `Untitled Resume ${new Date().toISOString()}`;
+
     const newResume = await this.prisma.resume.create({
       data: {
-        name: `${selectedResume?.name} copy`,
+        name: name,
         userID: selectedResume?.userID || 1,
       },
     });
+
+    const objects = await this.prisma.resumeObject.findMany({
+      where: {
+        resumeID: selectedResume.id,
+      },
+    });
+
+    for (let index = 0; index < objects.length; index++) {
+      const element = objects[index];
+      await this.prisma.resumeObject.create({
+        data: {
+          resumeID: newResume.id,
+          eduID: element.eduID,
+          jobID: element.jobID,
+          description: element.description,
+        },
+      });
+    }
+
+    //TODO Add Bullet Points
 
     return newResume;
   }

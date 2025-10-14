@@ -49,8 +49,8 @@ type ResumeWithUser = Prisma.ResumeGetPayload<{
     resumeObjects: {
       include: {
         bulletPoints: true;
-        job: { include: { achievements: true } };
-        edu: { include: { achievements: true } };
+        job: true;
+        edu: true;
       };
     };
   };

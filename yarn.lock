@@ -1684,29 +1684,29 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nestjs/bull-shared@npm:^11.0.2":
-  version: 11.0.2
-  resolution: "@nestjs/bull-shared@npm:11.0.2"
+"@nestjs/bull-shared@npm:^11.0.4":
+  version: 11.0.4
+  resolution: "@nestjs/bull-shared@npm:11.0.4"
   dependencies:
     tslib: "npm:2.8.1"
   peerDependencies:
     "@nestjs/common": ^10.0.0 || ^11.0.0
     "@nestjs/core": ^10.0.0 || ^11.0.0
-  checksum: 10c0/47a132c75bdfb76f89a7680cf34d2cab6ef4650495d7a41bb43cf81271972a112716e8ef371830bf51c5ab0ac1f2a0b6c42ca71f4c16c99514d427543ea6464a
+  checksum: 10c0/88b819fa8e24033f41b9764712ebe130b1c6b78c9dfecbda1dbdf6c97f9f63a70fd0eb1cde870d2839590f8c712612c3d46ed30732361afe066c93bf320834fd
   languageName: node
   linkType: hard
 
-"@nestjs/bull@npm:^11.0.2":
-  version: 11.0.2
-  resolution: "@nestjs/bull@npm:11.0.2"
+"@nestjs/bull@npm:^11.0.4":
+  version: 11.0.4
+  resolution: "@nestjs/bull@npm:11.0.4"
   dependencies:
-    "@nestjs/bull-shared": "npm:^11.0.2"
+    "@nestjs/bull-shared": "npm:^11.0.4"
     tslib: "npm:2.8.1"
   peerDependencies:
     "@nestjs/common": ^8.0.0 || ^9.0.0 || ^10.0.0 || ^11.0.0
     "@nestjs/core": ^8.0.0 || ^9.0.0 || ^10.0.0 || ^11.0.0
     bull: ^3.3 || ^4.0.0
-  checksum: 10c0/1d493a642e48dbfb2122a4d11b3b156a129a477b869f11c99d96c02e95c6a78d7a0bcd030e7f649e8a6d845b48148cd5071e3c053afdeccab03743a9672f8ab8
+  checksum: 10c0/ddc9edc5e50a2bb222de3b47f5cbd056d520f916f7ebc9b994c2aef491358297533c6cdec351bff6910ee30442fd835d4608b01400303a1754eab60df6269b34
   languageName: node
   linkType: hard
 
@@ -4315,7 +4315,7 @@ __metadata:
     "@keyv/redis": "npm:^5.1.1"
     "@nestjs-modules/mailer": "npm:^2.0.2"
     "@nestjs/axios": "npm:^4.0.1"
-    "@nestjs/bull": "npm:^11.0.2"
+    "@nestjs/bull": "npm:^11.0.4"
     "@nestjs/cache-manager": "npm:^3.0.1"
     "@nestjs/cli": "npm:^11.0.0"
     "@nestjs/common": "npm:^11.0.1"
@@ -4359,6 +4359,7 @@ __metadata:
     class-transformer: "npm:^0.5.1"
     class-validator: "npm:^0.14.2"
     cookie-parser: "npm:^1.4.7"
+    csv-parse: "npm:^6.1.0"
     eslint: "npm:^9.18.0"
     eslint-config-prettier: "npm:^10.0.1"
     eslint-plugin-prettier: "npm:^5.2.2"
@@ -5559,6 +5560,13 @@ __metadata:
   version: 6.2.2
   resolution: "css-what@npm:6.2.2"
   checksum: 10c0/91e24c26fb977b4ccef30d7007d2668c1c10ac0154cc3f42f7304410e9594fb772aea4f30c832d2993b132ca8d99338050866476210316345ec2e7d47b248a56
+  languageName: node
+  linkType: hard
+
+"csv-parse@npm:^6.1.0":
+  version: 6.1.0
+  resolution: "csv-parse@npm:6.1.0"
+  checksum: 10c0/098c69e5b3b50d4bf65401dc3b2f1bd66f272fe985be99d7cb9f14ad33a7218f0f5695a03a82720cf47141d242bf44b4836ff32900751bef087057bc6e6715a2
   languageName: node
   linkType: hard
 

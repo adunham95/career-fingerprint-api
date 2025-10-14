@@ -6,5 +6,5 @@ export class UpdateResumeDto extends PartialType(CreateResumeDto) {}
 export class UpdateResumeObjectDto {
   description: string;
 
-  bulletPoints?: { id: string; text: string }[];
+  bulletPointOptions?: { id: string; text: string }[];
 }

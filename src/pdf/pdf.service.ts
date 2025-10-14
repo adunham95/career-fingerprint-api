@@ -42,19 +42,22 @@ function formatDate(dateString?: string | null) {
 }
 
 type ResumeWithUser = Prisma.ResumeGetPayload<{
-  include: { user: { include: { skills: true } } };
+  include: {
+    user: {
+      include: { skills: true };
+    };
+    resumeObjects: {
+      include: {
+        bulletPoints: true;
+        job: { include: { achievements: true } };
+        edu: { include: { achievements: true } };
+      };
+    };
+  };
 }>;
 
 type CoverLetterWithUser = Prisma.CoverLetterGetPayload<{
   include: { user: true; jobApplication: true };
-}>;
-
-type JobPositionWithBulletPoints = Prisma.JobPositionGetPayload<{
-  // include: { bulletPoints: true };
-}>;
-
-type EducationWithBulletPoints = Prisma.EducationGetPayload<{
-  // include: { bulletPoints: true };
 }>;
 
 type MeetingDetails = Prisma.MeetingGetPayload<{
@@ -81,12 +84,143 @@ export class PdfService {
     this.printer = new PdfPrinter(fonts);
   }
 
-  createResume(
-    resumeData: ResumeWithUser,
-    jobPositions: JobPositionWithBulletPoints[],
-    education: EducationWithBulletPoints[],
-    skills: Skills | null,
-  ) {
+  createResume(resumeData: ResumeWithUser, skills: Skills | null) {
+    const content: TDocumentDefinitions['content'] = [];
+
+    // Header
+    content.push(
+      {
+        columns: [
+          {
+            text: `${resumeData.firstName || resumeData.user?.firstName} ${resumeData.lastName || resumeData.user.lastName}`,
+            style: 'name',
+          },
+          [
+            { text: resumeData.email, style: 'contact' },
+            { text: resumeData.phoneNumber, style: 'contact' },
+            { text: resumeData.location, style: 'contact' },
+          ],
+        ],
+        columnGap: 10,
+      },
+      '\n',
+      {
+        text: resumeData.summary,
+        style: 'summary',
+      },
+      '\n',
+    );
+    // Skills
+    content.push({
+      text: 'Skills',
+      style: 'sectionHeader',
+    });
+    // Skills
+    content.push(
+      {
+        text: skills?.skillList.join(', ') || '',
+        style: 'summary',
+      },
+      '\n',
+    );
+    // Jobs Title
+    content.push(
+      { text: 'Professional Experience', style: 'sectionHeader' },
+      {
+        canvas: [
+          {
+            type: 'line',
+            x1: 0,
+            y1: 0,
+            x2: 515,
+            y2: 0,
+            lineWidth: 2,
+            lineColor: '#ff7a8a',
+          },
+        ],
+        margin: [0, 5, 0, 5],
+      },
+    );
+    // Job List
+    resumeData.resumeObjects
+      .filter((j) => j.type === 'job')
+      .map((exp) => {
+        console.log({ exp });
+        content.push(
+          {
+            columns: [
+              {
+                text: `${exp?.job?.name} | ${exp?.job?.company}`,
+                style: 'jobTitle',
+              },
+              {
+                text: `${formatDate(exp?.job?.startDate?.toString())} - ${
+                  exp.job?.currentPosition
+                    ? 'Current'
+                    : formatDate(exp?.job?.endDate?.toString())
+                }`,
+                style: 'jobDates',
+              },
+            ],
+          },
+          { text: exp.description, style: 'jobDescription' },
+          {
+            ul: exp.bulletPoints.map((b) => {
+              return { text: b.text, style: 'bulletPointList' };
+            }),
+          },
+        );
+      });
+
+    // Education Title
+    content.push(
+      { text: 'Education', style: 'sectionHeader' },
+      {
+        canvas: [
+          {
+            type: 'line',
+            x1: 0,
+            y1: 0,
+            x2: 515,
+            y2: 0,
+            lineWidth: 2,
+            lineColor: '#ff7a8a',
+          },
+        ],
+        margin: [0, 5, 0, 5],
+      },
+    );
+
+    resumeData.resumeObjects
+      .filter((j) => j.type === 'education')
+      .map((eduObj) => {
+        console.log({ eduObj });
+        content.push(
+          {
+            columns: [
+              {
+                text: `${eduObj?.edu?.degree || ''} | ${eduObj?.edu?.institution || ''}`,
+                style: 'jobTitle',
+              },
+              {
+                text: `${formatDate(eduObj?.edu?.startDate?.toString())} - ${
+                  eduObj?.edu?.currentPosition
+                    ? 'Current'
+                    : formatDate(eduObj?.edu?.endDate?.toString())
+                }`,
+                style: 'jobDates',
+              },
+            ],
+          },
+          { text: eduObj?.description, style: 'jobDescription' },
+          {
+            ul: eduObj.bulletPoints.map((b) => {
+              return { text: b.text, style: 'bulletPointList' };
+            }),
+          },
+        );
+      });
+
     const docDefinition: TDocumentDefinitions = {
       pageMargins: [40, 50, 40, 50],
 
@@ -98,107 +232,7 @@ export class PdfService {
           margin: [40, 0, 40, 20],
         };
       },
-      content: [
-        {
-          columns: [
-            {
-              text: `${resumeData.firstName || resumeData.user?.firstName} ${resumeData.lastName || resumeData.user.lastName}`,
-              style: 'name',
-            },
-            [
-              { text: resumeData.email, style: 'contact' },
-              { text: resumeData.phoneNumber, style: 'contact' },
-              { text: resumeData.location, style: 'contact' },
-            ],
-          ],
-          columnGap: 10,
-        },
-        '\n',
-        {
-          text: resumeData.summary,
-          style: 'summary',
-        },
-        '\n',
-        {
-          text: 'Skills',
-          style: 'sectionHeader',
-        },
-        {
-          text: skills?.skillList.join(', ') || '',
-          style: 'summary',
-        },
-        '\n',
-        { text: 'Professional Experience', style: 'sectionHeader' },
-        {
-          canvas: [
-            {
-              type: 'line',
-              x1: 0,
-              y1: 0,
-              x2: 515,
-              y2: 0,
-              lineWidth: 2,
-              lineColor: '#ff7a8a',
-            },
-          ],
-          margin: [0, 5, 0, 5],
-        },
-        ...jobPositions.map((exp) => {
-          return [
-            {
-              columns: [
-                {
-                  text: `${exp.name} | ${exp.company}`,
-                  style: 'jobTitle',
-                },
-                {
-                  text: `${formatDate(exp?.startDate?.toString())} - ${
-                    exp.currentPosition
-                      ? 'Current'
-                      : formatDate(exp?.endDate?.toString())
-                  }`,
-                  style: 'jobDates',
-                },
-              ],
-            },
-            { text: exp.description, style: 'jobDescription' },
-          ];
-        }),
-
-        // Education Section
-        { text: 'Education', style: 'sectionHeader' },
-        {
-          canvas: [
-            {
-              type: 'line',
-              x1: 0,
-              y1: 0,
-              x2: 515,
-              y2: 0,
-              lineWidth: 2,
-              lineColor: '#ff7a8a',
-            },
-          ],
-          margin: [0, 5, 0, 5],
-        },
-        ...education.map((edu) => [
-          {
-            columns: [
-              { text: edu.degree, style: 'jobTitle' },
-              {
-                text: `${formatDate(edu?.startDate?.toString())} - ${
-                  edu.currentPosition
-                    ? 'Current'
-                    : formatDate(edu?.endDate?.toString())
-                }`,
-                style: 'jobDates',
-              },
-            ],
-          },
-          { text: edu.institution, style: 'jobDescription' },
-        ]),
-      ],
-
+      content,
       styles: {
         name: { fontSize: 18, bold: true, margin: [0, 0, 0, 5] },
         contact: {
@@ -218,6 +252,7 @@ export class PdfService {
         jobLocation: { fontSize: 12, italics: true },
         jobDates: { fontSize: 10, color: '#555', alignment: 'right' },
         jobDescription: { fontSize: 10, margin: [0, 2, 0, 8] },
+        bulletPointList: { fontSize: 10 },
       },
 
       defaultStyle: {

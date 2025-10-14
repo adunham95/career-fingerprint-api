@@ -115,36 +115,29 @@ export class ResumeService {
   async findOneAndBuildPDF(id: string) {
     const resume = await this.prisma.resume.findFirst({
       where: { id },
-      include: { user: { include: { skills: true } } },
+      include: {
+        user: {
+          include: { skills: true },
+        },
+        resumeObjects: {
+          include: {
+            bulletPoints: true,
+            job: true,
+            edu: true,
+          },
+        },
+      },
     });
 
     if (!resume) {
       throw new Error('Resume not found');
     }
-    const jobPositions = await this.prisma.jobPosition.findMany({
-      where: { userID: resume.userID },
-      orderBy: { startDate: 'desc' },
-      include: {
-        // bulletPoints: true,
-      },
-    });
-
-    const education = await this.prisma.education.findMany({
-      orderBy: { startDate: 'desc' },
-      where: { userID: resume.userID },
-      // include: { bulletPoints: true },
-    });
 
     const skills = await this.prisma.skills.findFirst({
       where: { userID: resume.userID },
     });
     console.log({ resume });
-    return this.pdfService.createResume(
-      resume,
-      jobPositions,
-      education,
-      skills,
-    );
+    return this.pdfService.createResume(resume, skills);
   }
 
   async duplicateResume(id: string) {
@@ -209,7 +202,9 @@ export class ResumeService {
     { jobPositionID, educationID }: CreateResumeObjectDto,
   ) {
     let description = '';
+    let type = '';
     if (jobPositionID) {
+      type = 'job';
       const currentJob = await this.prisma.jobPosition.findFirst({
         where: { id: jobPositionID },
       });
@@ -219,6 +214,7 @@ export class ResumeService {
       }
       description = currentJob.description;
     } else if (educationID) {
+      type = 'eduction';
       const currentEdu = await this.prisma.education.findFirst({
         where: { id: educationID },
       });
@@ -231,12 +227,16 @@ export class ResumeService {
 
     return this.prisma.resumeObject.create({
       data: {
+        type,
         resumeID: resumeID,
         jobID: jobPositionID,
         eduID: educationID,
         description,
       },
-      include: { job: true, edu: true },
+      include: {
+        job: { include: { achievements: true } },
+        edu: { include: { achievements: true } },
+      },
     });
   }
 
@@ -244,10 +244,11 @@ export class ResumeService {
     resumeObjectID: string,
     updateResumeObjectDto: UpdateResumeObjectDto,
   ) {
-    const { bulletPoints, ...updateObj } = updateResumeObjectDto;
+    console.log(updateResumeObjectDto);
+    const { bulletPointOptions, ...updateObj } = updateResumeObjectDto;
 
-    if (bulletPoints) {
-      for (const bulletPoint of bulletPoints) {
+    if (bulletPointOptions) {
+      for (const bulletPoint of bulletPointOptions) {
         await this.prisma.bulletPoint.update({
           where: { id: bulletPoint.id },
           data: { text: bulletPoint.text },

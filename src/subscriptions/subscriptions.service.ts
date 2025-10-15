@@ -16,6 +16,7 @@ export class SubscriptionsService {
   async createOrgManagedSubscription(
     createSubscription: CreateSubscriptionDto,
   ) {
+    console.log('creating org managed subscription', createSubscription);
     const oneYearFromNow = new Date();
     oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
 

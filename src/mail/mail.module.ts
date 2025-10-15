@@ -9,7 +9,7 @@ import { MailProcessor } from './mail.processor';
     BullModule.registerQueue({
       name: 'email',
       defaultJobOptions: {
-        attempts: 3,
+        attempts: process.env.NODE_ENV === 'production' ? 3 : 1,
         backoff: {
           type: 'exponential',
           delay: 1000,

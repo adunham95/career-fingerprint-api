@@ -9,10 +9,13 @@ import { AuthCookieModule } from 'src/authcookie/authcookie.module';
 import { OrgModule } from 'src/org/org.module';
 import { CacheModule } from 'src/cache/cache.module';
 import { SubscriptionsModule } from 'src/subscriptions/subscriptions.module';
+import { RegisterUsersProcessor } from './register.processor';
+import { BullModule } from '@nestjs/bull';
+import { MailModule } from 'src/mail/mail.module';
 
 @Module({
   controllers: [RegisterController],
-  providers: [RegisterService],
+  providers: [RegisterService, RegisterUsersProcessor],
   imports: [
     PrismaModule,
     UsersModule,
@@ -22,6 +25,10 @@ import { SubscriptionsModule } from 'src/subscriptions/subscriptions.module';
     OrgModule,
     CacheModule,
     SubscriptionsModule,
+    MailModule,
+    BullModule.registerQueue({
+      name: 'register-users',
+    }),
   ],
 })
 export class RegisterModule {}

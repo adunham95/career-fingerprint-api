@@ -6,6 +6,7 @@ import { SubscriptionsModule } from 'src/subscriptions/subscriptions.module';
 import { StripeModule } from 'src/stripe/stripe.module';
 import { MailModule } from 'src/mail/mail.module';
 import { CacheModule } from 'src/cache/cache.module';
+import { BullModule } from '@nestjs/bull';
 
 @Module({
   controllers: [UsersController],
@@ -16,6 +17,9 @@ import { CacheModule } from 'src/cache/cache.module';
     StripeModule,
     MailModule,
     CacheModule,
+    BullModule.registerQueue({
+      name: 'users-import',
+    }),
   ],
   exports: [UsersService],
 })

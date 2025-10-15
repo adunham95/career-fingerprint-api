@@ -88,6 +88,20 @@ export class MailService {
     await this.mailQueue.add('welcomeEmail', params);
   }
 
+  async sendWelcomeOrgEmail(params: {
+    to: string;
+    context: { firstName: string; orgName: string };
+  }) {
+    await this.mailQueue.add('welcomeOrgEmail', params);
+  }
+
+  async sendOrgUpgradedEmail(params: {
+    to: string;
+    context: { firstName: string; orgName: string };
+  }) {
+    await this.mailQueue.add('orgUpgradedEmail', params);
+  }
+
   async sendVerifyEmail(params: {
     to: string;
     context: { firstName: string; token: string };

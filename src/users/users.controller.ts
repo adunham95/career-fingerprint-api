@@ -10,8 +10,6 @@ import {
   Req,
   HttpException,
   HttpStatus,
-  UseInterceptors,
-  UploadedFile,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -20,7 +18,6 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { Request } from 'express';
 import { PlatformAdminGuard } from 'src/auth/platform-admin.guard';
-import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('users')
 export class UsersController {
@@ -88,23 +85,4 @@ export class UsersController {
     }
     return this.usersService.deleteUser(req.user.id);
   }
-
-  // @Post('upload')
-  // @UseInterceptors(FileInterceptor('file'))
-  // async uploadUsers(@UploadedFile() file: Express.Multer) {
-  //   if (!file) throw new Error('No file uploaded');
-
-  //   // Convert file buffer to text
-  //   const csvText = file.buffer.toString();
-
-  //   // Parse the CSV into objects (assuming the first row has headers)
-  //   const records = parse(csvText, {
-  //     columns: true,
-  //     skip_empty_lines: true,
-  //     trim: true,
-  //   });
-
-  //   // Pass the parsed data to the service
-  //   return this.usersService.bulkImport(records);
-  // }
 }

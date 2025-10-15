@@ -45,7 +45,10 @@ export class UsersService {
     });
   }
 
-  async createUser(data: Prisma.UserCreateInput): Promise<User> {
+  async createUser(
+    data: Prisma.UserCreateInput,
+    doNotSendWelcomeEmail?: boolean,
+  ): Promise<User> {
     data.password = await this.hashPassword(data.password);
 
     data.email = data.email.toLowerCase();
@@ -78,13 +81,15 @@ export class UsersService {
 
     await this.stripeService.newStripeCustomer({ user });
 
-    await this.mailService.sendWelcomeEmail({
-      to: user.email,
-      context: {
-        firstName: user.firstName,
-        token: await this.createEmailValidationCode(user.id, true),
-      },
-    });
+    if (!doNotSendWelcomeEmail) {
+      await this.mailService.sendWelcomeEmail({
+        to: user.email,
+        context: {
+          firstName: user.firstName,
+          token: await this.createEmailValidationCode(user.id, true),
+        },
+      });
+    }
 
     return user;
   }

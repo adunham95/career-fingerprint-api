@@ -159,6 +159,69 @@ export class MailProcessor {
     }
   }
 
+  @Process('welcomeOrgEmail')
+  async welcomeOrgEmail(
+    job: Job<{
+      to: string;
+      context: { firstName: string; orgName: string };
+    }>,
+  ) {
+    const { to, context } = job.data;
+
+    const template = 'welcome-org';
+    const subject =
+      'A Career Fingerprint Premium Account has been created for you!';
+
+    console.log(`📧 Sending email to ${to}`);
+
+    try {
+      await this.mailerService.sendMail({
+        to: [to],
+        template,
+        subject,
+        context: {
+          ...context,
+          resetPasswordLink: `${process.env.FRONT_END_URL}/forgot-password`,
+        },
+      });
+      console.log(`✅ Email sent to ${to}`);
+    } catch (error) {
+      console.log(`❌ Email not sent`, error);
+      throw error;
+    }
+  }
+
+  @Process('orgUpgradedEmail')
+  async orgUpgradedEmail(
+    job: Job<{
+      to: string;
+      context: { firstName: string; orgName: string };
+    }>,
+  ) {
+    const { to, context } = job.data;
+
+    const template = 'org-upgraded';
+    const subject = 'You have been added to an Career Fingerprint Org';
+
+    console.log(`📧 Sending email to ${to}`);
+
+    try {
+      await this.mailerService.sendMail({
+        to: [to],
+        template,
+        subject,
+        context: {
+          ...context,
+          loginLink: `${process.env.FRONT_END_URL}/login`,
+        },
+      });
+      console.log(`✅ Email sent to ${to}`);
+    } catch (error) {
+      console.log(`❌ Email not sent`, error);
+      throw error;
+    }
+  }
+
   @Process('verifyEmail')
   async verifyEmail(
     job: Job<{

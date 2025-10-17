@@ -13,9 +13,13 @@ export class MyFingerprintService {
     private education: EducationService,
   ) {}
   async byUser(id: number) {
+    const user = await this.prisma.user.findFirst({
+      where: { id },
+      select: { id: true, lastName: true, firstName: true },
+    });
     const jobs = await this.jobPositions.findMyJobPositions(id);
     const education = await this.education.findMyEducation(id);
 
-    return { jobs, education };
+    return { jobs, education, user };
   }
 }

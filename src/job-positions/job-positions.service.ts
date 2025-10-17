@@ -49,12 +49,16 @@ export class JobPositionsService {
     return this.prisma.jobPosition.findMany();
   }
 
-  async findMyJobPositions(userID: number) {
+  async findMyJobPositions(
+    userID: number,
+    options?: { includeAchievements: boolean },
+  ) {
+    const { includeAchievements = true } = options ?? {};
     return this.prisma.jobPosition.findMany({
       where: { userID },
       orderBy: { startDate: { sort: 'desc', nulls: 'last' } },
       include: {
-        achievements: true,
+        achievements: includeAchievements,
       },
     });
   }

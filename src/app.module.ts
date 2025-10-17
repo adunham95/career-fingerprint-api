@@ -49,6 +49,7 @@ import { SkillListModule } from './skill-list/skill-list.module';
 import { AccountCleanUpModule } from './account-clean-up/account-clean-up.module';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AdminModule } from './admin/admin.module';
+import { MyFingerprintModule } from './my-fingerprint/my-fingerprint.module';
 
 @Module({
   imports: [
@@ -127,6 +128,7 @@ import { AdminModule } from './admin/admin.module';
       },
     ]),
     AdminModule,
+    MyFingerprintModule,
   ],
   controllers: [AppController, HealthController, SkillListController],
   providers: [

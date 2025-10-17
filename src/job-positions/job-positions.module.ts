@@ -7,5 +7,6 @@ import { PrismaModule } from 'src/prisma/prisma.module';
   controllers: [JobPositionsController],
   providers: [JobPositionsService],
   imports: [PrismaModule],
+  exports: [JobPositionsService],
 })
 export class JobPositionsModule {}

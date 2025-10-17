@@ -2,10 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { CreateEducationDto } from './dto/create-education.dto';
 import { UpdateEducationDto } from './dto/update-education.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { CacheService } from 'src/cache/cache.service';
 
 @Injectable()
 export class EducationService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private cache: CacheService,
+  ) {}
 
   create(createEducationDto: CreateEducationDto) {
     return this.prisma.education.create({ data: createEducationDto });
@@ -15,12 +19,12 @@ export class EducationService {
     return `This action returns all education`;
   }
 
-  findMyEducation(userID: number) {
+  findMyEducation(userID: number, options?: { includeAchievements: boolean }) {
+    const { includeAchievements = true } = options ?? {};
     return this.prisma.education.findMany({
       where: { userID },
       include: {
-        achievements: true,
-        // bulletPoints: { select: { id: true, text: true } },
+        achievements: includeAchievements,
       },
     });
   }

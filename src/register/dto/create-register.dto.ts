@@ -67,4 +67,12 @@ export class CreateRegisterOrgDto {
   @ApiProperty()
   @IsEmail()
   orgEmail: string;
+
+  @ApiProperty()
+  @IsString()
+  postalCode?: string;
+
+  @ApiProperty()
+  @IsString()
+  country?: string;
 }

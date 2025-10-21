@@ -19,6 +19,7 @@ import { OrgService } from './org.service';
 import { CreateOrgDto } from './dto/create-org.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { UpdateOrgDto } from './dto/update-org.dto';
+import { PlatformAdminGuard } from 'src/auth/platform-admin.guard';
 // import { UpdateOrgDto } from './dto/update-org.dto';
 // import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 // import { Request } from 'express';
@@ -94,6 +95,22 @@ export class OrgController {
     @Query() query: { includeSubscription?: string },
   ) {
     return this.orgService.findOne(id, query?.includeSubscription);
+  }
+
+  @Get(':id/details')
+  @UseGuards(JwtAuthGuard, PlatformAdminGuard)
+  @Header('Cache-Control', 'private, max-age=30')
+  findOneDetails(
+    @Param('id') id: string,
+    @Query() query: { includeSubscription?: string },
+  ) {
+    return this.orgService.findOne(id, query?.includeSubscription);
+  }
+
+  @Get()
+  @UseGuards(JwtAuthGuard, PlatformAdminGuard)
+  findAll() {
+    return this.orgService.findAll();
   }
 
   @Patch(':id')

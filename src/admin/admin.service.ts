@@ -41,6 +41,8 @@ export class AdminService {
         },
       },
     });
-    return { totalUsers, premiumUsers, newSignups };
+
+    const orgs = await this.prisma.organization.count();
+    return { totalUsers, premiumUsers, newSignups, orgs };
   }
 }

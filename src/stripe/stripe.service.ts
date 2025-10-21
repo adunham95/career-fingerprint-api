@@ -58,7 +58,7 @@ export class StripeService {
   async createStripeCustomer(
     user?: Partial<User> & Pick<User, 'id' | 'email'>,
     org?: Partial<Organization> & Pick<Organization, 'id' | 'email'>,
-    address?: { county: string; postal_code: string },
+    address?: { country: string; postal_code: string },
   ) {
     if (user) {
       return this.stripe.customers.create({

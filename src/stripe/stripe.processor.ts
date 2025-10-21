@@ -16,7 +16,7 @@ export class StripeProcessor {
     job: Job<{
       user?: Partial<User> & Pick<User, 'id' | 'email'>;
       org?: Partial<Organization> & Pick<Organization, 'id' | 'email'>;
-      address?: { county: string; postal_code: string };
+      address?: { country: string; postal_code: string };
     }>,
   ) {
     const { user, org, address } = job.data;

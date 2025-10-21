@@ -54,9 +54,18 @@ export class OrgService {
       });
     }
 
+    const address =
+      createOrgDto.country && createOrgDto.postalCode
+        ? {
+            country: createOrgDto.country,
+            postal_code: createOrgDto.postalCode,
+          }
+        : undefined;
+
     const stripeCustomer = await this.stripeService.createStripeCustomer(
       undefined,
       newOrg,
+      address,
     );
 
     const updatedOrg = await this.prisma.organization.update({
@@ -240,7 +249,17 @@ export class OrgService {
   }
 
   findAll() {
-    return `This action returns all org`;
+    return this.prisma.organization.findMany({
+      include: {
+        _count: {
+          select: {
+            orgSubscription: true,
+            orgAdmins: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 
   findOne(id: string, includeSubscription?: string) {

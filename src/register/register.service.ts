@@ -125,6 +125,8 @@ export class RegisterService {
       orgSize: createRegisterOrgDto.orgSize,
       orgLogo: createRegisterOrgDto.orgLogo,
       admin: newUser.id,
+      country: createRegisterOrgDto.country,
+      postalCode: createRegisterOrgDto.postalCode,
     });
     return { user: newUser, org: newOrg };
   }

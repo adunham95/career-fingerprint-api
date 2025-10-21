@@ -28,4 +28,14 @@ export class CreateOrgDto {
   @IsOptional()
   @IsNumber()
   admin?: number;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  country?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  postalCode?: string;
 }

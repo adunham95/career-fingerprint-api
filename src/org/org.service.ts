@@ -45,13 +45,14 @@ export class OrgService {
         },
       },
     });
-
-    await this.prisma.domain.create({
-      data: {
-        orgID: newOrg.id,
-        domain: createOrgDto.orgDomain,
-      },
-    });
+    if (createOrgDto.orgDomain) {
+      await this.prisma.domain.create({
+        data: {
+          orgID: newOrg.id,
+          domain: createOrgDto.orgDomain,
+        },
+      });
+    }
 
     const stripeCustomer = await this.stripeService.createStripeCustomer(
       undefined,
@@ -242,10 +243,13 @@ export class OrgService {
     return `This action returns all org`;
   }
 
-  findOne(id: string) {
+  findOne(id: string, includeSubscription?: string) {
     return this.prisma.organization.findFirst({
       where: { id },
-      include: { domains: true },
+      include: {
+        domains: true,
+        orgSubscription: includeSubscription === 'true' || false,
+      },
     });
   }
 

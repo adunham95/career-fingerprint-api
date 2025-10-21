@@ -48,13 +48,15 @@ export class CreateRegisterOrgDto {
   @IsString()
   orgName: string;
 
-  @ApiProperty({ default: 100 })
+  @ApiProperty({ default: 0 })
   @IsNumber()
+  @IsOptional()
   @IsOptional()
   orgSize: number;
 
   @ApiProperty()
   @IsString()
+  @IsOptional()
   orgDomain: string;
 
   @ApiProperty()

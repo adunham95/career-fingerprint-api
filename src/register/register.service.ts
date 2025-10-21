@@ -108,12 +108,15 @@ export class RegisterService {
   }
 
   async registerNewOrg(createRegisterOrgDto: CreateRegisterOrgDto) {
-    const newUser = await this.users.createUser({
-      email: createRegisterOrgDto.email,
-      password: createRegisterOrgDto.password,
-      firstName: createRegisterOrgDto.firstName,
-      lastName: createRegisterOrgDto.lastName,
-    });
+    const newUser = await this.users.createUser(
+      {
+        email: createRegisterOrgDto.email,
+        password: createRegisterOrgDto.password,
+        firstName: createRegisterOrgDto.firstName,
+        lastName: createRegisterOrgDto.lastName,
+      },
+      true,
+    );
 
     const newOrg = await this.org.create({
       orgDomain: createRegisterOrgDto.orgDomain,

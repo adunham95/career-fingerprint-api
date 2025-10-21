@@ -89,8 +89,11 @@ export class OrgController {
 
   @Get(':id')
   @Header('Cache-Control', 'private, max-age=30')
-  findOne(@Param('id') id: string) {
-    return this.orgService.findOne(id);
+  findOne(
+    @Param('id') id: string,
+    @Query() query: { includeSubscription?: string },
+  ) {
+    return this.orgService.findOne(id, query?.includeSubscription);
   }
 
   @Patch(':id')

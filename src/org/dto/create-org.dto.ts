@@ -38,4 +38,9 @@ export class CreateOrgDto {
   @IsOptional()
   @IsString()
   postalCode?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  planKey?: string;
 }

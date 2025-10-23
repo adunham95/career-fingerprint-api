@@ -1,7 +1,7 @@
 import { Plan } from '@prisma/client';
 import { Injectable } from '@nestjs/common';
 import { CreateOrgDto } from './dto/create-org.dto';
-import { UpdateOrgDto } from './dto/update-org.dto';
+import { UpdateOrgDto, UpdateOrgSubscriptionDto } from './dto/update-org.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { StripeService } from 'src/stripe/stripe.service';
 import { roundUpToNext100 } from 'src/utils/roundUp100';
@@ -19,18 +19,22 @@ export class OrgService {
   ) {}
 
   async create(createOrgDto: CreateOrgDto) {
+    const planKey =
+      createOrgDto.planKey || process.env.DEFAULT_SUBSCRIPTION_KEY;
     const plan = await this.cache.wrap(
-      `plan:${process.env.DEFAULT_SUBSCRIPTION_KEY}`,
+      `plan:${planKey}`,
       () => {
         return this.prisma.plan.findFirst({
-          where: { key: process.env.DEFAULT_SUBSCRIPTION_KEY },
+          where: {
+            key: planKey,
+          },
         });
       },
       86400,
     );
 
     if (!plan) {
-      console.log('missingPlan', process.env.DEFAULT_SUBSCRIPTION_KEY);
+      console.log('missingPlan', planKey);
     }
 
     const newOrg = await this.prisma.organization.create({
@@ -91,6 +95,8 @@ export class OrgService {
     if (!org) {
       return { hasOpenSeats: false, org: undefined, plan: undefined };
     }
+
+    // TODO Check if org if active
 
     const currentUsers = await this.prisma.subscription.count({
       where: { managedByID: org?.id },
@@ -276,6 +282,41 @@ export class OrgService {
     return this.prisma.organization.update({
       where: { id },
       data: updateOrgDto,
+    });
+  }
+
+  async updateSubscription(id: string, updateOrgDto: UpdateOrgSubscriptionDto) {
+    const planKey = updateOrgDto.subscriptionType;
+    const plan = await this.cache.wrap(
+      `plan:${planKey}`,
+      () => {
+        return this.prisma.plan.findFirst({
+          where: {
+            key: planKey,
+          },
+        });
+      },
+      86400,
+    );
+
+    if (!plan) {
+      console.log('missingPlan', planKey);
+      throw Error(`Missing Plan: ${planKey}`);
+    }
+
+    await this.prisma.subscription.create({
+      data: {
+        orgID: id,
+        status: 'active',
+        planID: plan.id,
+      },
+    });
+
+    return this.prisma.organization.update({
+      where: { id },
+      data: {
+        seatCount: updateOrgDto.userCount,
+      },
     });
   }
 

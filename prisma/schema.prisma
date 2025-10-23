@@ -144,7 +144,7 @@ model Plan {
   name                 String
   description          String         @default("")
   featureList          String[]
-  priceCents           Int // e.g. 0 for Free, 1000 for $10
+  priceCents           Int? // e.g. 0 for Free, 1000 for $10
   priceCentsYear       Int? // e.g. 0 for Free, 1000 for $10
   interval             String // 'month', 'year'
   features             String[] // Optional
@@ -154,6 +154,8 @@ model Plan {
   updatedAt            DateTime       @updatedAt
   monthlyStripePriceID String?
   annualStripePriceID  String?
+  hasOrgManagement     Boolean        @default(false)
+  userKey              String?
 
   @@index([key])
 }

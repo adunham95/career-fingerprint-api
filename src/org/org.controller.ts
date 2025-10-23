@@ -18,7 +18,7 @@ import {
 import { OrgService } from './org.service';
 import { CreateOrgDto } from './dto/create-org.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { UpdateOrgDto } from './dto/update-org.dto';
+import { UpdateOrgDto, UpdateOrgSubscriptionDto } from './dto/update-org.dto';
 import { PlatformAdminGuard } from 'src/auth/platform-admin.guard';
 // import { UpdateOrgDto } from './dto/update-org.dto';
 // import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
@@ -117,6 +117,15 @@ export class OrgController {
   @UseGuards(JwtAuthGuard)
   update(@Param('id') id: string, @Body() updateOrgDto: UpdateOrgDto) {
     return this.orgService.update(id, updateOrgDto);
+  }
+
+  @Patch(':id/add-subscription')
+  @UseGuards(JwtAuthGuard, PlatformAdminGuard)
+  updatePlatformAdmin(
+    @Param('id') id: string,
+    @Body() updateOrgDto: UpdateOrgSubscriptionDto,
+  ) {
+    return this.orgService.updateSubscription(id, updateOrgDto);
   }
 
   // @Delete(':id')

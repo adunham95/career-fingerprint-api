@@ -383,6 +383,7 @@ model Meeting {
   link          String?
   agenda        String?
   attendees     String[]
+  status        String?         @default("active")
   jobAppID      String?
   jobApp        JobApplication? @relation(fields: [jobAppID], references: [id])
   jobPositionID String?
@@ -392,7 +393,7 @@ model Meeting {
   highlights    Highlight[]
   prepAnswers   PrepAnswer[]
 
-  @@index([jobAppID, jobPositionID])
+  @@index([jobAppID, jobPositionID, status])
 }
 
 model Note {

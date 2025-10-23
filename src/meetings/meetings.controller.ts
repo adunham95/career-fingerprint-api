@@ -104,7 +104,8 @@ export class MeetingsController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard)
   remove(@Param('id') id: string) {
-    return this.meetingsService.remove(+id);
+    return this.meetingsService.remove(id);
   }
 }

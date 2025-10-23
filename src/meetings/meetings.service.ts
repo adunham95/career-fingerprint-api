@@ -38,7 +38,7 @@ export class MeetingsService {
 
     return this.prisma.meeting.findMany({
       ...queryData,
-      where: { userID },
+      where: { userID, status: { not: 'archived' } },
       orderBy: {
         time: 'desc',
       },
@@ -63,6 +63,7 @@ export class MeetingsService {
       ...queryData,
       where: {
         userID,
+        status: { not: 'archived' },
         // title: { not: null },
         time: {
           gte: tenMinutesAgo,
@@ -90,6 +91,7 @@ export class MeetingsService {
       ...queryData,
       where: {
         userID,
+        status: { not: 'archived' },
         // title: { not: null },
         time: {
           lt: new Date(),
@@ -105,6 +107,7 @@ export class MeetingsService {
     return this.prisma.meeting.findMany({
       where: {
         jobAppID,
+        status: { not: 'archived' },
       },
       orderBy: {
         time: 'asc',
@@ -114,7 +117,7 @@ export class MeetingsService {
 
   async findOne(id: string, query?: SingleMeetingQueryDto) {
     const meeting = await this.prisma.meeting.findUnique({
-      where: { id },
+      where: { id, status: { not: 'archived' } },
       select: {
         id: true,
         jobAppID: true,
@@ -171,7 +174,7 @@ export class MeetingsService {
 
   async getPrepDocPdf(id: string) {
     const meeting = await this.prisma.meeting.findFirst({
-      where: { id },
+      where: { id, status: { not: 'archived' } },
       include: {
         jobApp: true,
         jobPosition: true,
@@ -198,7 +201,10 @@ export class MeetingsService {
     return this.pdfService.createPrepDoc(meeting, answers, highlights);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} meeting`;
+  remove(id: string) {
+    return this.prisma.meeting.update({
+      where: { id },
+      data: { status: 'archived' },
+    });
   }
 }

@@ -54,7 +54,7 @@ DROP COLUMN "educationID",
 DROP COLUMN "jobOptionID",
 DROP COLUMN "jobPositionID",
 DROP COLUMN "resumeID",
-ADD COLUMN     "resumeObjectID" TEXT NOT NULL;
+ADD COLUMN "resumeObjectID" TEXT NULL;
 
 -- DropTable
 DROP TABLE "public"."EduOption";

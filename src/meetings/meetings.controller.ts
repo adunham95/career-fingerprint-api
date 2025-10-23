@@ -73,6 +73,17 @@ export class MeetingsController {
     return this.meetingsService.findMinePrevious(req.user.id, query);
   }
 
+  @Get('my/:userID')
+  @UseGuards(JwtAuthGuard)
+  @Header('Cache-Control', 'private, max-age=30')
+  findByUser(
+    @Req() req: Request,
+    @Param('userID') id: string,
+    @Query() query: MeetingQueryDto,
+  ) {
+    return this.meetingsService.findMine(+id, query);
+  }
+
   @Get('job-application/:id')
   @UseGuards(JwtAuthGuard)
   findRelatedToJobApplication(@Param('id') id: string) {

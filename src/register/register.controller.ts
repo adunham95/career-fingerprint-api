@@ -85,6 +85,23 @@ export class RegisterController {
     if (!file) throw new Error('No file uploaded');
     if (!body.orgID) throw new Error('No OrgID Added');
 
+    const fileContent = file.buffer.toString('utf-8').trim();
+    const rows = fileContent.split(/\r?\n/);
+
+    // ✅ Validate header
+    const expectedHeaders = ['First Name', 'Last Name', 'Email'];
+    const headerRow = rows[0].split(',').map((h) => h.trim());
+
+    const isHeaderValid =
+      headerRow.length === expectedHeaders.length &&
+      expectedHeaders.every((expected, i) => headerRow[i] === expected);
+
+    if (!isHeaderValid) {
+      throw new BadRequestException(
+        `Invalid CSV headers. Expected: ${expectedHeaders.join(', ')}. This is case sensitive.`,
+      );
+    }
+
     // Find Current User Count
     const currentUsers = await this.prisma.subscription.count({
       where: { managedByID: body.orgID },
@@ -95,9 +112,6 @@ export class RegisterController {
     });
 
     const maxUsers = org?.seatCount ?? 0; // fallback if not set
-
-    const fileContent = file.buffer.toString('utf-8');
-    const rows = fileContent.trim().split('\n');
     const userCount = rows.length - 1; // assuming first row is header
 
     if (currentUsers + userCount > maxUsers) {

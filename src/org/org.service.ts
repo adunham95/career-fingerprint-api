@@ -19,8 +19,7 @@ export class OrgService {
   ) {}
 
   async create(createOrgDto: CreateOrgDto) {
-    const planKey =
-      createOrgDto.planKey || process.env.DEFAULT_SUBSCRIPTION_KEY;
+    const planKey = createOrgDto.planKey || 'free';
     const plan = await this.cache.wrap(
       `plan:${planKey}`,
       () => {
@@ -304,6 +303,18 @@ export class OrgService {
       throw Error(`Missing Plan: ${planKey}`);
     }
 
+    const userPlan = await this.cache.wrap(
+      `plan:${plan.userKey}`,
+      () => {
+        return this.prisma.plan.findFirst({
+          where: {
+            key: plan.userKey || 'free',
+          },
+        });
+      },
+      86400,
+    );
+
     await this.prisma.subscription.create({
       data: {
         orgID: id,
@@ -317,6 +328,7 @@ export class OrgService {
       where: { id },
       data: {
         seatCount: updateOrgDto.userCount,
+        defaultPlanID: userPlan?.id,
       },
     });
   }

@@ -69,6 +69,26 @@ export class AchievementController {
     );
   }
 
+  @Get('my/:userID')
+  @UseGuards(JwtAuthGuard)
+  @Header('Cache-Control', 'private, max-age=30')
+  findMyAchievementsByUser(
+    @Req() req: Request,
+    @Param('userID') id: string,
+    @Query() query: MyAchievementQuery,
+  ) {
+    return this.achievementService.findMy(
+      +id,
+      {
+        jobPositionID: query.jobPositionID || null,
+        educationID: query.educationID || null,
+        tagID: query.tagID || null,
+      },
+      query.includeLinked === 'true',
+      { limit: query.limit, page: query.page },
+    );
+  }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   @Header('Cache-Control', 'private, max-age=30')
@@ -76,7 +96,6 @@ export class AchievementController {
   findOne(@Param('id') id: string) {
     return this.achievementService.findOne(id);
   }
-
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()

@@ -309,6 +309,7 @@ export class OrgService {
         orgID: id,
         status: 'active',
         planID: plan.id,
+        stripeSubId: updateOrgDto.stripeSubscriptionID,
       },
     });
 

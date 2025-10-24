@@ -5,6 +5,7 @@ import {
   Res,
   UseInterceptors,
   UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
 import { RegisterService } from './register.service';
 import {
@@ -18,6 +19,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import * as fs from 'fs';
 import * as path from 'path';
 import { InjectQueue } from '@nestjs/bull';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Controller('register')
 export class RegisterController {
@@ -25,6 +27,7 @@ export class RegisterController {
     private readonly registerService: RegisterService,
     private readonly authService: AuthService,
     private readonly authCookieService: AuthCookieService,
+    private readonly prisma: PrismaService,
     @InjectQueue('register-users') private registerUsersQueue,
   ) {}
 
@@ -81,6 +84,28 @@ export class RegisterController {
   ) {
     if (!file) throw new Error('No file uploaded');
     if (!body.orgID) throw new Error('No OrgID Added');
+
+    // Find Current User Count
+    const currentUsers = await this.prisma.subscription.count({
+      where: { managedByID: body.orgID },
+    });
+    const org = await this.prisma.organization.findFirst({
+      where: { id: body.orgID },
+      select: { seatCount: true },
+    });
+
+    const maxUsers = org?.seatCount ?? 0; // fallback if not set
+
+    const fileContent = file.buffer.toString('utf-8');
+    const rows = fileContent.trim().split('\n');
+    const userCount = rows.length - 1; // assuming first row is header
+
+    if (currentUsers + userCount > maxUsers) {
+      const remaining = Math.max(0, maxUsers - currentUsers);
+      throw new BadRequestException(
+        `User upload exceeds your limit. You can only add ${remaining} more user${remaining === 1 ? '' : 's'}.`,
+      );
+    }
 
     // Save file to a temp folder
     const tempDir = path.join(process.cwd(), 'tmp');

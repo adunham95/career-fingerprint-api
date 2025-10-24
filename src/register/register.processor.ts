@@ -8,9 +8,9 @@ import { SubscriptionsService } from 'src/subscriptions/subscriptions.service';
 import { UsersService } from 'src/users/users.service';
 
 type CsvUserRow = {
-  firstName?: string;
-  lastName?: string;
-  email: string;
+  'First Name'?: string;
+  'Last Name'?: string;
+  Email: string;
 };
 
 @Processor('register-users')
@@ -55,29 +55,34 @@ export class RegisterUsersProcessor {
 
           try {
             let user = await this.prismaService.user.findFirst({
-              where: { email: record.email },
+              where: { email: record.Email },
             });
             if (!user) {
-              console.log('adding user', record.email);
+              console.log('adding user', record.Email);
               user = await this.userService.createUser(
                 {
-                  email: record.email,
+                  email: record.Email,
                   password: this.generateRandomString(10),
-                  firstName: record.firstName,
-                  lastName: record.lastName,
+                  firstName: record['First Name'],
+                  lastName: record['Last Name'],
                 },
                 true,
               );
 
-              const resetToken = await this.prismaService;
               await this.mailService.sendWelcomeOrgEmail({
-                to: record.email,
-                context: { firstName: user.firstName, orgName: org.name },
+                to: record.Email,
+                context: {
+                  firstName: record['First Name'] || '',
+                  orgName: org.name,
+                },
               });
             } else {
               await this.mailService.sendOrgUpgradedEmail({
-                to: record.email,
-                context: { firstName: user.firstName, orgName: org.name },
+                to: record.Email,
+                context: {
+                  firstName: record['First Name'] || '',
+                  orgName: org.name,
+                },
               });
             }
 

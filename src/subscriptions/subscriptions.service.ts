@@ -140,7 +140,7 @@ export class SubscriptionsService {
               { currentPeriodEnd: { gt: new Date() } },
             ], // optional: time-safe check
           },
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: 'desc', plan: { level: 'desc' } },
           include: { plan: true },
         });
       },

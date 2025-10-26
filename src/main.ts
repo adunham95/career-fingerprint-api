@@ -6,11 +6,19 @@ import cookieParser from 'cookie-parser';
 import * as express from 'express';
 import { SentryFilter } from './sentry/sentry.filter.js';
 import { initializeSentry } from './instrument';
+import passport from 'passport';
+import * as fs from 'fs';
 
 async function bootstrap() {
   initializeSentry();
 
-  const app = await NestFactory.create(AppModule);
+  const httpsOptions = {
+    key: fs.readFileSync('./localhost-key.pem'),
+    cert: fs.readFileSync('./localhost.pem'),
+  };
+
+  const app = await NestFactory.create(AppModule, { httpsOptions });
+  // const app = await NestFactory.create(AppModule);
 
   const { httpAdapter } = app.get(HttpAdapterHost);
   app.useGlobalFilters(new SentryFilter(httpAdapter));
@@ -29,6 +37,8 @@ async function bootstrap() {
     credentials: true,
   });
 
+  app.use(passport.initialize());
+
   const config = new DocumentBuilder()
     .setTitle('Career Fingerprint API')
     .setDescription('API for the Career Fingerprint Application')
@@ -36,6 +46,7 @@ async function bootstrap() {
     .addCookieAuth()
     .addBearerAuth()
     .build();
+
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
 

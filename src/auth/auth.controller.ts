@@ -23,6 +23,8 @@ import { UserEntity } from 'src/users/entities/user.entity';
 import { AuthCookieService } from 'src/authcookie/authcookie.service';
 import { Throttle } from '@nestjs/throttler';
 import { CustomThrottlerGuard } from './custom-throttler.guard';
+import { SamlAuthGuard } from './SamlAuthGuard.guard';
+import passport from 'passport';
 
 @Controller('auth')
 @ApiTags('Auth')
@@ -51,6 +53,32 @@ export class AuthController {
     });
     this.authCookieService.setAuthCookie(response, accessToken);
     return { accessToken, user };
+  }
+
+  @Get('sso')
+  @UseGuards(SamlAuthGuard)
+  samlLogin(@Req() req: Request) {
+    console.log('🚀 SAML login triggered', req.query);
+  }
+
+  @Post('sso/callback')
+  @UseGuards(SamlAuthGuard)
+  async ssoCallback(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    // req.user comes from done(null, user)
+    const { user } = req;
+
+    if (!user) {
+      throw Error('missing user');
+    }
+
+    // Reuse your existing helper
+    const { accessToken } = await this.authService.loginUserByID(user.id);
+    this.authCookieService.setAuthCookie(res, accessToken);
+
+    return res.redirect(`${process.env.FRONTEND_URL}/dashboard`);
   }
 
   @Post('request-reset')

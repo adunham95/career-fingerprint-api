@@ -99,8 +99,10 @@ export class DynamicSamlStrategy extends PassportStrategy(
               issuer: org.ssoIssuer || process.env.SAML_ISSUER!,
               idpCert: dynamicCert,
               signatureAlgorithm: 'sha256',
-              wantAssertionsSigned: false,
               acceptedClockSkewMs: -1,
+              wantAuthnResponseSigned: false, // ← toggle these
+              wantAssertionsSigned: true, // ← based on your IdP
+              disableRequestedAuthnContext: true,
             };
 
             console.log('✅ Loaded dynamic SAML config:', {
@@ -123,8 +125,16 @@ export class DynamicSamlStrategy extends PassportStrategy(
         try {
           console.log('🧭 VALIDATE SAML RESPONSE', profile);
 
-          const email = (profile as any).email || profile.nameID;
-          if (!email) return done(new Error('Missing email in SAML profile'));
+          const email = this.extractSamlField(profile, [
+            'email',
+            'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress',
+            'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn',
+          ]);
+
+          if (!email) {
+            console.error('❌ Missing email in SAML profile');
+            return done(new Error('Missing email in SAML profile'));
+          }
 
           const domain = email.split('@')[1];
           const orgDomain = await this.prisma.domain.findFirst({
@@ -137,8 +147,15 @@ export class DynamicSamlStrategy extends PassportStrategy(
 
           const user = await this.users.upsertUser({
             email,
-            firstName: (profile as any).firstName,
-            lastName: (profile as any).lastName,
+            firstName: this.extractSamlField(profile, [
+              'firstName',
+              'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname',
+              'http://schemas.auth0.com/nickname',
+            ]),
+            lastName: this.extractSamlField(profile, [
+              'lastName',
+              'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname',
+            ]),
             password: '',
           });
 
@@ -156,6 +173,14 @@ export class DynamicSamlStrategy extends PassportStrategy(
   }
   validate() {
     return null;
+  }
+
+  extractSamlField(profile: any, keys: string[]) {
+    for (const k of keys) {
+      if (profile[k]) return profile[k] as string;
+      if (profile.attributes?.[k]) return profile.attributes[k] as string;
+    }
+    return undefined;
   }
 }
 

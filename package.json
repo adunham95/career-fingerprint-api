@@ -9,7 +9,7 @@
     "build": "nest build && yarn sentry:sourcemaps",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
-    "start:dev": "nest start --watch",
+    "start:dev": "NODE_TLS_REJECT_UNAUTHORIZED=0 nest start --watch",
     "dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/src/main",
@@ -62,7 +62,8 @@
     "pug": "^3.0.3",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "stripe": "^18.5.0"
+    "stripe": "^18.5.0",
+    "xml2js": "^0.6.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
@@ -88,6 +89,7 @@
     "@types/pdfmake": "^0.2.11",
     "@types/stripe": "^8.0.417",
     "@types/supertest": "^6.0.2",
+    "@types/xml2js": "^0",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",

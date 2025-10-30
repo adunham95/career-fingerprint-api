@@ -137,10 +137,13 @@ export class DynamicSamlStrategy extends PassportStrategy(
           }
 
           const domain = email.split('@')[1];
+          console.log({ domain });
           const orgDomain = await this.prisma.domain.findFirst({
             where: { domain },
             include: { org: true },
           });
+
+          console.log(orgDomain);
 
           const org = orgDomain?.org;
           if (!org) return done(new Error('Organization not found'));
@@ -158,6 +161,10 @@ export class DynamicSamlStrategy extends PassportStrategy(
             ]),
             password: '',
           });
+
+          if (!user) return done(new Error('User not found'));
+
+          console.log(user);
 
           await this.subscriptions.upsetOrgManagedSubscription({
             userID: user.id,
@@ -183,45 +190,3 @@ export class DynamicSamlStrategy extends PassportStrategy(
     return undefined;
   }
 }
-
-//   async validate(
-//     req: Request,
-//     profile: SamlProfile,
-//     done: (err: Error | null, config?: SamlConfig | User) => void,
-//   ) {
-//     try {
-//       console.log('🧭 VALIDATE SAML RESPONSE', profile);
-//       // const email = (profile as any).email || profile.nameID;
-
-//       // if (!email) {
-//       //   return done(new Error('Missing email in SAML profile'));
-//       // }
-
-//       // const domain = email.split('@')[1];
-//       // const orgDomain = await this.prisma.domain.findFirst({
-//       //   where: { domain },
-//       //   include: { org: true },
-//       // });
-
-//       // const org = orgDomain?.org;
-//       // if (!org) return done(new Error('Organization not found'));
-
-//       // const user = await this.users.upsertUser({
-//       //   email,
-//       //   firstName: (profile as any).firstName,
-//       //   lastName: (profile as any).lastName,
-//       //   password: '',
-//       // });
-
-//       // await this.subscriptions.upsetOrgManagedSubscription({
-//       //   userID: user.id,
-//       //   orgID: org.id,
-//       // });
-
-//       // done(null, user);
-//       done(null);
-//     } catch (err) {
-//       done(err as Error);
-//     }
-//   }
-// }

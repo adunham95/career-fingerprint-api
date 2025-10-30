@@ -8,7 +8,38 @@ import { roundUpToNext100 } from 'src/utils/roundUp100';
 import { getDomainFromEmail } from 'src/utils/getDomain';
 import { CacheService } from 'src/cache/cache.service';
 import { MailService } from 'src/mail/mail.service';
+import { parseStringPromise } from 'xml2js';
 
+interface SamlMetadata {
+  EntityDescriptor?: {
+    $: {
+      entityID: string;
+      'xmlns:md': string;
+    };
+    IDPSSODescriptor: {
+      $: {
+        WantAuthnRequestsSigned: string;
+        protocolSupportEnumeration: string;
+      };
+      KeyDescriptor: {
+        $: { use: string };
+        'ds:KeyInfo': {
+          $: { 'xmlns:ds': string };
+          'ds:X509Data': {
+            'ds:X509Certificate': string;
+          };
+        };
+      };
+      NameIDFormat: string;
+      SingleSignOnService: {
+        $: {
+          Binding: string;
+          Location: string;
+        };
+      }[];
+    };
+  };
+}
 @Injectable()
 export class OrgService {
   constructor(
@@ -335,5 +366,58 @@ export class OrgService {
 
   remove(id: string) {
     return `This action removes a #${id} org`;
+  }
+
+  async xmlToSSOData(id: string, xml: string) {
+    try {
+      const xmlData = await this.parseSamlMetadata(xml);
+      await this.prisma.organization.update({
+        where: { id },
+        data: {
+          ssoEnabled: true,
+          ssoCert: xmlData.cert,
+          ssoIssuer: xmlData.issuer,
+          ssoEntryPoint: xmlData.entryPoint,
+        },
+      });
+    } catch (error) {
+      console.log(error);
+      throw Error('Error Parsing file');
+    }
+  }
+
+  async parseSamlMetadata(metadataUrl: string) {
+    const res = await fetch(metadataUrl);
+    if (!res.ok) {
+      throw new Error(`Failed to fetch metadata: ${res.statusText}`);
+    }
+    const xml = await res.text();
+
+    console.log('xml', xml);
+
+    const parsed = (await parseStringPromise(xml, {
+      explicitArray: false,
+      tagNameProcessors: [(name) => name.replace('md:', '')],
+    })) as SamlMetadata;
+
+    console.log('parsed', parsed);
+    const entity = parsed.EntityDescriptor;
+
+    console.log({
+      sso: JSON.stringify(entity),
+    });
+
+    const entryPoint =
+      entity?.IDPSSODescriptor.SingleSignOnService?.[0].$.Location || '';
+    const cert =
+      entity?.IDPSSODescriptor.KeyDescriptor['ds:KeyInfo']['ds:X509Data'][
+        'ds:X509Certificate'
+      ];
+
+    const issuer = entity?.$?.entityID;
+
+    console.log({ entryPoint, cert, issuer });
+
+    return { entryPoint, cert, issuer };
   }
 }

@@ -3691,7 +3691,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/xml2js@npm:^0.4.14":
+"@types/xml2js@npm:^0, @types/xml2js@npm:^0.4.14":
   version: 0.4.14
   resolution: "@types/xml2js@npm:0.4.14"
   dependencies:
@@ -4442,6 +4442,7 @@ __metadata:
     "@types/pdfmake": "npm:^0.2.11"
     "@types/stripe": "npm:^8.0.417"
     "@types/supertest": "npm:^6.0.2"
+    "@types/xml2js": "npm:^0"
     axios: "npm:^1.11.0"
     bcrypt: "npm:^6.0.0"
     bull: "npm:^4.16.5"
@@ -4478,6 +4479,7 @@ __metadata:
     tsconfig-paths: "npm:^4.2.0"
     typescript: "npm:^5.8.3"
     typescript-eslint: "npm:^8.20.0"
+    xml2js: "npm:^0.6.2"
   languageName: unknown
   linkType: soft
 

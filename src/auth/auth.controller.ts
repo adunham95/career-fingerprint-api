@@ -8,6 +8,7 @@ import {
   Post,
   Req,
   Res,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
@@ -78,7 +79,19 @@ export class AuthController {
     const { accessToken } = await this.authService.loginUserByID(user.id);
     this.authCookieService.setAuthCookie(res, accessToken);
 
-    return res.redirect(`${process.env.FRONTEND_URL}/dashboard`);
+    return res.redirect(
+      `${process.env.APP_URL}/dashboard?token=${accessToken}`,
+    );
+  }
+
+  @Get('set-cookie')
+  setCookie(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) throw new UnauthorizedException('Missing token');
+
+    const token = authHeader.replace('Bearer ', '');
+    this.authCookieService.setAuthCookie(res, token);
+    return { ok: true };
   }
 
   @Post('request-reset')

@@ -128,6 +128,15 @@ export class OrgController {
     return this.orgService.updateSubscription(id, updateOrgDto);
   }
 
+  @Post(':id/sso-metadata')
+  // @UseGuards(JwtAuthGuard)
+  ssoMetaData(
+    @Param('id') id: string,
+    @Body() setSSOMetadata: { xml: string },
+  ) {
+    return this.orgService.xmlToSSOData(id, setSSOMetadata.xml);
+  }
+
   // @Delete(':id')
   // remove(@Param('id') id: string) {
   //   return this.orgService.remove(+id);

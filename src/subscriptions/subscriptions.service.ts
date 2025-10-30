@@ -51,45 +51,29 @@ export class SubscriptionsService {
   }
 
   async upsetOrgManagedSubscription(createSubscription: CreateSubscriptionDto) {
-    console.log('creating org managed subscription', createSubscription);
-    const oneYearFromNow = new Date();
-    oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
+    console.log('upserting org managed subscription', createSubscription);
 
     if (!createSubscription.orgID) {
       throw Error('Missing OrgID');
     }
 
-    await this.cache.del(`activeUserSubscription:${createSubscription.userID}`);
-
-    const org = await this.prisma.organization.findFirst({
-      where: { id: createSubscription.orgID },
-    });
-
-    if (!org || !org.defaultPlanID) {
-      throw Error('Missing Org');
-    }
-
     const currentSubscription = await this.prisma.subscription.findFirst({
-      where: { status: 'org-managed', managedByID: org?.id },
+      where: {
+        status: 'org-managed',
+        managedByID: createSubscription.orgID,
+        userID: createSubscription.userID,
+      },
     });
 
-    // If current subscription dont create a new one
     if (currentSubscription) {
+      console.log('user has current subscription', currentSubscription);
       return await this.prisma.user.findFirst({
         where: { id: createSubscription.userID },
         include: { subscriptions: true },
       });
     }
 
-    await this.prisma.subscription.create({
-      data: {
-        userID: createSubscription.userID,
-        managedByID: org?.id,
-        planID: org.defaultPlanID,
-        status: 'org-managed',
-        currentPeriodEnd: oneYearFromNow.toISOString(),
-      },
-    });
+    await this.createOrgManagedSubscription(createSubscription);
 
     return await this.prisma.user.findFirst({
       where: { id: createSubscription.userID },

@@ -29,6 +29,7 @@ export class DynamicSamlStrategy extends PassportStrategy(
     private users: UsersService,
     private subscriptions: SubscriptionsService,
   ) {
+    console.log('🚀 DynamicSamlStrategy initialized');
     const cert = (process.env.SAML_CERT || '')
       .replace(/\\n/g, '\n')
       .replace(/\r/g, '')
@@ -62,6 +63,12 @@ export class DynamicSamlStrategy extends PassportStrategy(
             if (req.query.email) {
               domain = (req.query.email as string).split('@')[1];
               // Optional: persist to session if you use sessions
+              req.session = req.session || {};
+              req.session.ssoDomain = domain;
+            }
+
+            if (!domain && req.params?.domain) {
+              domain = req.params.domain;
               req.session = req.session || {};
               req.session.ssoDomain = domain;
             }
@@ -105,6 +112,8 @@ export class DynamicSamlStrategy extends PassportStrategy(
               disableRequestedAuthnContext: true,
             };
 
+            console.log('✅ Loaded SAML config:', samlOptions.entryPoint);
+
             console.log('✅ Loaded dynamic SAML config:', {
               entryPoint: samlOptions.entryPoint,
               issuer: samlOptions.issuer,
@@ -127,6 +136,7 @@ export class DynamicSamlStrategy extends PassportStrategy(
 
           const email = this.extractSamlField(profile, [
             'email',
+            'nameID',
             'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress',
             'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn',
           ]);

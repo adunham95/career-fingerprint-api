@@ -376,7 +376,7 @@ export class OrgService {
         data: {
           ssoEnabled: true,
           ssoCert: xmlData.cert,
-          ssoIssuer: xmlData.issuer,
+          // ssoIssuer: xmlData.issuer,
           ssoEntryPoint: xmlData.entryPoint,
         },
       });

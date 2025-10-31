@@ -59,7 +59,15 @@ export class AuthController {
   @Get('sso')
   @UseGuards(SamlAuthGuard)
   samlLogin(@Req() req: Request) {
-    console.log('🚀 SAML login triggered', req.query);
+    const email = req.query.email as string | undefined;
+    const relayState = email ? `email=${encodeURIComponent(email)}` : undefined;
+    console.log('🚀 SAML login triggered', { email, relayState });
+  }
+
+  @Get('sso/:domain')
+  @UseGuards(SamlAuthGuard)
+  samlLoginDomain(@Req() req: Request) {
+    req.query.email = `test@${req.params.domain}`;
   }
 
   @Post('sso/callback')

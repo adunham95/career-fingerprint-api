@@ -9,6 +9,7 @@ import {
 export class SamlAuthGuard extends AuthGuard('saml') {
   getAuthenticateOptions(context: ExecutionContext) {
     const req = context.switchToHttp().getRequest();
+    console.log('🧭 SAML Auth Guard triggered', req.params, req.query);
 
     // detect which route we're in
     const isCallback = req.originalUrl?.includes('/callback');
@@ -19,22 +20,37 @@ export class SamlAuthGuard extends AuthGuard('saml') {
     }
 
     const email = req.query.email as string | undefined;
+    const domainParam = req.params?.domain as string | undefined;
 
-    if (!email) {
+    console.log({ email, domainParam });
+
+    let finalEmail: string | undefined;
+    let domain: string | undefined;
+
+    if (email) {
+      // ✅ Standard SP-initiated case
+      finalEmail = email;
+      domain = email.split('@')[1];
+    } else if (domainParam) {
+      // ✅ Support /auth/sso/:domain pattern (no email provided)
+      domain = domainParam.toLowerCase();
+      finalEmail = `placeholder@${domain}`;
+      // Optional: you could throw instead of faking an email
+      // if your org lookup logic doesn't require it
+    }
+
+    if (!domain) {
       throw new BadRequestException(
-        'Missing email parameter. Example: /auth/sso?email=user@domain.edu',
+        'Missing email or domain. Example: /auth/sso?email=user@domain.edu or /auth/sso/:domain',
       );
     }
 
-    const domain = email.split('@')[1];
-    if (!domain) {
-      throw new BadRequestException('Invalid email address.');
-    }
+    console.log({ domain });
 
     // 👇 Pass RelayState and email to IdP
     return {
       additionalParams: {
-        email,
+        email: finalEmail,
         RelayState: domain, // 💾 this will come back in req.body.RelayState
       },
     };

@@ -171,8 +171,19 @@ export class SubscriptionsService {
               { currentPeriodEnd: { gt: new Date() } },
             ], // optional: time-safe check
           },
-          orderBy: { createdAt: 'desc' },
-          include: { plan: true },
+          include: {
+            plan: true,
+          },
+          orderBy: [
+            {
+              plan: {
+                level: 'desc', // highest plan level first
+              },
+            },
+            {
+              createdAt: 'desc', // newest first
+            },
+          ],
         });
       },
       86400,

@@ -101,13 +101,14 @@ export class DynamicSamlStrategy extends PassportStrategy(
               org.ssoCert?.replace(/\\n/g, '\n').trim() || cert;
 
             const samlOptions: SamlConfig = {
-              callbackUrl: `${process.env.API_URL}/auth/sso/callback`,
-              entryPoint: org.ssoEntryPoint || process.env.SAML_ENTRYPOINT!,
-              issuer: org.ssoIssuer || process.env.SAML_ISSUER!,
-              idpCert: dynamicCert,
+              // ---- SERVICE PROVIDER CONFIG ----
+              issuer: process.env.SAML_ISSUER || '', // You define this (SP Entity ID)
+              callbackUrl: process.env.SAML_CALLBACK_URL || '', // SP ACS URL
+              // ---- IDENTITY PROVIDER CONFIG ----
+              entryPoint: org.ssoEntryPoint || '', // Provided by Okta (redirect/login URL)
+              idpCert: dynamicCert, // Provided by Okta (x509 cert)
               signatureAlgorithm: 'sha256',
               acceptedClockSkewMs: -1,
-              wantAuthnResponseSigned: false, // ← toggle these
               wantAssertionsSigned: true, // ← based on your IdP
               disableRequestedAuthnContext: true,
             };
@@ -158,7 +159,7 @@ export class DynamicSamlStrategy extends PassportStrategy(
           const org = orgDomain?.org;
           if (!org) return done(new Error('Organization not found'));
 
-          const user = await this.users.upsertUser({
+          const newUser = {
             email,
             firstName: this.extractSamlField(profile, [
               'firstName',
@@ -170,7 +171,9 @@ export class DynamicSamlStrategy extends PassportStrategy(
               'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname',
             ]),
             password: '',
-          });
+          };
+
+          const user = await this.users.upsertUser(newUser, true);
 
           if (!user) return done(new Error('User not found'));
 
@@ -178,7 +181,7 @@ export class DynamicSamlStrategy extends PassportStrategy(
 
           await this.subscriptions.upsetOrgManagedSubscription({
             userID: user.id,
-            orgID: org.id,
+            orgID: org?.id || '',
           });
 
           return done(null, user);

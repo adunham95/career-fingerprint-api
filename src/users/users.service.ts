@@ -48,10 +48,72 @@ export class UsersService {
   async createUser(
     data: Prisma.UserCreateInput,
     doNotSendWelcomeEmail?: boolean,
+    doNotHashPassword?: boolean,
   ): Promise<User> {
-    data.password = await this.hashPassword(data.password);
+    data.password = doNotHashPassword
+      ? data.password
+      : await this.hashPassword(data.password);
 
     data.email = data.email.toLowerCase();
+
+    const freePlan = await this.cache.wrap(
+      'plan:free',
+      () => {
+        return this.prisma.plan.findFirst({
+          where: { key: 'free' },
+        });
+      },
+      86400,
+    );
+
+    if (!freePlan) {
+      throw new HttpException('Missing Plans', HttpStatus.FAILED_DEPENDENCY);
+    }
+
+    const user = await this.prisma.user.create({
+      data,
+    });
+
+    await this.prisma.subscription.create({
+      data: {
+        userID: user.id,
+        planID: freePlan.id,
+        status: 'active',
+      },
+    });
+
+    await this.stripeService.newStripeCustomer({ user });
+
+    if (!doNotSendWelcomeEmail) {
+      await this.mailService.sendWelcomeEmail({
+        to: user.email,
+        context: {
+          firstName: user.firstName,
+          token: await this.createEmailValidationCode(user.id, true),
+        },
+      });
+    }
+
+    return user;
+  }
+
+  async upsertUser(
+    data: Prisma.UserCreateInput,
+    doNotSendWelcomeEmail?: boolean,
+    doNotHashPassword?: boolean,
+  ) {
+    data.email = data.email.toLowerCase();
+    const currentUser = await this.prisma.user.findFirst({
+      where: { email: data.email },
+    });
+
+    if (currentUser) {
+      return currentUser;
+    }
+
+    data.password = doNotHashPassword
+      ? data.password
+      : await this.hashPassword(data.password);
 
     const freePlan = await this.cache.wrap(
       'plan:free',

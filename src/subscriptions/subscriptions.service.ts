@@ -50,6 +50,37 @@ export class SubscriptionsService {
     });
   }
 
+  async upsetOrgManagedSubscription(createSubscription: CreateSubscriptionDto) {
+    console.log('upserting org managed subscription', createSubscription);
+
+    if (!createSubscription.orgID) {
+      throw Error('Missing OrgID');
+    }
+
+    const currentSubscription = await this.prisma.subscription.findFirst({
+      where: {
+        status: 'org-managed',
+        managedByID: createSubscription.orgID,
+        userID: createSubscription.userID,
+      },
+    });
+
+    if (currentSubscription) {
+      console.log('user has current subscription', currentSubscription);
+      return await this.prisma.user.findFirst({
+        where: { id: createSubscription.userID },
+        include: { subscriptions: true },
+      });
+    }
+
+    await this.createOrgManagedSubscription(createSubscription);
+
+    return await this.prisma.user.findFirst({
+      where: { id: createSubscription.userID },
+      include: { subscriptions: true },
+    });
+  }
+
   async createTempSubscription(
     priceID: string,
     sessionID: string,

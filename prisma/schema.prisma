@@ -81,6 +81,10 @@ model Organization {
   defaultPlanID        String?
   logoURL              String?
   email                String
+  ssoEnabled           Boolean           @default(false)
+  ssoEntryPoint        String? // SSO URL
+  ssoIssuer            String? // Entity ID
+  ssoCert              String? // x509 cert
   admins               User[]
   orgAdmins            User[]            @relation("OrgAdmins")
   managedSubscriptions Subscription[]    @relation("managedSubscriptions")
@@ -259,8 +263,8 @@ model BulletPoint {
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
   text           String
-  resumeObjectID String
-  resumeObject   ResumeObject @relation(fields: [resumeObjectID], references: [id], onDelete: Cascade)
+  resumeObjectID String?
+  resumeObject   ResumeObject? @relation(fields: [resumeObjectID], references: [id], onDelete: Cascade)
 
   @@index([text])
 }

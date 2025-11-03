@@ -8,7 +8,38 @@ import { roundUpToNext100 } from 'src/utils/roundUp100';
 import { getDomainFromEmail } from 'src/utils/getDomain';
 import { CacheService } from 'src/cache/cache.service';
 import { MailService } from 'src/mail/mail.service';
+import { parseStringPromise } from 'xml2js';
 
+interface SamlMetadata {
+  EntityDescriptor?: {
+    $: {
+      entityID: string;
+      'xmlns:md': string;
+    };
+    IDPSSODescriptor: {
+      $: {
+        WantAuthnRequestsSigned: string;
+        protocolSupportEnumeration: string;
+      };
+      KeyDescriptor: {
+        $: { use: string };
+        'ds:KeyInfo': {
+          $: { 'xmlns:ds': string };
+          'ds:X509Data': {
+            'ds:X509Certificate': string;
+          };
+        };
+      };
+      NameIDFormat: string;
+      SingleSignOnService: {
+        $: {
+          Binding: string;
+          Location: string;
+        };
+      }[];
+    };
+  };
+}
 @Injectable()
 export class OrgService {
   constructor(
@@ -335,5 +366,91 @@ export class OrgService {
 
   remove(id: string) {
     return `This action removes a #${id} org`;
+  }
+
+  async xmlToSSOData(id: string, xml: string) {
+    try {
+      const xmlData = await this.parseSamlMetadata(xml);
+      await this.prisma.organization.update({
+        where: { id },
+        data: {
+          ssoEnabled: true,
+          ssoCert: xmlData.cert,
+          // ssoIssuer: xmlData.issuer,
+          ssoEntryPoint: xmlData.entryPoint,
+        },
+      });
+    } catch (error) {
+      console.log(error);
+      throw Error('Error Parsing file');
+    }
+  }
+
+  async parseSamlMetadata(metadataUrl: string) {
+    // SSRF protection: only allow URLs on allowed domains (example.com), and HTTP/S protocol
+    let url;
+    try {
+      url = new URL(metadataUrl);
+    } catch (e) {
+      throw new Error("Invalid URL for SAML metadata.");
+    }
+    // Only allow http or https
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      throw new Error("Only HTTP(S) URLs are allowed for SAML metadata.");
+    }
+    // Prevent access to localhost, 127.*, private networks
+    const hostname = url.hostname;
+    const forbiddenHosts = [
+      "localhost",
+      "127.0.0.1",
+      "0.0.0.0",
+      "169.254.169.254", // AWS metadata, etc.
+    ];
+    if (forbiddenHosts.includes(hostname)) {
+      throw new Error("Forbidden host.");
+    }
+    // Prevent private or loopback IPs: use a simple regex here, or do a DNS lookup if you want
+    // Regex for 10.*, 192.168.*, 172.16-31.*
+    const privateIpRegex = /^(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/;
+    if (privateIpRegex.test(hostname)) {
+      throw new Error("Forbidden private network address.");
+    }
+    // Optionally, maintain a domain allow-list for extra safety
+    // Example: allow *.safedomain.com
+    // if (!hostname.endsWith(".safedomain.com")) {
+    //   throw new Error("Only safedomain.com domains allowed.");
+    // }
+    const res = await fetch(metadataUrl);
+    if (!res.ok) {
+      throw new Error(`Failed to fetch metadata: ${res.statusText}`);
+    }
+    const xml = await res.text();
+
+    console.log('xml', xml);
+
+    const parsed = (await parseStringPromise(xml, {
+      explicitArray: false,
+      tagNameProcessors: [(name) => name.replace('md:', '')],
+    })) as SamlMetadata;
+
+    console.log('parsed', parsed);
+    const entity = parsed.EntityDescriptor;
+
+    console.log({
+      sso: JSON.stringify(entity),
+    });
+
+    const entryPoint =
+      entity?.IDPSSODescriptor.SingleSignOnService?.[0].$.Location || '';
+    const cert =
+      entity?.IDPSSODescriptor.KeyDescriptor['ds:KeyInfo']['ds:X509Data'][
+        'ds:X509Certificate'
+      ];
+
+    const issuer = entity?.$?.entityID;
+
+    console.log({ entryPoint, cert, issuer });
+
+    return { entryPoint, cert, issuer };
   }
 }

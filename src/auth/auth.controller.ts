@@ -8,6 +8,7 @@ import {
   Post,
   Req,
   Res,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
@@ -23,6 +24,8 @@ import { UserEntity } from 'src/users/entities/user.entity';
 import { AuthCookieService } from 'src/authcookie/authcookie.service';
 import { Throttle } from '@nestjs/throttler';
 import { CustomThrottlerGuard } from './custom-throttler.guard';
+import { SamlAuthGuard } from './SamlAuthGuard.guard';
+import passport from 'passport';
 
 @Controller('auth')
 @ApiTags('Auth')
@@ -51,6 +54,52 @@ export class AuthController {
     });
     this.authCookieService.setAuthCookie(response, accessToken);
     return { accessToken, user };
+  }
+
+  @Get('sso')
+  @UseGuards(SamlAuthGuard)
+  samlLogin(@Req() req: Request) {
+    const email = req.query.email as string | undefined;
+    const relayState = email ? `email=${encodeURIComponent(email)}` : undefined;
+    console.log('🚀 SAML login triggered', { email, relayState });
+  }
+
+  @Get('sso/:domain')
+  @UseGuards(SamlAuthGuard)
+  samlLoginDomain(@Req() req: Request) {
+    req.query.email = `test@${req.params.domain}`;
+  }
+
+  @Post('sso/callback')
+  @UseGuards(SamlAuthGuard)
+  async ssoCallback(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    // req.user comes from done(null, user)
+    const { user } = req;
+
+    if (!user) {
+      throw Error('missing user');
+    }
+
+    // Reuse your existing helper
+    const { accessToken } = await this.authService.loginUserByID(user.id);
+    this.authCookieService.setAuthCookie(res, accessToken);
+
+    return res.redirect(
+      `${process.env.APP_URL}/dashboard?token=${accessToken}`,
+    );
+  }
+
+  @Get('set-cookie')
+  setCookie(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) throw new UnauthorizedException('Missing token');
+
+    const token = authHeader.replace('Bearer ', '');
+    this.authCookieService.setAuthCookie(res, token);
+    return { ok: true };
   }
 
   @Post('request-reset')

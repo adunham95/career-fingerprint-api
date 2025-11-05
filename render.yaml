@@ -1,50 +1,105 @@
-services:
-  - type: web
-    name: career-fingerprint-api
-    runtime: 'node'
-    plan: starter
-    buildCommand: |
-      yarn install
-      yarn prisma migrate deploy
-      yarn build
-    startCommand: yarn start:prod
-    envVars:
-      - key: DATABASE_URL
-        fromDatabase:
-          name: prod
-          property: connectionString
-      - key: REDIS_URL
-        fromService:
-          name: thunder
-          type: redis
-          property: connectionString
-      - key: NODE_ENV
-        value: production
-      - key: FRONT_END_URL
-        sync: false
-      - key: STRIPE_API_KEY
-        sync: false
-      - key: STRIPE_API_SECRET
-        sync: false
-      - key: STRIPE_WEBHOOK_SECRET
-        sync: false
-      - key: SMTP_HOST
-        sync: false
-      - key: SMTP_PORT
-        sync: false
-      - key: SMTP_USERNAME
-        sync: false
-      - key: SMTP_PASSWORD
-        sync: false
-      - key: DEFAULT_SUBSCRIPTION_KEY
-        value: 'pro-beta'
-  - type: keyvalue
-    name: thunder
-    ipAllowList: []
-    plan: starter # Default: starter
-    previewPlan: starter # Default: use the value for 'plan'
-
-databases:
-  - name: prod
-    plan: basic-256mb
-    ipAllowList: []
+projects:
+  - name: Career Fingerprint
+    environments:
+      - name: Production
+        services:
+          - type: web
+            name: career-fingerprint-api
+            runtime: 'node'
+            plan: starter
+            branch: 'production'
+            buildCommand: |
+              yarn install
+              yarn prisma migrate deploy
+              yarn build
+            startCommand: yarn start:prod
+            envVars:
+              - key: DATABASE_URL
+                fromDatabase:
+                  name: thunder
+                  property: connectionString
+              - key: REDIS_URL
+                fromService:
+                  name: lightning
+                  type: redis
+                  property: connectionString
+              - key: NODE_ENV
+                value: production
+              - key: FRONT_END_URL
+                sync: false
+              - key: STRIPE_API_KEY
+                sync: false
+              - key: STRIPE_API_SECRET
+                sync: false
+              - key: STRIPE_WEBHOOK_SECRET
+                sync: false
+              - key: SMTP_HOST
+                sync: false
+              - key: SMTP_PORT
+                sync: false
+              - key: SMTP_USERNAME
+                sync: false
+              - key: SMTP_PASSWORD
+                sync: false
+              - key: DEFAULT_SUBSCRIPTION_KEY
+                value: 'pro-beta'
+          - type: keyvalue
+            name: lightning
+            ipAllowList: []
+            plan: starter # Default: starter
+            previewPlan: starter # Default: use the value for 'plan'
+        databases:
+          - name: thunder
+            plan: basic-256mb
+            ipAllowList: []
+      - name: Stage
+        services:
+          - type: web
+            name: career-fingerprint-api-stage
+            runtime: 'node'
+            plan: free
+            branch: 'main'
+            buildCommand: |
+              yarn install
+              yarn prisma migrate deploy
+              yarn build
+            startCommand: yarn start:prod
+            envVars:
+              - key: DATABASE_URL
+                fromDatabase:
+                  name: thunder-stage
+                  property: connectionString
+              - key: REDIS_URL
+                fromService:
+                  name: lightning-stage
+                  type: redis
+                  property: connectionString
+              - key: NODE_ENV
+                value: production
+              - key: FRONT_END_URL
+                sync: false
+              - key: STRIPE_API_KEY
+                sync: false
+              - key: STRIPE_API_SECRET
+                sync: false
+              - key: STRIPE_WEBHOOK_SECRET
+                sync: false
+              - key: SMTP_HOST
+                sync: false
+              - key: SMTP_PORT
+                sync: false
+              - key: SMTP_USERNAME
+                sync: false
+              - key: SMTP_PASSWORD
+                sync: false
+              - key: DEFAULT_SUBSCRIPTION_KEY
+                value: 'pro-beta'
+          - type: keyvalue
+            name: lightning-stage
+            ipAllowList: []
+            plan: starter # Default: starter
+            previewPlan: starter # Default: use the value for 'plan'
+        databases:
+          - name: thunder-stage
+            plan: basic-256mb
+            ipAllowList: []

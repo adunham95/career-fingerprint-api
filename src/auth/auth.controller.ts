@@ -25,7 +25,6 @@ import { AuthCookieService } from 'src/authcookie/authcookie.service';
 import { Throttle } from '@nestjs/throttler';
 import { CustomThrottlerGuard } from './custom-throttler.guard';
 import { SamlAuthGuard } from './SamlAuthGuard.guard';
-import passport from 'passport';
 
 @Controller('auth')
 @ApiTags('Auth')

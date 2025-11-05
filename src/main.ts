@@ -11,14 +11,17 @@ import * as fs from 'fs';
 
 async function bootstrap() {
   initializeSentry();
+  const isDev = process.env.NODE_ENV !== 'production';
+  const httpsOptions = isDev
+    ? {
+        key: fs.readFileSync('./localhost-key.pem'),
+        cert: fs.readFileSync('./localhost.pem'),
+      }
+    : undefined;
 
-  const httpsOptions = {
-    key: fs.readFileSync('./localhost-key.pem'),
-    cert: fs.readFileSync('./localhost.pem'),
-  };
-
-  const app = await NestFactory.create(AppModule, { httpsOptions });
-  // const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    httpsOptions,
+  });
 
   const { httpAdapter } = app.get(HttpAdapterHost);
   app.useGlobalFilters(new SentryFilter(httpAdapter));

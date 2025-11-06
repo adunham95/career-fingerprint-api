@@ -6,6 +6,9 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import crypto from 'crypto';
 import { MailService } from 'src/mail/mail.service';
 import { FailedLoginService } from './failed-login.service';
+import { AuditService } from 'src/audit/audit.service';
+import { AUDIT_EVENT } from 'src/audit/auditEvents';
+import { Request } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -16,10 +19,17 @@ export class AuthService {
     private prisma: PrismaService,
     private mail: MailService,
     private failedLoginService: FailedLoginService,
+    private auditService: AuditService,
   ) {}
 
-  async loginUser(email: string, pass: string) {
+  async loginUser(email: string, pass: string, ipAddress?: string) {
     if (await this.failedLoginService.isBlocked(email)) {
+      await this.auditService.logEvent(
+        AUDIT_EVENT.LOGIN_FAILED,
+        undefined,
+        ipAddress,
+        { email, type: 'too_many_attempts' },
+      );
       throw new HttpException(
         'Too many failed login attempts. Please try again later.',
         HttpStatus.TOO_MANY_REQUESTS,
@@ -33,6 +43,12 @@ export class AuthService {
 
     if (!user) {
       await this.failedLoginService.recordFailure(email);
+      await this.auditService.logEvent(
+        AUDIT_EVENT.LOGIN_FAILED,
+        undefined,
+        ipAddress,
+        { email },
+      );
 
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
     }
@@ -41,6 +57,12 @@ export class AuthService {
 
     if (!isPasswordValid) {
       await this.failedLoginService.recordFailure(email);
+      await this.auditService.logEvent(
+        AUDIT_EVENT.LOGIN_FAILED,
+        undefined,
+        ipAddress,
+        { email },
+      );
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
     }
 
@@ -54,13 +76,19 @@ export class AuthService {
 
     const accessToken = this.jwtService.sign(payload);
 
+    await this.auditService.logEvent(
+      AUDIT_EVENT.LOGIN_SUCCESS,
+      user.id,
+      ipAddress,
+    );
+
     return {
       accessToken,
       user,
     };
   }
 
-  async loginUserByID(id: number) {
+  async loginUserByID(id: number, ipAddress?: string) {
     const user = await this.usersService.user({
       id,
       accountStatus: 'active',
@@ -69,6 +97,7 @@ export class AuthService {
     this.logger.debug('loginUserByID', user);
 
     if (!user) {
+      await this.auditService.logEvent(AUDIT_EVENT.LOGIN_FAILED, id, ipAddress);
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
     }
 
@@ -80,13 +109,15 @@ export class AuthService {
 
     const accessToken = this.jwtService.sign(payload);
 
+    await this.auditService.logEvent(AUDIT_EVENT.LOGIN_SUCCESS, id, ipAddress);
+
     return {
       accessToken,
       user,
     };
   }
 
-  async generateResetToken(email: string) {
+  async generateResetToken(email: string, ipAddress?: string) {
     const tokenData = this.generateResetTokenData();
     await this.prisma.resetToken.create({
       data: {
@@ -100,11 +131,22 @@ export class AuthService {
       to: email,
       context: { email, token: tokenData.token },
     });
+    await this.auditService.logEvent(
+      AUDIT_EVENT.PASSWORD_RESET_REQUESTED,
+      undefined,
+      ipAddress,
+      { email },
+    );
     this.logger.verbose('Token Data', { tokenData });
     return true;
   }
 
-  async resetFromToken(email: string, password: string, token: string) {
+  async resetFromToken(
+    email: string,
+    password: string,
+    token: string,
+    ipAddress?: string,
+  ) {
     const tokenData = await this.prisma.resetToken.findFirst({
       where: {
         email: email.toLowerCase(),
@@ -123,6 +165,13 @@ export class AuthService {
       data: { password },
     });
 
+    await this.auditService.logEvent(
+      AUDIT_EVENT.PASSWORD_RESET,
+      undefined,
+      ipAddress,
+      { email },
+    );
+
     await this.prisma.resetToken.delete({
       where: {
         token_email: { token, email: email.toLowerCase() },
@@ -131,7 +180,14 @@ export class AuthService {
     return true;
   }
 
-  logout(): { message: string; statusCode: number } {
+  async logout(
+    ipAddress?: string,
+  ): Promise<{ message: string; statusCode: number }> {
+    await this.auditService.logEvent(
+      AUDIT_EVENT.LOGIN_FAILED,
+      undefined,
+      ipAddress,
+    );
     return {
       message: 'Logout successful',
       statusCode: HttpStatus.OK,

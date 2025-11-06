@@ -25,6 +25,7 @@ import { AuthCookieService } from 'src/authcookie/authcookie.service';
 import { Throttle } from '@nestjs/throttler';
 import { CustomThrottlerGuard } from './custom-throttler.guard';
 import { SamlAuthGuard } from './SamlAuthGuard.guard';
+import { getClientIp } from 'src/utils/getIPAddress';
 
 @Controller('auth')
 @ApiTags('Auth')
@@ -41,10 +42,12 @@ export class AuthController {
   async login(
     @Body() { email, password }: LoginDto,
     @Res({ passthrough: true }) response: Response,
+    @Req() req: Request,
   ) {
     const { accessToken, user } = await this.authService.loginUser(
       email,
       password,
+      getClientIp(req),
     );
     this.logger.verbose('login response', {
       accessToken,
@@ -83,7 +86,10 @@ export class AuthController {
     }
 
     // Reuse your existing helper
-    const { accessToken } = await this.authService.loginUserByID(user.id);
+    const { accessToken } = await this.authService.loginUserByID(
+      user.id,
+      getClientIp(req),
+    );
     this.authCookieService.setAuthCookie(res, accessToken);
 
     return res.redirect(
@@ -102,13 +108,24 @@ export class AuthController {
   }
 
   @Post('request-reset')
-  requestPasswordReset(@Body() { email }: InitiatePasswordResetDto) {
-    return this.authService.generateResetToken(email);
+  requestPasswordReset(
+    @Body() { email }: InitiatePasswordResetDto,
+    @Req() req: Request,
+  ) {
+    return this.authService.generateResetToken(email, getClientIp(req));
   }
 
   @Post('reset-password')
-  requestPassword(@Body() { email, password, token }: PasswordResetDto) {
-    return this.authService.resetFromToken(email, password, token);
+  requestPassword(
+    @Body() { email, password, token }: PasswordResetDto,
+    @Req() req: Request,
+  ) {
+    return this.authService.resetFromToken(
+      email,
+      password,
+      token,
+      getClientIp(req),
+    );
   }
 
   @Get('current-user')
@@ -125,6 +142,6 @@ export class AuthController {
   @Get('logout')
   logout(@Req() req: Request, @Res({ passthrough: true }) response: Response) {
     this.authCookieService.clearAuthCookie(response);
-    return { success: true };
+    return this.authService.logout(getClientIp(req));
   }
 }

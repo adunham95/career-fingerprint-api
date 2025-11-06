@@ -257,11 +257,11 @@ model JobPosition {
 }
 
 model BulletPoint {
-  id             String       @id @default(uuid())
+  id             String        @id @default(uuid())
   userID         Int
-  user           User         @relation(fields: [userID], references: [id])
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  user           User          @relation(fields: [userID], references: [id])
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
   text           String
   resumeObjectID String?
   resumeObject   ResumeObject? @relation(fields: [resumeObjectID], references: [id], onDelete: Cascade)
@@ -513,4 +513,17 @@ model OrgWeeklyReport {
 
   @@unique([orgID, weekStart])
   @@index([orgID, weekStart])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userID    Int?
+  ipAddress String?
+  event     String
+  details   Json?
+  createdAt DateTime @default(now())
+
+  @@index([userID])
+  @@index([event])
+  @@index([createdAt])
 }

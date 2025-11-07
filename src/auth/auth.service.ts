@@ -8,7 +8,6 @@ import { MailService } from 'src/mail/mail.service';
 import { FailedLoginService } from './failed-login.service';
 import { AuditService } from 'src/audit/audit.service';
 import { AUDIT_EVENT } from 'src/audit/auditEvents';
-import { Request } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -51,6 +50,23 @@ export class AuthService {
       );
 
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+    }
+
+    if (user.passwordRestRequired) {
+      const tokenData = this.generateResetTokenData();
+      await this.prisma.resetToken.create({
+        data: {
+          email: email.toLowerCase(),
+          token: tokenData.token,
+          expiresAt: tokenData.expiresAt,
+        },
+      });
+      return {
+        accessToken: '',
+        user: { email: user.email },
+        resetRequired: true,
+        resetToken: tokenData.token,
+      };
     }
 
     const isPasswordValid = await bcrypt.compare(pass, user.password);
@@ -162,7 +178,7 @@ export class AuthService {
 
     await this.usersService.updateUser({
       where: { email: email.toLowerCase() },
-      data: { password },
+      data: { password, passwordRestRequired: false },
     });
 
     await this.auditService.logEvent(

@@ -23,48 +23,49 @@ datasource db {
 }
 
 model User {
-  id                  Int                @id @default(autoincrement())
-  firstName           String             @default("")
-  lastName            String             @default("")
-  username            String?            @unique
-  password            String
-  profileImage        String?            @default("")
-  email               String             @unique
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime           @updatedAt
-  accountStatus       String             @default("active")
-  pitch               String?
-  lookingFor          String?
-  stripeCustomerID    String?
-  inviteCode          String?
-  emailVerified       Boolean            @default(false)
-  timezone            String             @default("America/New_York")
-  nextSendAt          DateTime? // in UTC
-  preferredDay        Int                @default(5)
-  resume              Resume[]
-  positions           JobPosition[]
-  achievements        Achievement[]
-  projects            Project[]
-  education           Education[]
-  subscriptions       Subscription[]
-  jobApplications     JobApplication[]
-  notes               Note[]
-  meetings            Meeting[]
-  resetTokens         ResetToken[]
-  highlights          Highlight[]
-  prepAnswers         PrepAnswer[]
-  achievementTags     AchievementTag[]
-  coverLetter         CoverLetter[]
-  bulletPoints        BulletPoint[]
-  sentRedemptions     InviteRedemption[] @relation("InviterRedemptions")
-  receivedRedemptions InviteRedemption[] @relation("InviteeRedemptions")
-  orgID               String?
-  org                 Organization?      @relation(fields: [orgID], references: [id])
-  orgs                Organization[]     @relation("OrgAdmins")
-  verifyTokens        VerifyToken[]
-  skills              Skills[]
-  redeemedFreeTrial   Boolean            @default(false)
-  userType            String             @default("user")
+  id                   Int                @id @default(autoincrement())
+  firstName            String             @default("")
+  lastName             String             @default("")
+  username             String?            @unique
+  password             String
+  profileImage         String?            @default("")
+  email                String             @unique
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  accountStatus        String             @default("active")
+  pitch                String?
+  lookingFor           String?
+  stripeCustomerID     String?
+  inviteCode           String?
+  emailVerified        Boolean            @default(false)
+  timezone             String             @default("America/New_York")
+  nextSendAt           DateTime? // in UTC
+  preferredDay         Int                @default(5)
+  resume               Resume[]
+  positions            JobPosition[]
+  achievements         Achievement[]
+  projects             Project[]
+  education            Education[]
+  subscriptions        Subscription[]
+  jobApplications      JobApplication[]
+  notes                Note[]
+  meetings             Meeting[]
+  resetTokens          ResetToken[]
+  highlights           Highlight[]
+  prepAnswers          PrepAnswer[]
+  achievementTags      AchievementTag[]
+  coverLetter          CoverLetter[]
+  bulletPoints         BulletPoint[]
+  sentRedemptions      InviteRedemption[] @relation("InviterRedemptions")
+  receivedRedemptions  InviteRedemption[] @relation("InviteeRedemptions")
+  orgID                String?
+  org                  Organization?      @relation(fields: [orgID], references: [id])
+  orgs                 Organization[]     @relation("OrgAdmins")
+  verifyTokens         VerifyToken[]
+  skills               Skills[]
+  redeemedFreeTrial    Boolean            @default(false)
+  userType             String             @default("user")
+  passwordRestRequired Boolean            @default(false)
 
   @@index([email, inviteCode, stripeCustomerID])
 }

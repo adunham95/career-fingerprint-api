@@ -44,11 +44,17 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
     @Req() req: Request,
   ) {
-    const { accessToken, user } = await this.authService.loginUser(
-      email,
-      password,
-      getClientIp(req),
-    );
+    const {
+      accessToken,
+      user,
+      resetRequired = false,
+      resetToken,
+    } = await this.authService.loginUser(email, password, getClientIp(req));
+
+    if (resetRequired) {
+      return { resetToken, user };
+    }
+
     this.logger.verbose('login response', {
       accessToken,
       secure: process.env.NODE_ENV === 'production',

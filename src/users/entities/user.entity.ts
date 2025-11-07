@@ -59,4 +59,6 @@ export class UserEntity implements User {
   redeemedFreeTrial: boolean;
 
   userType: string;
+
+  passwordRestRequired: boolean;
 }

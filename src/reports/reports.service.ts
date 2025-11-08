@@ -16,7 +16,8 @@ export class ReportsService {
       async () => {
         const result = await this.prisma.jobPosition.groupBy({
           by: ['company'],
-          where: { user: { orgID } },
+          // TODO Fix that calulations
+          // where: { user:  },
           _count: { id: true },
           orderBy: { _count: { id: 'desc' } },
           take: 10,
@@ -33,7 +34,10 @@ export class ReportsService {
       async () => {
         const org = await this.prisma.organization.findUnique({
           where: { id: orgID },
-          select: { seatCount: true, _count: { select: { admins: true } } },
+          select: {
+            seatCount: true,
+            _count: { select: { orgAdminLinks: true } },
+          },
         });
         const users = await this.prisma.user.count({
           where: {
@@ -48,7 +52,7 @@ export class ReportsService {
         return {
           seatsUsed: users,
           seatLimit: org?.seatCount ?? 0,
-          admins: org?._count.admins ?? 0,
+          admins: org?._count.orgAdminLinks ?? 0,
         };
       },
       600, // cache 10 mins
@@ -65,14 +69,26 @@ export class ReportsService {
 
         const activeUsers = await this.prisma.user.count({
           where: {
-            orgID,
+            subscriptions: {
+              some: {
+                managedByID: orgID,
+              },
+            },
             achievements: {
               some: { createdAt: { gte: thirtyDaysAgo } },
             },
           },
         });
 
-        const totalUsers = await this.prisma.user.count({ where: { orgID } });
+        const totalUsers = await this.prisma.user.count({
+          where: {
+            subscriptions: {
+              some: {
+                managedByID: orgID,
+              },
+            },
+          },
+        });
         const inactiveUsers = totalUsers - activeUsers;
 
         return { activeUsers, inactiveUsers, totalUsers };

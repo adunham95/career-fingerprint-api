@@ -6,6 +6,7 @@ import { UsersService } from 'src/users/users.service';
 import { Request } from 'express';
 import { SubscriptionsService } from 'src/subscriptions/subscriptions.service';
 import { CacheService } from 'src/cache/cache.service';
+import { PermissionsService } from 'src/permission/permission.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
@@ -14,6 +15,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     private usersService: UsersService,
     private subscriptionService: SubscriptionsService,
     private cache: CacheService,
+    private permissionService: PermissionsService,
   ) {
     super({
       jwtFromRequest: (req: Request) => {
@@ -51,6 +53,8 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     const subscription = await this.subscriptionService.getActive(user?.id);
 
     const planLevel = subscription?.plan?.level ?? 0; // 0 = Free
+
+    // const permissionList = this.permissionService.getPermissionsForRoles();
 
     this.logger.debug('current user details', user);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

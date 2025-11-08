@@ -64,6 +64,30 @@ export class AuthController {
     return { accessToken, user };
   }
 
+  @Post('login/o/:id')
+  @UseGuards(JwtAuthGuard)
+  @Throttle({ default: { limit: 3, ttl: 60000 } }) // max 3 login attempts per minute per IP
+  async loginOrg(
+    @Res({ passthrough: true }) response: Response,
+    @Req() req: Request,
+  ) {
+    if (!req.user?.id) {
+      throw Error('Missing User');
+    }
+    const { accessToken, user } = await this.authService.loginUserOrg(
+      req.user?.id,
+      req.params.id,
+    );
+
+    this.logger.verbose('login response', {
+      accessToken,
+      secure: process.env.NODE_ENV === 'production',
+      cookieDomain: process.env.COOKIE_DOMAIN,
+    });
+    this.authCookieService.setAuthCookie(response, accessToken);
+    return { accessToken, user };
+  }
+
   @Get('sso')
   @UseGuards(SamlAuthGuard)
   samlLogin(@Req() req: Request) {

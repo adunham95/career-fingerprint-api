@@ -23,24 +23,24 @@ datasource db {
 }
 
 model User {
-  id                   Int                @id @default(autoincrement())
-  firstName            String             @default("")
-  lastName             String             @default("")
-  username             String?            @unique
+  id                   Int                 @id @default(autoincrement())
+  firstName            String              @default("")
+  lastName             String              @default("")
+  username             String?             @unique
   password             String
-  profileImage         String?            @default("")
-  email                String             @unique
-  createdAt            DateTime           @default(now())
-  updatedAt            DateTime           @updatedAt
-  accountStatus        String             @default("active")
+  profileImage         String?             @default("")
+  email                String              @unique
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  accountStatus        String              @default("active")
   pitch                String?
   lookingFor           String?
   stripeCustomerID     String?
   inviteCode           String?
-  emailVerified        Boolean            @default(false)
-  timezone             String             @default("America/New_York")
+  emailVerified        Boolean             @default(false)
+  timezone             String              @default("America/New_York")
   nextSendAt           DateTime? // in UTC
-  preferredDay         Int                @default(5)
+  preferredDay         Int                 @default(5)
   resume               Resume[]
   positions            JobPosition[]
   achievements         Achievement[]
@@ -56,42 +56,41 @@ model User {
   achievementTags      AchievementTag[]
   coverLetter          CoverLetter[]
   bulletPoints         BulletPoint[]
-  sentRedemptions      InviteRedemption[] @relation("InviterRedemptions")
-  receivedRedemptions  InviteRedemption[] @relation("InviteeRedemptions")
-  orgID                String?
-  org                  Organization?      @relation(fields: [orgID], references: [id])
-  orgs                 Organization[]     @relation("OrgAdmins")
+  sentRedemptions      InviteRedemption[]  @relation("InviterRedemptions")
+  receivedRedemptions  InviteRedemption[]  @relation("InviteeRedemptions")
+  orgs                 Organization[]      @relation("OrgAdmins")
   verifyTokens         VerifyToken[]
   skills               Skills[]
-  redeemedFreeTrial    Boolean            @default(false)
-  userType             String             @default("user")
-  passwordRestRequired Boolean            @default(false)
+  orgAdminLinks        OrganizationAdmin[]
+  redeemedFreeTrial    Boolean             @default(false)
+  userType             String              @default("user")
+  passwordRestRequired Boolean             @default(false)
 
   @@index([email, inviteCode, stripeCustomerID])
 }
 
 model Organization {
-  id                   String            @id @default(uuid())
-  createdAt            DateTime          @default(now())
-  updatedAt            DateTime          @updatedAt
+  id                   String              @id @default(uuid())
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
   name                 String
   domain               String?
-  domainVerified       Boolean?          @default(false)
-  seatCount            Int               @default(100)
+  domainVerified       Boolean?            @default(false)
+  seatCount            Int                 @default(100)
   stripeCustomerID     String?
   defaultPlanID        String?
   logoURL              String?
   email                String
-  ssoEnabled           Boolean           @default(false)
+  ssoEnabled           Boolean             @default(false)
   ssoEntryPoint        String? // SSO URL
   ssoIssuer            String? // Entity ID
   ssoCert              String? // x509 cert
-  admins               User[]
-  orgAdmins            User[]            @relation("OrgAdmins")
-  managedSubscriptions Subscription[]    @relation("managedSubscriptions")
-  orgSubscription      Subscription[]    @relation("orgSubscription")
+  orgAdmins            User[]              @relation("OrgAdmins")
+  managedSubscriptions Subscription[]      @relation("managedSubscriptions")
+  orgSubscription      Subscription[]      @relation("orgSubscription")
   domains              Domain[]
   weeklyReport         OrgWeeklyReport[]
+  orgAdminLinks        OrganizationAdmin[]
 
   @@index([email, stripeCustomerID])
 }
@@ -105,6 +104,19 @@ model Domain {
 
   @@unique([domain, orgID]) // prevent duplicate self-invites
   @@index([domain])
+}
+
+model OrganizationAdmin {
+  id           String       @id @default(uuid())
+  userId       Int
+  orgId        String
+  roles        String[]     @default(["viewer"])
+  user         User         @relation(fields: [userId], references: [id])
+  organization Organization @relation(fields: [orgId], references: [id])
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@unique([userId, orgId]) // a user can’t be “admin twice” in the same org
 }
 
 model InviteRedemption {

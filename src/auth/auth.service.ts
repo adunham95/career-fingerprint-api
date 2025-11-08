@@ -1,4 +1,10 @@
-import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import {
+  ForbiddenException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
@@ -8,6 +14,7 @@ import { MailService } from 'src/mail/mail.service';
 import { FailedLoginService } from './failed-login.service';
 import { AuditService } from 'src/audit/audit.service';
 import { AUDIT_EVENT } from 'src/audit/auditEvents';
+import { PermissionsService } from 'src/permission/permission.service';
 
 @Injectable()
 export class AuthService {
@@ -19,6 +26,7 @@ export class AuthService {
     private mail: MailService,
     private failedLoginService: FailedLoginService,
     private auditService: AuditService,
+    private permissionService: PermissionsService,
   ) {}
 
   async loginUser(email: string, pass: string, ipAddress?: string) {
@@ -101,6 +109,47 @@ export class AuthService {
     return {
       accessToken,
       user,
+      mode: 'base',
+      orgId: null,
+      roles: [],
+      permissions: [],
+    };
+  }
+
+  async loginUserOrg(userId: number, orgId: string) {
+    const membership = await this.prisma.organizationAdmin.findFirst({
+      where: {
+        userId,
+        orgId,
+      },
+    });
+
+    const user = await this.usersService.user({
+      id: userId,
+      accountStatus: 'active',
+    });
+
+    if (!membership || !user) {
+      throw new ForbiddenException('Not a member of this organization');
+    }
+
+    const roles = membership?.roles || [];
+    const permissions = this.permissionService.getPermissionsForRoles(roles);
+
+    const payload = {
+      mode: 'org',
+      orgId,
+      roles: roles || [],
+      permissions,
+      userID: userId,
+      email: user.email,
+    };
+
+    const token = await this.jwtService.signAsync(payload);
+
+    return {
+      accessToken: token,
+      user: user,
     };
   }
 

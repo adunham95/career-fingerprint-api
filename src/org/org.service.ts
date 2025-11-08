@@ -9,6 +9,7 @@ import { getDomainFromEmail } from 'src/utils/getDomain';
 import { CacheService } from 'src/cache/cache.service';
 import { MailService } from 'src/mail/mail.service';
 import { parseStringPromise } from 'xml2js';
+import { PermissionsService } from 'src/permission/permission.service';
 
 interface SamlMetadata {
   EntityDescriptor?: {
@@ -47,6 +48,7 @@ export class OrgService {
     private stripeService: StripeService,
     private cache: CacheService,
     private mailService: MailService,
+    private permissionService: PermissionsService,
   ) {}
 
   async create(createOrgDto: CreateOrgDto) {
@@ -368,6 +370,14 @@ export class OrgService {
     return `This action removes a #${id} org`;
   }
 
+  async getMyPermissionForOrg(orgID: string, userID: number) {
+    const orgAdmin = await this.prisma.organizationAdmin.findFirst({
+      where: { userId: userID, orgId: orgID },
+    });
+
+    return this.permissionService.getPermissionsForRoles(orgAdmin?.roles || []);
+  }
+
   async xmlToSSOData(id: string, xml: string) {
     try {
       const xmlData = await this.parseSamlMetadata(xml);
@@ -392,28 +402,28 @@ export class OrgService {
     try {
       url = new URL(metadataUrl);
     } catch (e) {
-      throw new Error("Invalid URL for SAML metadata.");
+      throw new Error('Invalid URL for SAML metadata.');
     }
     // Only allow http or https
-    if (url.protocol !== "http:" && url.protocol !== "https:") {
-      throw new Error("Only HTTP(S) URLs are allowed for SAML metadata.");
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+      throw new Error('Only HTTP(S) URLs are allowed for SAML metadata.');
     }
     // Prevent access to localhost, 127.*, private networks
     const hostname = url.hostname;
     const forbiddenHosts = [
-      "localhost",
-      "127.0.0.1",
-      "0.0.0.0",
-      "169.254.169.254", // AWS metadata, etc.
+      'localhost',
+      '127.0.0.1',
+      '0.0.0.0',
+      '169.254.169.254', // AWS metadata, etc.
     ];
     if (forbiddenHosts.includes(hostname)) {
-      throw new Error("Forbidden host.");
+      throw new Error('Forbidden host.');
     }
     // Prevent private or loopback IPs: use a simple regex here, or do a DNS lookup if you want
     // Regex for 10.*, 192.168.*, 172.16-31.*
     const privateIpRegex = /^(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/;
     if (privateIpRegex.test(hostname)) {
-      throw new Error("Forbidden private network address.");
+      throw new Error('Forbidden private network address.');
     }
     // Optionally, maintain a domain allow-list for extra safety
     // Example: allow *.safedomain.com

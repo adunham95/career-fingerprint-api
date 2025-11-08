@@ -37,12 +37,24 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
   }
 
-  async validate(payload: { userID: number }) {
+  async validate(payload: { userID: number; roles: string[] }) {
     this.logger.debug('validate', payload);
     const user = await this.cache.wrap(`currentUser:${payload.userID}`, () => {
       return this.usersService.user(
         { id: payload.userID },
-        { orgs: { select: { id: true, name: true, logoURL: true } } },
+        {
+          orgAdminLinks: {
+            include: {
+              organization: {
+                select: {
+                  id: true,
+                  name: true,
+                  logoURL: true,
+                },
+              },
+            },
+          },
+        },
       );
     });
 
@@ -54,12 +66,14 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
 
     const planLevel = subscription?.plan?.level ?? 0; // 0 = Free
 
-    // const permissionList = this.permissionService.getPermissionsForRoles();
+    const permissionList = this.permissionService.getPermissionsForRoles(
+      payload.roles,
+    );
 
     this.logger.debug('current user details', user);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...currentUser } = user;
 
-    return { ...currentUser, planLevel, subscription };
+    return { ...currentUser, planLevel, subscription, permissionList };
   }
 }

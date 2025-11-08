@@ -3,7 +3,7 @@ import { permissionsMap } from './permissions';
 
 @Injectable()
 export class PermissionsService {
-  getPermissionsForRoles(roles: string[]): string[] {
+  getPermissionsForRoles(roles: string[] = []): string[] {
     const permissions = new Set<string>();
 
     for (const role of roles) {

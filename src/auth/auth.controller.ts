@@ -64,9 +64,8 @@ export class AuthController {
     return { accessToken, user };
   }
 
-  @Post('login/o/:id')
+  @Post('login/org/:id')
   @UseGuards(JwtAuthGuard)
-  @Throttle({ default: { limit: 3, ttl: 60000 } }) // max 3 login attempts per minute per IP
   async loginOrg(
     @Res({ passthrough: true }) response: Response,
     @Req() req: Request,

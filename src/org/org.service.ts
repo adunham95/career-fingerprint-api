@@ -10,6 +10,8 @@ import { CacheService } from 'src/cache/cache.service';
 import { MailService } from 'src/mail/mail.service';
 import { parseStringPromise } from 'xml2js';
 import { PermissionsService } from 'src/permission/permission.service';
+import { AuditService } from 'src/audit/audit.service';
+import { AUDIT_EVENT } from 'src/audit/auditEvents';
 
 interface SamlMetadata {
   EntityDescriptor?: {
@@ -49,6 +51,7 @@ export class OrgService {
     private cache: CacheService,
     private mailService: MailService,
     private permissionService: PermissionsService,
+    private auditService: AuditService,
   ) {}
 
   async create(createOrgDto: CreateOrgDto) {
@@ -76,9 +79,6 @@ export class OrgService {
         email: createOrgDto.orgEmail.toLowerCase(),
         logoURL: createOrgDto.orgLogo,
         defaultPlanID: plan?.id,
-        orgAdmins: {
-          connect: { id: createOrgDto.admin },
-        },
       },
     });
     if (createOrgDto.orgDomain) {
@@ -90,6 +90,15 @@ export class OrgService {
       });
     }
 
+    if (createOrgDto.admin) {
+      await this.prisma.organizationAdmin.create({
+        data: {
+          orgId: newOrg.id,
+          userId: createOrgDto.admin,
+          roles: ['org_owner'],
+        },
+      });
+    }
     const address =
       createOrgDto.country && createOrgDto.postalCode
         ? {
@@ -216,6 +225,7 @@ export class OrgService {
   async addOrgAdmin(
     orgID: string,
     email: string,
+    roles?: string[],
     firstName?: string,
     lastName?: string,
   ) {
@@ -225,10 +235,15 @@ export class OrgService {
       select: { name: true },
     });
     console.log({ user });
+    await this.auditService.logEvent(
+      AUDIT_EVENT.ADMIN_ADDED,
+      undefined,
+      undefined,
+      { email, orgID },
+    );
     if (user !== null) {
-      await this.prisma.user.update({
-        where: { id: user.id },
-        data: { orgs: { connect: { id: orgID } } },
+      await this.prisma.organizationAdmin.create({
+        data: { orgId: orgID, userId: user.id, roles: roles ?? ['viewer'] },
       });
       await this.mailService.sendAdminAddedEmail({
         to: email,
@@ -245,10 +260,10 @@ export class OrgService {
         firstName,
         lastName,
         email: email.toLowerCase(),
-        orgs: {
-          connect: { id: orgID },
-        },
       },
+    });
+    await this.prisma.organizationAdmin.create({
+      data: { orgId: orgID, userId: newUser.id },
     });
     await this.mailService.sendAdminAddedEmail({
       to: email,
@@ -276,12 +291,18 @@ export class OrgService {
   async removeAdminFromOrg(orgID: string, userID: number) {
     await this.cache.del(`currentUser:${userID}`);
     await this.cache.del(`orgAdmins:${orgID}`);
-    return this.prisma.user.update({
+    await this.auditService.logEvent(
+      AUDIT_EVENT.ADMIN_ADDED,
+      userID,
+      undefined,
+      { orgID },
+    );
+    return this.prisma.organizationAdmin.delete({
       where: {
-        id: userID,
-      },
-      data: {
-        orgs: { disconnect: { id: orgID } },
+        userId_orgId: {
+          userId: userID,
+          orgId: orgID,
+        },
       },
     });
   }

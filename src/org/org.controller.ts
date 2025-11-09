@@ -69,11 +69,13 @@ export class OrgController {
       firstName?: string;
       lastName?: string;
       email: string;
+      roles: string[];
     },
   ) {
     return this.orgService.addOrgAdmin(
       id,
       createOrgDto.email,
+      createOrgDto.roles,
       createOrgDto.firstName,
       createOrgDto.lastName,
     );

@@ -325,7 +325,39 @@ export class OrgService {
     details: { roles: string[] },
   ) {
     await this.cache.del(`currentUser:${userID}`);
-    // TODO Add Details to make sure that there is always an owner
+
+    const currentLink = await this.prisma.organizationAdmin.findUnique({
+      where: {
+        userId_orgId: {
+          userId: userID,
+          orgId: orgID,
+        },
+      },
+      select: { roles: true },
+    });
+
+    // ensure that at least one other owner still exists.
+    const removingOwnerRole =
+      currentLink?.roles.includes('org_owner') &&
+      !details.roles.includes('org_owner');
+
+    if (removingOwnerRole) {
+      const otherOwners = await this.prisma.organizationAdmin.count({
+        where: {
+          orgId: orgID,
+          roles: {
+            has: 'org_owner',
+          },
+          NOT: { userId: userID },
+        },
+      });
+
+      if (otherOwners === 0) {
+        throw new Error(
+          'Each organization must have at least one owner. Please assign another owner before removing this one.',
+        );
+      }
+    }
     return this.prisma.organizationAdmin.update({
       where: {
         userId_orgId: {

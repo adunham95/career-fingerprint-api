@@ -1,5 +1,15 @@
 export type PermissionsMap = Record<string, string[]>;
 
+export const permissionRoles = [
+  { label: 'Org Owner', id: 'org_owner' },
+  { label: 'Org Admin', id: 'org_admin' },
+  { label: 'Billing Admin', id: 'billing_admin' },
+  { label: 'User Admin', id: 'user_admin' },
+  { label: 'Advisor', id: 'advisor_admin' },
+  { label: 'Viewer', id: 'viewer' },
+  { label: 'SSO Admin', id: 'sso_admin' },
+];
+
 export const permissionsMap: PermissionsMap = {
   org_owner: [
     'org:*',
@@ -14,12 +24,17 @@ export const permissionsMap: PermissionsMap = {
     'reports:view',
     'org:view',
     'org:update_details',
+    'org:update_logo',
+    'org:view_domains',
+    'org:manage_domains',
     'org:manage_seats',
+    'org:manage_admins',
     'admins:view',
     'admins:manage',
-    'admins:remove',
     'users:list',
+    'users:create',
     'users:add',
+    'users:assign_roles',
     'users:remove',
     'users:view_profile',
   ],
@@ -29,7 +44,15 @@ export const permissionsMap: PermissionsMap = {
     'billing:update_payment_method',
     'billing:update_plan',
   ],
-  user_admin: ['reports:view', 'users:list', 'users:add', 'users:remove'],
+  user_admin: [
+    'reports:view',
+    'users:list',
+    'users:create',
+    'users:add',
+    'users:assign_roles',
+    'users:remove',
+    'users:view_profile',
+  ],
   advisor: [
     'reports:view',
     'career:view',

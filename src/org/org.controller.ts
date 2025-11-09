@@ -92,7 +92,7 @@ export class OrgController {
   }
 
   @Delete(':orgID/admin/:userID')
-  @RequirePermission('admin:remove')
+  @RequirePermission('admins:manage')
   @UseGuards(JwtAuthGuard, PermissionGuard)
   removeAdminFromOrg(
     @Param('orgID') id: string,
@@ -101,13 +101,22 @@ export class OrgController {
     return this.orgService.removeAdminFromOrg(id, +userID);
   }
 
-  @Get(':id')
-  @Header('Cache-Control', 'private, max-age=30')
-  findOne(
-    @Param('id') id: string,
-    @Query() query: { includeSubscription?: string },
+  @Patch(':orgID/admin/:userID')
+  @RequirePermission('admins:manage')
+  @UseGuards(JwtAuthGuard, PermissionGuard)
+  updateAdminFromOrg(
+    @Param('orgID') id: string,
+    @Param('userID') userID: string,
+    @Body()
+    updateOrgAdminDetailsDTO: {
+      roles: string[];
+    },
   ) {
-    return this.orgService.findOne(id, query?.includeSubscription);
+    return this.orgService.updateAdminOrgDetails(
+      id,
+      +userID,
+      updateOrgAdminDetailsDTO,
+    );
   }
 
   @Get(':id/permissions')
@@ -117,6 +126,22 @@ export class OrgController {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
     }
     return this.orgService.getMyPermissionForOrg(id, req.user.id);
+  }
+
+  @Get(':id/roles')
+  @RequirePermission('admins:manage')
+  @UseGuards(JwtAuthGuard, PermissionGuard)
+  myOrgRoles(@Param('id') id: string) {
+    return this.orgService.getRolesForOrg(id);
+  }
+
+  @Get(':id')
+  @Header('Cache-Control', 'private, max-age=30')
+  findOne(
+    @Param('id') id: string,
+    @Query() query: { includeSubscription?: string },
+  ) {
+    return this.orgService.findOne(id, query?.includeSubscription);
   }
 
   @Get(':id/details')

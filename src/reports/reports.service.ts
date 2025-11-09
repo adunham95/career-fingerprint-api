@@ -16,8 +16,7 @@ export class ReportsService {
       async () => {
         const result = await this.prisma.jobPosition.groupBy({
           by: ['company'],
-          // TODO Fix that calulations
-          // where: { user:  },
+          where: { user: { subscriptions: { some: { managedByID: orgID } } } },
           _count: { id: true },
           orderBy: { _count: { id: 'desc' } },
           take: 10,

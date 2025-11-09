@@ -21,6 +21,7 @@ export class PermissionGuard implements CanActivate {
 
     const hasPermission = (needed: string): boolean => {
       console.log('needed', needed);
+      console.log('current', userPerms);
       // Exact match
       if (userPerms.has(needed)) return true;
 

@@ -12,6 +12,7 @@ import { parseStringPromise } from 'xml2js';
 import { PermissionsService } from 'src/permission/permission.service';
 import { AuditService } from 'src/audit/audit.service';
 import { AUDIT_EVENT } from 'src/audit/auditEvents';
+import { permissionRoles, permissionsMap } from 'src/permission/permissions';
 
 interface SamlMetadata {
   EntityDescriptor?: {
@@ -211,15 +212,34 @@ export class OrgService {
       () =>
         this.prisma.user.findMany({
           where: {
-            orgs: {
-              some: { id },
+            orgAdminLinks: {
+              some: { orgId: id },
+            },
+          },
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            orgAdminLinks: {
+              where: { orgId: id },
+              select: {
+                roles: true,
+              },
+              take: 1,
             },
           },
         }),
+
       600,
     );
 
-    return admins;
+    const result = admins.map((u) => ({
+      ...u,
+      orgAdminLink: u.orgAdminLinks[0] || null,
+    }));
+
+    return result;
   }
 
   async addOrgAdmin(
@@ -229,6 +249,8 @@ export class OrgService {
     firstName?: string,
     lastName?: string,
   ) {
+    console.log({ roles });
+
     const user = await this.prisma.user.findFirst({ where: { email } });
     const org = await this.prisma.organization.findFirst({
       where: { id: orgID },
@@ -243,7 +265,11 @@ export class OrgService {
     );
     if (user !== null) {
       await this.prisma.organizationAdmin.create({
-        data: { orgId: orgID, userId: user.id, roles: roles ?? ['viewer'] },
+        data: {
+          orgId: orgID,
+          userId: user.id,
+          roles: roles ? roles : ['viewer'],
+        },
       });
       await this.mailService.sendAdminAddedEmail({
         to: email,
@@ -259,11 +285,16 @@ export class OrgService {
         password: '123abc',
         firstName,
         lastName,
+        passwordRestRequired: true,
         email: email.toLowerCase(),
       },
     });
     await this.prisma.organizationAdmin.create({
-      data: { orgId: orgID, userId: newUser.id },
+      data: {
+        orgId: orgID,
+        userId: newUser.id,
+        roles: roles ? roles : ['viewer'],
+      },
     });
     await this.mailService.sendAdminAddedEmail({
       to: email,
@@ -288,11 +319,29 @@ export class OrgService {
     });
   }
 
+  async updateAdminOrgDetails(
+    orgID: string,
+    userID: number,
+    details: { roles: string[] },
+  ) {
+    await this.cache.del(`currentUser:${userID}`);
+    // TODO Add Details to make sure that there is always an owner
+    return this.prisma.organizationAdmin.update({
+      where: {
+        userId_orgId: {
+          userId: userID,
+          orgId: orgID,
+        },
+      },
+      data: details,
+    });
+  }
+
   async removeAdminFromOrg(orgID: string, userID: number) {
     await this.cache.del(`currentUser:${userID}`);
     await this.cache.del(`orgAdmins:${orgID}`);
     await this.auditService.logEvent(
-      AUDIT_EVENT.ADMIN_ADDED,
+      AUDIT_EVENT.ADMIN_REMOVE,
       userID,
       undefined,
       { orgID },
@@ -392,11 +441,28 @@ export class OrgService {
   }
 
   async getMyPermissionForOrg(orgID: string, userID: number) {
-    const orgAdmin = await this.prisma.organizationAdmin.findFirst({
-      where: { userId: userID, orgId: orgID },
-    });
+    try {
+      const orgAdmin = await this.prisma.organizationAdmin.findFirst({
+        where: { userId: userID, orgId: orgID },
+      });
 
-    return this.permissionService.getPermissionsForRoles(orgAdmin?.roles || []);
+      return this.permissionService.getPermissionsForRoles(
+        orgAdmin?.roles || [],
+      );
+    } catch (error) {
+      console.log(error);
+      return [];
+    }
+  }
+
+  getRolesForOrg(orgID: string) {
+    try {
+      const roles = permissionRoles;
+      return roles;
+    } catch (error) {
+      console.log(error);
+      return [];
+    }
   }
 
   async xmlToSSOData(id: string, xml: string) {

@@ -4,7 +4,6 @@ import { CacheService } from '../cache/cache.service';
 @Injectable()
 export class FailedLoginService {
   private readonly MAX_ATTEMPTS = 5; // configurable
-  private readonly BLOCK_TTL = 60 * 15; // 15 minutes in seconds
   private readonly ATTEMPT_TTL = 60 * 15; // reset failures after 15 min
 
   constructor(private readonly cache: CacheService) {}

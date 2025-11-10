@@ -1,0 +1,28 @@
+name: Production Release PR
+
+on:
+  schedule:
+    - cron: '0 13 * * 3'
+
+jobs:
+  create-release-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create Release Pull Request
+        uses: repo-sync/pull-request@v2
+        with:
+          source_branch: main
+          destination_branch: production
+          pr_title: 'Release: Prepare for Production'
+          pr_body: |
+            This PR prepares the production release.
+            Includes changes from develop branch.
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate Release Notes (Optional)
+        uses: release-drafter/release-drafter@v5
+        with:
+          config_file: .github/release-drafter.yml

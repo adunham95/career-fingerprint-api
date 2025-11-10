@@ -7,6 +7,7 @@ import { StripeModule } from 'src/stripe/stripe.module';
 import { MailModule } from 'src/mail/mail.module';
 import { CacheModule } from 'src/cache/cache.module';
 import { BullModule } from '@nestjs/bull';
+import { AuditModule } from 'src/audit/audit.module';
 
 @Module({
   controllers: [UsersController],
@@ -17,6 +18,7 @@ import { BullModule } from '@nestjs/bull';
     StripeModule,
     MailModule,
     CacheModule,
+    AuditModule,
     BullModule.registerQueue({
       name: 'users-import',
     }),

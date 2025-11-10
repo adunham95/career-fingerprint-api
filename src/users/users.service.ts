@@ -6,6 +6,8 @@ import { StripeService } from 'src/stripe/stripe.service';
 import { MailService } from 'src/mail/mail.service';
 import { generateInviteString } from 'src/utils/generateReadableCode';
 import { CacheService } from 'src/cache/cache.service';
+import { AuditService } from 'src/audit/audit.service';
+import { AUDIT_EVENT } from 'src/audit/auditEvents';
 
 export const roundsOfHashing = 10;
 
@@ -16,6 +18,7 @@ export class UsersService {
     private stripeService: StripeService,
     private readonly mailService: MailService,
     private cache: CacheService,
+    private auditService: AuditService,
   ) {}
 
   async user(
@@ -48,8 +51,12 @@ export class UsersService {
   async createUser(
     data: Prisma.UserCreateInput,
     doNotSendWelcomeEmail?: boolean,
+    doNotHashPassword?: boolean,
+    ipAddress?: string,
   ): Promise<User> {
-    data.password = await this.hashPassword(data.password);
+    data.password = doNotHashPassword
+      ? data.password
+      : await this.hashPassword(data.password);
 
     data.email = data.email.toLowerCase();
 
@@ -70,6 +77,78 @@ export class UsersService {
     const user = await this.prisma.user.create({
       data,
     });
+
+    await this.auditService.logEvent(
+      AUDIT_EVENT.USER_CREATED,
+      user.id,
+      ipAddress,
+    );
+
+    await this.prisma.subscription.create({
+      data: {
+        userID: user.id,
+        planID: freePlan.id,
+        status: 'active',
+      },
+    });
+
+    await this.stripeService.newStripeCustomer({ user });
+
+    if (!doNotSendWelcomeEmail) {
+      await this.mailService.sendWelcomeEmail({
+        to: user.email,
+        context: {
+          firstName: user.firstName,
+          token: await this.createEmailValidationCode(user.id, true),
+        },
+      });
+    }
+
+    return user;
+  }
+
+  async upsertUser(
+    data: Prisma.UserCreateInput,
+    doNotSendWelcomeEmail?: boolean,
+    doNotHashPassword?: boolean,
+    ipAddress?: string,
+  ) {
+    data.email = data.email.toLowerCase();
+    const currentUser = await this.prisma.user.findFirst({
+      where: { email: data.email },
+    });
+
+    if (currentUser) {
+      return currentUser;
+    }
+
+    data.password = doNotHashPassword
+      ? data.password
+      : await this.hashPassword(data.password);
+
+    const freePlan = await this.cache.wrap(
+      'plan:free',
+      () => {
+        return this.prisma.plan.findFirst({
+          where: { key: 'free' },
+        });
+      },
+      86400,
+    );
+
+    if (!freePlan) {
+      throw new HttpException('Missing Plans', HttpStatus.FAILED_DEPENDENCY);
+    }
+
+    const user = await this.prisma.user.create({
+      data,
+    });
+
+    await this.auditService.logEvent(
+      AUDIT_EVENT.USER_CREATED,
+      user.id,
+      ipAddress,
+    );
 
     await this.prisma.subscription.create({
       data: {

@@ -8,7 +8,42 @@ import { roundUpToNext100 } from 'src/utils/roundUp100';
 import { getDomainFromEmail } from 'src/utils/getDomain';
 import { CacheService } from 'src/cache/cache.service';
 import { MailService } from 'src/mail/mail.service';
+import { parseStringPromise } from 'xml2js';
+import { PermissionsService } from 'src/permission/permission.service';
+import { AuditService } from 'src/audit/audit.service';
+import { AUDIT_EVENT } from 'src/audit/auditEvents';
+import { permissionRoles, permissionsMap } from 'src/permission/permissions';
 
+interface SamlMetadata {
+  EntityDescriptor?: {
+    $: {
+      entityID: string;
+      'xmlns:md': string;
+    };
+    IDPSSODescriptor: {
+      $: {
+        WantAuthnRequestsSigned: string;
+        protocolSupportEnumeration: string;
+      };
+      KeyDescriptor: {
+        $: { use: string };
+        'ds:KeyInfo': {
+          $: { 'xmlns:ds': string };
+          'ds:X509Data': {
+            'ds:X509Certificate': string;
+          };
+        };
+      };
+      NameIDFormat: string;
+      SingleSignOnService: {
+        $: {
+          Binding: string;
+          Location: string;
+        };
+      }[];
+    };
+  };
+}
 @Injectable()
 export class OrgService {
   constructor(
@@ -16,6 +51,8 @@ export class OrgService {
     private stripeService: StripeService,
     private cache: CacheService,
     private mailService: MailService,
+    private permissionService: PermissionsService,
+    private auditService: AuditService,
   ) {}
 
   async create(createOrgDto: CreateOrgDto) {
@@ -43,9 +80,6 @@ export class OrgService {
         email: createOrgDto.orgEmail.toLowerCase(),
         logoURL: createOrgDto.orgLogo,
         defaultPlanID: plan?.id,
-        orgAdmins: {
-          connect: { id: createOrgDto.admin },
-        },
       },
     });
     if (createOrgDto.orgDomain) {
@@ -57,6 +91,15 @@ export class OrgService {
       });
     }
 
+    if (createOrgDto.admin) {
+      await this.prisma.organizationAdmin.create({
+        data: {
+          orgId: newOrg.id,
+          userId: createOrgDto.admin,
+          roles: ['org_owner'],
+        },
+      });
+    }
     const address =
       createOrgDto.country && createOrgDto.postalCode
         ? {
@@ -169,33 +212,64 @@ export class OrgService {
       () =>
         this.prisma.user.findMany({
           where: {
-            orgs: {
-              some: { id },
+            orgAdminLinks: {
+              some: { orgId: id },
+            },
+          },
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            orgAdminLinks: {
+              where: { orgId: id },
+              select: {
+                roles: true,
+              },
+              take: 1,
             },
           },
         }),
+
       600,
     );
 
-    return admins;
+    const result = admins.map((u) => ({
+      ...u,
+      orgAdminLink: u.orgAdminLinks[0] || null,
+    }));
+
+    return result;
   }
 
   async addOrgAdmin(
     orgID: string,
     email: string,
+    roles?: string[],
     firstName?: string,
     lastName?: string,
   ) {
+    console.log({ roles });
+
     const user = await this.prisma.user.findFirst({ where: { email } });
     const org = await this.prisma.organization.findFirst({
       where: { id: orgID },
       select: { name: true },
     });
     console.log({ user });
+    await this.auditService.logEvent(
+      AUDIT_EVENT.ADMIN_ADDED,
+      undefined,
+      undefined,
+      { email, orgID },
+    );
     if (user !== null) {
-      await this.prisma.user.update({
-        where: { id: user.id },
-        data: { orgs: { connect: { id: orgID } } },
+      await this.prisma.organizationAdmin.create({
+        data: {
+          orgId: orgID,
+          userId: user.id,
+          roles: roles ? roles : ['viewer'],
+        },
       });
       await this.mailService.sendAdminAddedEmail({
         to: email,
@@ -211,10 +285,15 @@ export class OrgService {
         password: '123abc',
         firstName,
         lastName,
+        passwordRestRequired: true,
         email: email.toLowerCase(),
-        orgs: {
-          connect: { id: orgID },
-        },
+      },
+    });
+    await this.prisma.organizationAdmin.create({
+      data: {
+        orgId: orgID,
+        userId: newUser.id,
+        roles: roles ? roles : ['viewer'],
       },
     });
     await this.mailService.sendAdminAddedEmail({
@@ -240,15 +319,71 @@ export class OrgService {
     });
   }
 
+  async updateAdminOrgDetails(
+    orgID: string,
+    userID: number,
+    details: { roles: string[] },
+  ) {
+    await this.cache.del(`currentUser:${userID}`);
+
+    const currentLink = await this.prisma.organizationAdmin.findUnique({
+      where: {
+        userId_orgId: {
+          userId: userID,
+          orgId: orgID,
+        },
+      },
+      select: { roles: true },
+    });
+
+    // ensure that at least one other owner still exists.
+    const removingOwnerRole =
+      currentLink?.roles.includes('org_owner') &&
+      !details.roles.includes('org_owner');
+
+    if (removingOwnerRole) {
+      const otherOwners = await this.prisma.organizationAdmin.count({
+        where: {
+          orgId: orgID,
+          roles: {
+            has: 'org_owner',
+          },
+          NOT: { userId: userID },
+        },
+      });
+
+      if (otherOwners === 0) {
+        throw new Error(
+          'Each organization must have at least one owner. Please assign another owner before removing this one.',
+        );
+      }
+    }
+    return this.prisma.organizationAdmin.update({
+      where: {
+        userId_orgId: {
+          userId: userID,
+          orgId: orgID,
+        },
+      },
+      data: details,
+    });
+  }
+
   async removeAdminFromOrg(orgID: string, userID: number) {
     await this.cache.del(`currentUser:${userID}`);
     await this.cache.del(`orgAdmins:${orgID}`);
-    return this.prisma.user.update({
+    await this.auditService.logEvent(
+      AUDIT_EVENT.ADMIN_REMOVE,
+      userID,
+      undefined,
+      { orgID },
+    );
+    return this.prisma.organizationAdmin.delete({
       where: {
-        id: userID,
-      },
-      data: {
-        orgs: { disconnect: { id: orgID } },
+        userId_orgId: {
+          userId: userID,
+          orgId: orgID,
+        },
       },
     });
   }
@@ -335,5 +470,116 @@ export class OrgService {
 
   remove(id: string) {
     return `This action removes a #${id} org`;
+  }
+
+  async getMyPermissionForOrg(orgID: string, userID: number) {
+    try {
+      const orgAdmin = await this.prisma.organizationAdmin.findFirst({
+        where: { userId: userID, orgId: orgID },
+      });
+
+      return this.permissionService.getPermissionsForRoles(
+        orgAdmin?.roles || [],
+      );
+    } catch (error) {
+      console.log(error);
+      return [];
+    }
+  }
+
+  getRolesForOrg(orgID: string) {
+    try {
+      const roles = permissionRoles;
+      return roles;
+    } catch (error) {
+      console.log(error);
+      return [];
+    }
+  }
+
+  async xmlToSSOData(id: string, xml: string) {
+    try {
+      const xmlData = await this.parseSamlMetadata(xml);
+      await this.prisma.organization.update({
+        where: { id },
+        data: {
+          ssoEnabled: true,
+          ssoCert: xmlData.cert,
+          // ssoIssuer: xmlData.issuer,
+          ssoEntryPoint: xmlData.entryPoint,
+        },
+      });
+    } catch (error) {
+      console.log(error);
+      throw Error('Error Parsing file');
+    }
+  }
+
+  async parseSamlMetadata(metadataUrl: string) {
+    // SSRF protection: only allow URLs on allowed domains (example.com), and HTTP/S protocol
+    let url;
+    try {
+      url = new URL(metadataUrl);
+    } catch (e) {
+      throw new Error('Invalid URL for SAML metadata.');
+    }
+    // Only allow http or https
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+      throw new Error('Only HTTP(S) URLs are allowed for SAML metadata.');
+    }
+    // Prevent access to localhost, 127.*, private networks
+    const hostname = url.hostname;
+    const forbiddenHosts = [
+      'localhost',
+      '127.0.0.1',
+      '0.0.0.0',
+      '169.254.169.254', // AWS metadata, etc.
+    ];
+    if (forbiddenHosts.includes(hostname)) {
+      throw new Error('Forbidden host.');
+    }
+    // Prevent private or loopback IPs: use a simple regex here, or do a DNS lookup if you want
+    // Regex for 10.*, 192.168.*, 172.16-31.*
+    const privateIpRegex = /^(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/;
+    if (privateIpRegex.test(hostname)) {
+      throw new Error('Forbidden private network address.');
+    }
+    // Optionally, maintain a domain allow-list for extra safety
+    // Example: allow *.safedomain.com
+    // if (!hostname.endsWith(".safedomain.com")) {
+    //   throw new Error("Only safedomain.com domains allowed.");
+    // }
+    const res = await fetch(metadataUrl);
+    if (!res.ok) {
+      throw new Error(`Failed to fetch metadata: ${res.statusText}`);
+    }
+    const xml = await res.text();
+
+    console.log('xml', xml);
+
+    const parsed = (await parseStringPromise(xml, {
+      explicitArray: false,
+      tagNameProcessors: [(name) => name.replace('md:', '')],
+    })) as SamlMetadata;
+
+    console.log('parsed', parsed);
+    const entity = parsed.EntityDescriptor;
+
+    console.log({
+      sso: JSON.stringify(entity),
+    });
+
+    const entryPoint =
+      entity?.IDPSSODescriptor.SingleSignOnService?.[0].$.Location || '';
+    const cert =
+      entity?.IDPSSODescriptor.KeyDescriptor['ds:KeyInfo']['ds:X509Data'][
+        'ds:X509Certificate'
+      ];
+
+    const issuer = entity?.$?.entityID;
+
+    console.log({ entryPoint, cert, issuer });
+
+    return { entryPoint, cert, issuer };
   }
 }

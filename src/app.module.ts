@@ -50,8 +50,8 @@ import { AccountCleanUpModule } from './account-clean-up/account-clean-up.module
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AdminModule } from './admin/admin.module';
 import { MyFingerprintModule } from './my-fingerprint/my-fingerprint.module';
-import { AuditService } from './audit/audit.service';
 import { AuditModule } from './audit/audit.module';
+import { PermissionModule } from './permission/permission.module';
 
 @Module({
   imports: [
@@ -132,6 +132,7 @@ import { AuditModule } from './audit/audit.module';
     ]),
     AdminModule,
     MyFingerprintModule,
+    PermissionModule,
   ],
   controllers: [AppController, HealthController, SkillListController],
   providers: [

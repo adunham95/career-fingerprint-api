@@ -12,6 +12,7 @@ import { AuthCookieModule } from 'src/authcookie/authcookie.module';
 import { CacheModule } from 'src/cache/cache.module';
 import { FailedLoginService } from './failed-login.service';
 import { DynamicSamlStrategy } from './saml.strategy';
+import { PermissionModule } from 'src/permission/permission.module';
 
 export const jwtSecret = process.env.SECRET || '123abc';
 
@@ -28,6 +29,7 @@ export const jwtSecret = process.env.SECRET || '123abc';
     MailModule,
     AuthCookieModule,
     CacheModule,
+    PermissionModule,
   ],
   controllers: [AuthController],
   providers: [

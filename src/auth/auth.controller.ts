@@ -64,6 +64,29 @@ export class AuthController {
     return { accessToken, user };
   }
 
+  @Post('login/org/:id')
+  @UseGuards(JwtAuthGuard)
+  async loginOrg(
+    @Res({ passthrough: true }) response: Response,
+    @Req() req: Request,
+  ) {
+    if (!req.user?.id) {
+      throw Error('Missing User');
+    }
+    const { accessToken, user } = await this.authService.loginUserOrg(
+      req.user?.id,
+      req.params.id,
+    );
+
+    this.logger.verbose('login response', {
+      accessToken,
+      secure: process.env.NODE_ENV === 'production',
+      cookieDomain: process.env.COOKIE_DOMAIN,
+    });
+    this.authCookieService.setAuthCookie(response, accessToken);
+    return { accessToken, user };
+  }
+
   @Get('sso')
   @UseGuards(SamlAuthGuard)
   samlLogin(@Req() req: Request) {

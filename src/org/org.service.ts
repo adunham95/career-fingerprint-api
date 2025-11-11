@@ -516,18 +516,17 @@ export class OrgService {
   }
 
   async parseSamlMetadata(metadataUrl: string) {
-    // SSRF protection: only allow URLs on allowed domains (example.com), and HTTP/S protocol
     let url;
     try {
       url = new URL(metadataUrl);
     } catch (e) {
       throw new Error('Invalid URL for SAML metadata.');
     }
-    // Only allow http or https
-    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+
+    if (url.protocol !== 'https:') {
       throw new Error('Only HTTP(S) URLs are allowed for SAML metadata.');
     }
-    // Prevent access to localhost, 127.*, private networks
+
     const hostname = url.hostname;
     const forbiddenHosts = [
       'localhost',
@@ -538,18 +537,15 @@ export class OrgService {
     if (forbiddenHosts.includes(hostname)) {
       throw new Error('Forbidden host.');
     }
-    // Prevent private or loopback IPs: use a simple regex here, or do a DNS lookup if you want
-    // Regex for 10.*, 192.168.*, 172.16-31.*
     const privateIpRegex = /^(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/;
     if (privateIpRegex.test(hostname)) {
       throw new Error('Forbidden private network address.');
     }
-    // Optionally, maintain a domain allow-list for extra safety
-    // Example: allow *.safedomain.com
-    // if (!hostname.endsWith(".safedomain.com")) {
-    //   throw new Error("Only safedomain.com domains allowed.");
-    // }
-    const res = await fetch(metadataUrl);
+
+    const res = await fetch(metadataUrl, {
+      redirect: 'follow',
+    });
+
     if (!res.ok) {
       throw new Error(`Failed to fetch metadata: ${res.statusText}`);
     }

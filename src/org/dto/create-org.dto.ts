@@ -13,6 +13,7 @@ export class CreateOrgDto {
 
   @ApiProperty()
   @IsString()
+  @IsOptional()
   orgDomain: string;
 
   @ApiProperty()

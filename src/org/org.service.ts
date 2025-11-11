@@ -395,10 +395,24 @@ export class OrgService {
           select: {
             orgSubscription: true,
             orgAdmins: true,
+            orgAdminLinks: true,
           },
         },
       },
       orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async findMine(userID: number) {
+    const links = await this.prisma.organizationAdmin.findMany({
+      where: { userId: userID },
+      select: { orgId: true },
+    });
+
+    console.log(links);
+
+    return this.prisma.organization.findMany({
+      where: { id: { in: links.map((l) => l.orgId) } },
     });
   }
 

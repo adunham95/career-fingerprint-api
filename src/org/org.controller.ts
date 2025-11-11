@@ -35,6 +35,7 @@ export class OrgController {
   constructor(private readonly orgService: OrgService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   create(@Body() createOrgDto: CreateOrgDto) {
     return this.orgService.create(createOrgDto);
   }
@@ -133,6 +134,15 @@ export class OrgController {
   @UseGuards(JwtAuthGuard, PermissionGuard)
   myOrgRoles(@Param('id') id: string) {
     return this.orgService.getRolesForOrg(id);
+  }
+
+  @Get('my')
+  @UseGuards(JwtAuthGuard)
+  findMine(@Req() req: Request) {
+    if (!req.user) {
+      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+    }
+    return this.orgService.findMine(req.user.id);
   }
 
   @Get(':id')

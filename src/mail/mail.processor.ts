@@ -138,7 +138,7 @@ export class MailProcessor {
     } = job.data;
 
     const template = 'welcome';
-    const subject = 'Start You Free Premium Trial';
+    const subject = 'Start Your Free Premium Trial';
 
     console.log(`📧 Sending email to ${to}`);
 

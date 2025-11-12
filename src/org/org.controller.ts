@@ -35,12 +35,13 @@ export class OrgController {
   constructor(private readonly orgService: OrgService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   create(@Body() createOrgDto: CreateOrgDto) {
     return this.orgService.create(createOrgDto);
   }
 
   @Get(':orgID/users')
-  @RequirePermission('users:list')
+  @RequirePermission('client:list')
   @UseGuards(JwtAuthGuard, PermissionGuard)
   @Header('Cache-Control', 'private, max-age=30')
   getOrgUser(
@@ -82,7 +83,7 @@ export class OrgController {
   }
 
   @Delete(':orgID/user/:userID')
-  @RequirePermission('users:remove')
+  @RequirePermission('client:remove')
   @UseGuards(JwtAuthGuard, PermissionGuard)
   removeUserFromOrg(
     @Param('orgID') id: string,
@@ -133,6 +134,15 @@ export class OrgController {
   @UseGuards(JwtAuthGuard, PermissionGuard)
   myOrgRoles(@Param('id') id: string) {
     return this.orgService.getRolesForOrg(id);
+  }
+
+  @Get('my')
+  @UseGuards(JwtAuthGuard)
+  findMine(@Req() req: Request) {
+    if (!req.user) {
+      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+    }
+    return this.orgService.findMine(req.user.id);
   }
 
   @Get(':id')

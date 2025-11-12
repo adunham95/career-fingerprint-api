@@ -41,7 +41,7 @@ export class OrgController {
   }
 
   @Get(':orgID/users')
-  @RequirePermission('users:list')
+  @RequirePermission('client:list')
   @UseGuards(JwtAuthGuard, PermissionGuard)
   @Header('Cache-Control', 'private, max-age=30')
   getOrgUser(
@@ -83,7 +83,7 @@ export class OrgController {
   }
 
   @Delete(':orgID/user/:userID')
-  @RequirePermission('users:remove')
+  @RequirePermission('client:remove')
   @UseGuards(JwtAuthGuard, PermissionGuard)
   removeUserFromOrg(
     @Param('orgID') id: string,

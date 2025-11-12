@@ -10,7 +10,7 @@ export class ClientsController {
   constructor(private readonly clientsService: ClientsService) {}
 
   @Post()
-  @RequirePermission('client:remove')
+  @RequirePermission('client:add')
   @UseGuards(JwtAuthGuard, PermissionGuard)
   create(@Body() createClientDto: CreateClientDto) {
     return this.clientsService.create(createClientDto);

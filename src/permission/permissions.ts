@@ -32,7 +32,6 @@ export const permissionsMap: PermissionsMap = {
     'admins:view',
     'admins:manage',
     'client:list',
-    'client:create',
     'client:add',
     'client:assign_roles',
     'client:remove',

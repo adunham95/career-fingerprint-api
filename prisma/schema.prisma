@@ -409,6 +409,8 @@ model Meeting {
   education     Education?      @relation(fields: [educationID], references: [id])
   highlights    Highlight[]
   prepAnswers   PrepAnswer[]
+  thankYouNotes ThankYou[]
+  contact       Contact[]       @relation("meetingContact")
 
   @@index([jobAppID, jobPositionID, status])
 }
@@ -518,8 +520,8 @@ model OrgWeeklyReport {
   totalAchievements      Int   @default(0)
   avgAchievementsPerUser Float @default(0)
 
-  topTags      Json // [{ tagName, count }]
-  topEmployers Json // [{ company, count, currentPositions }]
+  topTags      Json
+  topEmployers Json
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -539,4 +541,24 @@ model AuditLog {
   @@index([userID])
   @@index([event])
   @@index([createdAt])
+}
+
+model ThankYou {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  message   String
+  meetingID String?
+  meeting   Meeting?  @relation(fields: [meetingID], references: [id])
+  contacts  Contact[] @relation("thankYouNote")
+}
+
+model Contact {
+  id        String     @id @default(uuid())
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  firstName String?
+  lastName  String?
+  email     String
+  meetings  Meeting[]  @relation("meetingContact")
+  thankYou  ThankYou[] @relation("thankYouNote")
 }

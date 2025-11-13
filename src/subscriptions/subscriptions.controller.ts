@@ -32,6 +32,7 @@ export class SubscriptionsController {
 
     return this.subscriptionsService.createOrgManagedSubscription(
       createSubscriptionDto,
+      'addToOrg',
     );
   }
 

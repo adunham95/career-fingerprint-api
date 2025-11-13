@@ -19,14 +19,17 @@ export class RegisterService {
     private cache: CacheService,
   ) {}
   async registerNewUser(createRegisterDto: CreateRegisterDto) {
-    const newUser = await this.users.createUser({
-      email: createRegisterDto.email,
-      password: createRegisterDto.password,
-      firstName: createRegisterDto.firstName,
-      lastName: createRegisterDto.lastName,
-      lookingFor: createRegisterDto.lookingFor,
-      timezone: createRegisterDto.timezone,
-    });
+    const newUser = await this.users.createUser(
+      {
+        email: createRegisterDto.email,
+        password: createRegisterDto.password,
+        firstName: createRegisterDto.firstName,
+        lastName: createRegisterDto.lastName,
+        lookingFor: createRegisterDto.lookingFor,
+        timezone: createRegisterDto.timezone,
+      },
+      !!createRegisterDto.orgID,
+    );
 
     if (createRegisterDto.inviteCode) {
       const codeUser = await this.prisma.user.findFirst({
@@ -45,13 +48,14 @@ export class RegisterService {
     }
 
     if (createRegisterDto.orgID) {
-      await this.subscription.createOrgManagedSubscription({
-        userID: newUser.id,
-        orgID: createRegisterDto.orgID,
-      });
+      await this.subscription.createOrgManagedSubscription(
+        {
+          userID: newUser.id,
+          orgID: createRegisterDto.orgID,
+        },
+        'newUser',
+      );
     }
-
-    console.log({ newUser });
 
     switch (createRegisterDto.lookingFor) {
       case 'student':

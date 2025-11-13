@@ -54,10 +54,12 @@ export class RegisterUsersProcessor {
           }
 
           try {
+            let emailType: 'addToOrg' | 'newUser' = 'addToOrg';
             let user = await this.prismaService.user.findFirst({
               where: { email: record.Email },
             });
             if (!user) {
+              emailType = 'newUser';
               console.log('adding user', record.Email);
               user = await this.userService.createUser(
                 {
@@ -68,31 +70,18 @@ export class RegisterUsersProcessor {
                 },
                 true,
               );
-
-              await this.mailService.sendWelcomeOrgEmail({
-                to: record.Email,
-                context: {
-                  firstName: record['First Name'] || '',
-                  orgName: org.name,
-                },
-              });
-            } else {
-              await this.mailService.sendOrgUpgradedEmail({
-                to: record.Email,
-                context: {
-                  firstName: record['First Name'] || '',
-                  orgName: org.name,
-                },
-              });
             }
 
             console.log(user);
 
             const newOrgUser =
-              await this.subscriptionService.createOrgManagedSubscription({
-                userID: user.id,
-                orgID: orgID,
-              });
+              await this.subscriptionService.createOrgManagedSubscription(
+                {
+                  userID: user.id,
+                  orgID: orgID,
+                },
+                emailType,
+              );
             console.log(newOrgUser);
 
             processed++;

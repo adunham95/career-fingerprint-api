@@ -20,8 +20,6 @@ export class SubscriptionsService {
     emailType: 'newUser' | 'addToOrg' | 'none' = 'none',
   ) {
     console.log('creating org managed subscription', createSubscription);
-    const oneYearFromNow = new Date();
-    oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
 
     if (!createSubscription.orgID) {
       throw Error('Missing OrgID');
@@ -46,15 +44,34 @@ export class SubscriptionsService {
       throw Error('Missing Org');
     }
 
+    const currentUsersCount = await this.prisma.subscription.count({
+      where: { managedByID: org?.id },
+    });
+
+    const defaultPlan = await this.cache.wrap(
+      `plan:${org.defaultPlanID}`,
+      () => {
+        return this.prisma.plan.findFirst({
+          where: { id: org.defaultPlanID || '' },
+        });
+      },
+      86400,
+    );
+
+    if ((org?.seatCount || 0) <= currentUsersCount) {
+      throw Error('Max Seats Claimed');
+    }
+
     await this.prisma.subscription.create({
       data: {
         userID: createSubscription.userID,
         managedByID: org?.id,
         planID: org.defaultPlanID,
         status: 'org-managed',
-        currentPeriodEnd: oneYearFromNow.toISOString(),
       },
     });
+
+    console.log({ emailType });
 
     switch (emailType) {
       case 'addToOrg':
@@ -63,6 +80,7 @@ export class SubscriptionsService {
           context: {
             firstName: user.firstName || '',
             orgName: org.name,
+            tierName: defaultPlan?.name || 'Free',
           },
         });
         break;
@@ -72,6 +90,7 @@ export class SubscriptionsService {
           context: {
             firstName: user?.firstName || '',
             orgName: org.name,
+            tierName: defaultPlan?.name || 'Free',
           },
         });
         break;

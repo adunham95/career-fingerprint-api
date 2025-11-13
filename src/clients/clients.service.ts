@@ -54,6 +54,7 @@ export class ClientsService {
         emailType,
       );
       console.log(newOrgUser);
+      return newOrgUser;
     } catch (err) {
       console.log(err);
     }

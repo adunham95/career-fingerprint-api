@@ -159,7 +159,7 @@ export class MailProcessor {
     }
   }
 
-  @Process('welcomeOrgEmail')
+  @Process('welcomeOrgUserEmail')
   async welcomeOrgEmail(
     job: Job<{
       to: string;
@@ -168,9 +168,8 @@ export class MailProcessor {
   ) {
     const { to, context } = job.data;
 
-    const template = 'welcome-org';
-    const subject =
-      'A Career Fingerprint Premium Account has been created for you!';
+    const template = 'welcome-org-user';
+    const subject = 'A Career Fingerprint Account has been created for you!';
 
     console.log(`📧 Sending email to ${to}`);
 
@@ -191,7 +190,7 @@ export class MailProcessor {
     }
   }
 
-  @Process('orgUpgradedEmail')
+  @Process('orgUserUpgradedEmail')
   async orgUpgradedEmail(
     job: Job<{
       to: string;
@@ -200,7 +199,7 @@ export class MailProcessor {
   ) {
     const { to, context } = job.data;
 
-    const template = 'org-upgraded';
+    const template = 'org-user-upgraded';
     const subject = 'You have been added to an Career Fingerprint Org';
 
     console.log(`📧 Sending email to ${to}`);

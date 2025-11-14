@@ -8,6 +8,10 @@ export class CreateThankYousDto {
   message: string;
 
   @ApiProperty()
+  @IsString()
+  meetingID: string;
+
+  @ApiProperty()
   @IsArray()
   @ValidateNested({ each: true })
   contacts: CreateContactDto[];

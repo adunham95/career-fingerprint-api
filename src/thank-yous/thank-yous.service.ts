@@ -10,28 +10,43 @@ export class ThankYousService {
     private mail: MailService,
   ) {}
 
-  async create(createThankYousDto: CreateThankYousDto) {
+  async create(userID: number, createThankYousDto: CreateThankYousDto) {
     return this.prisma.$transaction(async (tx) => {
       const thankYou = await tx.thankYou.create({
         data: { message: createThankYousDto.message },
       });
 
-      let createdContacts: { id: string }[] = [];
       if (createThankYousDto.contacts?.length) {
-        createdContacts = await tx.contact.createManyAndReturn({
-          data: createThankYousDto.contacts,
-        });
-      }
-
-      if (createdContacts.length) {
-        await tx.thankYou.update({
-          where: { id: thankYou.id },
-          data: {
-            contacts: {
-              connect: createdContacts.map((c) => ({ id: c.id })),
+        for (
+          let index = 0;
+          index < createThankYousDto.contacts.length;
+          index++
+        ) {
+          const details = createThankYousDto.contacts[index];
+          let currentContact = await tx.contact.findFirst({
+            where: { email: details.email },
+          });
+          if (!currentContact) {
+            currentContact = await tx.contact.create({
+              data: {
+                email: details.email,
+                firstName: details.firstName,
+                userID,
+              },
+            });
+          }
+          await tx.contact.update({
+            where: { id: currentContact.id },
+            data: {
+              thankYou: {
+                connect: { id: thankYou.id },
+              },
+              meetings: {
+                connect: { id: createThankYousDto.meetingID },
+              },
             },
-          },
-        });
+          });
+        }
       }
 
       return thankYou;

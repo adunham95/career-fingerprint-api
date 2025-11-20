@@ -532,4 +532,6 @@ export class PdfService {
     pdfDoc.end();
     return stream;
   }
+
+  createAchievementTimelineDoc() {}
 }

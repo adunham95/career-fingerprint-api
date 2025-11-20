@@ -26,6 +26,8 @@ interface MyAchievementQuery extends PaginationQueryDto {
   jobPositionID?: string;
   educationID?: string;
   tagID?: string;
+  startDate?: string;
+  endDate?: string;
 }
 @Controller('achievement')
 export class AchievementController {
@@ -63,6 +65,8 @@ export class AchievementController {
         jobPositionID: query.jobPositionID || null,
         educationID: query.educationID || null,
         tagID: query.tagID || null,
+        startDate: query.startDate || null,
+        endDate: query.endDate || null,
       },
       query.includeLinked === 'true',
       { limit: query.limit, page: query.page },
@@ -83,6 +87,8 @@ export class AchievementController {
         jobPositionID: query.jobPositionID || null,
         educationID: query.educationID || null,
         tagID: query.tagID || null,
+        startDate: query.startDate || null,
+        endDate: query.endDate || null,
       },
       query.includeLinked === 'true',
       { limit: query.limit, page: query.page },

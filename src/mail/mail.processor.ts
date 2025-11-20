@@ -355,4 +355,38 @@ export class MailProcessor {
       throw error;
     }
   }
+
+  @Process('thankYouNotes')
+  async thankYouNote(
+    job: Job<{
+      userEmail: string;
+      to: string[];
+      context: { message: string; senderName: string };
+    }>,
+  ) {
+    const { to, context, userEmail } = job.data;
+
+    const template = 'thank-you';
+    const subject = 'Thank You';
+
+    console.log(`📧 Sending email to ${to.join(',')}`);
+
+    console.log('data', job.data);
+
+    try {
+      await this.mailerService.sendMail({
+        from: `"${context.senderName} (via Career Fingerprint)" <${process.env.SMTP_FROM_EMAIL}>`,
+        sender: process.env.SMTP_FROM_EMAIL,
+        replyTo: userEmail,
+        to,
+        template,
+        subject,
+        context,
+      });
+      console.log(`✅ Email sent to ${to.join(',')}`);
+    } catch (error) {
+      console.log(`❌ Email not sent`, error);
+      throw error;
+    }
+  }
 }

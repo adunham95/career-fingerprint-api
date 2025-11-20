@@ -135,4 +135,19 @@ export class MailService {
       },
     });
   }
+
+  async sendThankYouNote(params: {
+    to: string;
+    userEmail: string;
+    context: { message: string; senderName: string; recipientName: string };
+  }) {
+    console.log('send thank you email');
+    await this.mailQueue.add('thankYouNotes', {
+      to: [params.to],
+      userEmail: params.userEmail,
+      context: {
+        ...params.context,
+      },
+    });
+  }
 }

@@ -6,6 +6,8 @@ import {
   HttpException,
   HttpStatus,
   UseGuards,
+  Get,
+  Param,
 } from '@nestjs/common';
 import { ThankYousService } from './thank-yous.service';
 import { CreateThankYousDto } from './dto/create-thank-yous.dto';
@@ -23,5 +25,14 @@ export class ThankYousController {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
     }
     return this.thankYousService.create(req.user, createThankYousDto);
+  }
+
+  @Get('meeting/:id')
+  @UseGuards(JwtAuthGuard)
+  getByMeetings(@Param('id') meetingID: string, @Req() req: Request) {
+    if (!req.user) {
+      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+    }
+    return this.thankYousService.getByMeeting(req.user.id, meetingID);
   }
 }

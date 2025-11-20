@@ -18,7 +18,10 @@ export class ThankYousService {
 
     return this.prisma.$transaction(async (tx) => {
       const thankYou = await tx.thankYou.create({
-        data: { message: createThankYousDto.message },
+        data: {
+          message: createThankYousDto.message,
+          meetingID: createThankYousDto.meetingID,
+        },
       });
 
       if (createThankYousDto.contacts?.length) {
@@ -72,6 +75,13 @@ export class ThankYousService {
       }
 
       return thankYou;
+    });
+  }
+
+  async getByMeeting(userID: number, meetingID: string) {
+    return this.prisma.thankYou.findMany({
+      where: { meetingID },
+      include: { contacts: true },
     });
   }
 }

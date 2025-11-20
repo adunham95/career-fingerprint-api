@@ -1,0 +1,53 @@
+html
+  head
+    meta(charset='UTF-8')
+    meta(name='viewport', content='width=device-width, initial-scale=1.0')
+  body(
+    style='margin: 0; padding: 0; background-color: #fdfaf9; font-family: Arial, sans-serif'
+  )
+    table(
+      width='100%',
+      cellpadding='0',
+      cellspacing='0',
+      border='0',
+      style='padding: 20px 0'
+    )
+      tr
+        td(align='center')
+          table(
+            width='600',
+            cellpadding='0',
+            cellspacing='0',
+            border='0',
+            style='border-radius: 8px; overflow: hidden; background-color: #ffffff'
+          )
+            // Greeting
+            tr
+              td(style='padding: 20px 30px 0 30px')
+                if recipientName
+                  p(
+                    style='color: #333; font-size: 16px; margin: 0 0 12px 0; font-weight: bold'
+                  )
+                  | Hello #{ recipientName },
+                else
+                  p(
+                    style='color: #333; font-size: 16px; margin: 0 0 12px 0; font-weight: bold'
+                  )
+                  | Hello,
+
+            // User Provided Message (HTML injected safely)
+            tr
+              td(style='padding: 0 30px 0 30px')
+                div(
+                  style='color: #333; font-size: 16px; line-height: 1.5; margin: 0 0 20px 0'
+                )
+                  != message
+
+            // Closing (optional)
+            tr
+              td(style='padding: 0 30px 20px 30px')
+                if senderName
+                  p(style='color: #333; font-size: 16px; margin: 0')
+                    | Best regards,
+                    br
+                    | #{ senderName }

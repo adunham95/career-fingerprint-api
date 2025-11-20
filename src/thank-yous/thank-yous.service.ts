@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateThankYousDto } from './dto/create-thank-yous.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { MailService } from 'src/mail/mail.service';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class ThankYousService {
@@ -10,7 +11,11 @@ export class ThankYousService {
     private mail: MailService,
   ) {}
 
-  async create(userID: number, createThankYousDto: CreateThankYousDto) {
+  async create(user: User, createThankYousDto: CreateThankYousDto) {
+    if (createThankYousDto.message === '') {
+      return Error('Missing Message');
+    }
+
     return this.prisma.$transaction(async (tx) => {
       const thankYou = await tx.thankYou.create({
         data: { message: createThankYousDto.message },
@@ -31,7 +36,7 @@ export class ThankYousService {
               data: {
                 email: details.email,
                 firstName: details.firstName,
-                userID,
+                userID: user.id,
               },
             });
           }
@@ -47,6 +52,23 @@ export class ThankYousService {
             },
           });
         }
+      }
+
+      const contactsEmails = createThankYousDto.contacts.filter(
+        (c) => c.email !== '',
+      );
+
+      for (let index = 0; index < contactsEmails.length; index++) {
+        const contact = contactsEmails[index];
+        await this.mail.sendThankYouNote({
+          to: contact.email,
+          userEmail: user.email,
+          context: {
+            recipientName: contact.firstName,
+            senderName: user.firstName,
+            message: createThankYousDto.message,
+          },
+        });
       }
 
       return thankYou;

@@ -90,16 +90,16 @@ export class MailService {
 
   async sendWelcomeOrgEmail(params: {
     to: string;
-    context: { firstName: string; orgName: string };
+    context: { firstName: string; orgName: string; tierName: string };
   }) {
-    await this.mailQueue.add('welcomeOrgEmail', params);
+    await this.mailQueue.add('welcomeOrgUserEmail', params);
   }
 
   async sendOrgUpgradedEmail(params: {
     to: string;
-    context: { firstName: string; orgName: string };
+    context: { firstName: string; orgName: string; tierName: string };
   }) {
-    await this.mailQueue.add('orgUpgradedEmail', params);
+    await this.mailQueue.add('orgUserUpgradedEmail', params);
   }
 
   async sendVerifyEmail(params: {
@@ -130,6 +130,21 @@ export class MailService {
     console.log('send admin added email');
     await this.mailQueue.add('adminAdded', {
       to: params.to,
+      context: {
+        ...params.context,
+      },
+    });
+  }
+
+  async sendThankYouNote(params: {
+    to: string;
+    userEmail: string;
+    context: { message: string; senderName: string; recipientName: string };
+  }) {
+    console.log('send thank you email');
+    await this.mailQueue.add('thankYouNotes', {
+      to: [params.to],
+      userEmail: params.userEmail,
       context: {
         ...params.context,
       },

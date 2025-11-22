@@ -4,6 +4,7 @@ import { FeatureFlag } from 'src/utils/featureFlags';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { CacheService } from 'src/cache/cache.service';
 import { StripeService } from 'src/stripe/stripe.service';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class SubscriptionsService {
@@ -11,17 +12,26 @@ export class SubscriptionsService {
     private prisma: PrismaService,
     private cache: CacheService,
     private stripe: StripeService,
+    private mail: MailService,
   ) {}
 
   async createOrgManagedSubscription(
     createSubscription: CreateSubscriptionDto,
+    emailType: 'newUser' | 'addToOrg' | 'none' = 'none',
   ) {
     console.log('creating org managed subscription', createSubscription);
-    const oneYearFromNow = new Date();
-    oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
 
     if (!createSubscription.orgID) {
       throw Error('Missing OrgID');
+    }
+
+    const user = await this.prisma.user.findFirst({
+      where: { id: createSubscription.userID },
+      include: { subscriptions: true },
+    });
+
+    if (!user) {
+      throw Error('Missing User');
     }
 
     await this.cache.del(`activeUserSubscription:${createSubscription.userID}`);
@@ -34,15 +44,60 @@ export class SubscriptionsService {
       throw Error('Missing Org');
     }
 
+    const currentUsersCount = await this.prisma.subscription.count({
+      where: { managedByID: org?.id },
+    });
+
+    const defaultPlan = await this.cache.wrap(
+      `plan:${org.defaultPlanID}`,
+      () => {
+        return this.prisma.plan.findFirst({
+          where: { id: org.defaultPlanID || '' },
+        });
+      },
+      86400,
+    );
+
+    if ((org?.seatCount || 0) <= currentUsersCount) {
+      throw Error('Max Seats Claimed');
+    }
+
     await this.prisma.subscription.create({
       data: {
         userID: createSubscription.userID,
         managedByID: org?.id,
         planID: org.defaultPlanID,
         status: 'org-managed',
-        currentPeriodEnd: oneYearFromNow.toISOString(),
       },
     });
+
+    console.log({ emailType });
+
+    switch (emailType) {
+      case 'addToOrg':
+        await this.mail.sendOrgUpgradedEmail({
+          to: user.email,
+          context: {
+            firstName: user.firstName || '',
+            orgName: org.name,
+            tierName: defaultPlan?.name || 'Free',
+          },
+        });
+        break;
+      case 'newUser':
+        await this.mail.sendWelcomeOrgEmail({
+          to: user?.email,
+          context: {
+            firstName: user?.firstName || '',
+            orgName: org.name,
+            tierName: defaultPlan?.name || 'Free',
+          },
+        });
+        break;
+
+      default:
+        break;
+    }
 
     return await this.prisma.user.findFirst({
       where: { id: createSubscription.userID },

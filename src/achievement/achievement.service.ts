@@ -57,6 +57,8 @@ export class AchievementService {
       jobPositionID: string | null;
       educationID: string | null;
       tagID: string | null;
+      startDate: string | null;
+      endDate: string | null;
     },
     includeLinked: boolean = false,
     query?: { page?: number | string; limit?: number | string },
@@ -88,6 +90,16 @@ export class AchievementService {
 
     if (whereOptions.tagID) {
       where.tags = { some: { id: whereOptions.tagID } };
+    }
+    if (whereOptions.startDate) {
+      where.startDate = { gte: new Date(whereOptions.startDate) };
+    }
+
+    if (whereOptions.startDate && whereOptions.endDate) {
+      where.startDate = {
+        gte: new Date(whereOptions.startDate),
+        lte: new Date(whereOptions.endDate),
+      };
     }
 
     this.logger.verbose('Where options after added', { where });

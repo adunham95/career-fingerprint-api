@@ -159,7 +159,7 @@ export class MailProcessor {
     }
   }
 
-  @Process('welcomeOrgEmail')
+  @Process('welcomeOrgUserEmail')
   async welcomeOrgEmail(
     job: Job<{
       to: string;
@@ -168,9 +168,8 @@ export class MailProcessor {
   ) {
     const { to, context } = job.data;
 
-    const template = 'welcome-org';
-    const subject =
-      'A Career Fingerprint Premium Account has been created for you!';
+    const template = 'welcome-org-user';
+    const subject = 'A Career Fingerprint Account has been created for you!';
 
     console.log(`📧 Sending email to ${to}`);
 
@@ -191,7 +190,7 @@ export class MailProcessor {
     }
   }
 
-  @Process('orgUpgradedEmail')
+  @Process('orgUserUpgradedEmail')
   async orgUpgradedEmail(
     job: Job<{
       to: string;
@@ -200,7 +199,7 @@ export class MailProcessor {
   ) {
     const { to, context } = job.data;
 
-    const template = 'org-upgraded';
+    const template = 'org-user-upgraded';
     const subject = 'You have been added to an Career Fingerprint Org';
 
     console.log(`📧 Sending email to ${to}`);
@@ -351,6 +350,40 @@ export class MailProcessor {
         },
       });
       console.log(`✅ Email sent to ${to}`);
+    } catch (error) {
+      console.log(`❌ Email not sent`, error);
+      throw error;
+    }
+  }
+
+  @Process('thankYouNotes')
+  async thankYouNote(
+    job: Job<{
+      userEmail: string;
+      to: string[];
+      context: { message: string; senderName: string };
+    }>,
+  ) {
+    const { to, context, userEmail } = job.data;
+
+    const template = 'thank-you';
+    const subject = 'Thank You';
+
+    console.log(`📧 Sending email to ${to.join(',')}`);
+
+    console.log('data', job.data);
+
+    try {
+      await this.mailerService.sendMail({
+        from: `"${context.senderName} (via Career Fingerprint)" <${process.env.SMTP_FROM_EMAIL}>`,
+        sender: process.env.SMTP_FROM_EMAIL,
+        replyTo: userEmail,
+        to,
+        template,
+        subject,
+        context,
+      });
+      console.log(`✅ Email sent to ${to.join(',')}`);
     } catch (error) {
       console.log(`❌ Email not sent`, error);
       throw error;

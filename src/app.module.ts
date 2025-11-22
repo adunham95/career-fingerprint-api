@@ -53,6 +53,8 @@ import { MyFingerprintModule } from './my-fingerprint/my-fingerprint.module';
 import { AuditModule } from './audit/audit.module';
 import { PermissionModule } from './permission/permission.module';
 import { ClientsModule } from './clients/clients.module';
+import { ThankYousModule } from './thank-yous/thank-yous.module';
+import { ContactsModule } from './contacts/contacts.module';
 
 @Module({
   imports: [
@@ -135,6 +137,8 @@ import { ClientsModule } from './clients/clients.module';
     MyFingerprintModule,
     PermissionModule,
     ClientsModule,
+    ThankYousModule,
+    ContactsModule,
   ],
   controllers: [AppController, HealthController, SkillListController],
   providers: [

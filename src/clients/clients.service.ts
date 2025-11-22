@@ -28,7 +28,9 @@ export class ClientsService {
       let user = await this.prisma.user.findFirst({
         where: { email: createClientDto.email },
       });
+      let emailType: 'addToOrg' | 'newUser' = 'addToOrg';
       if (!user) {
+        emailType = 'newUser';
         console.log('adding user', createClientDto.email);
         user = await this.user.createUser(
           {
@@ -40,31 +42,19 @@ export class ClientsService {
           },
           true,
         );
-
-        await this.mail.sendWelcomeOrgEmail({
-          to: createClientDto.email,
-          context: {
-            firstName: createClientDto.firstName || '',
-            orgName: org.name,
-          },
-        });
-      } else {
-        await this.mail.sendOrgUpgradedEmail({
-          to: createClientDto.email,
-          context: {
-            firstName: createClientDto.firstName || '',
-            orgName: org.name,
-          },
-        });
       }
 
       console.log(user);
 
-      const newOrgUser = await this.subscriptions.createOrgManagedSubscription({
-        userID: user.id,
-        orgID: createClientDto.orgID,
-      });
+      const newOrgUser = await this.subscriptions.createOrgManagedSubscription(
+        {
+          userID: user.id,
+          orgID: createClientDto.orgID,
+        },
+        emailType,
+      );
       console.log(newOrgUser);
+      return newOrgUser;
     } catch (err) {
       console.log(err);
     }

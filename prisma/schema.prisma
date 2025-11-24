@@ -66,6 +66,7 @@ model User {
   userType             String              @default("user")
   passwordRestRequired Boolean             @default(false)
   contacts             Contact[]
+  LoginToken           LoginToken[]
 
   @@index([email, inviteCode, stripeCustomerID])
 }
@@ -143,6 +144,14 @@ model ResetToken {
   user      User     @relation(fields: [email], references: [email])
 
   @@id([token, email])
+}
+
+model LoginToken {
+  token     String   @id
+  expiresAt DateTime
+  email     String
+  type      String
+  user      User     @relation(fields: [email], references: [email])
 }
 
 model VerifyToken {

@@ -176,6 +176,8 @@ export class AuthService {
 
     const accessToken = this.jwtService.sign(payload);
 
+    console.log('new access token', accessToken);
+
     await this.auditService.logEvent(AUDIT_EVENT.LOGIN_SUCCESS, id, ipAddress);
 
     return {

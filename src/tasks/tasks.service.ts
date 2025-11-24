@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { CronJob } from 'cron';
 import { AchievementService } from 'src/achievement/achievement.service';
+import { LoginTokenService } from 'src/login-token/login-token.service';
 import { MailService } from 'src/mail/mail.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { getNextPreferredSendTime } from 'src/utils/nestFridayAt9UTC';
@@ -18,6 +19,7 @@ export class TasksService {
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
     private readonly achService: AchievementService,
+    private readonly loginTokenService: LoginTokenService,
   ) {}
 
   createCronJob(
@@ -236,11 +238,17 @@ export class TasksService {
         user.id,
         user.timezone,
       );
+      const loginToken = await this.loginTokenService.createLoginToken(
+        user.email,
+        'check-in',
+      );
+
       await this.mailService.sendWeeklyReminderEmail({
         to: user.email,
         context: {
           firstName: user.firstName,
           streakCount,
+          loginToken: loginToken.rawToken,
         },
       });
       const nextSendAt = getNextPreferredSendTime(

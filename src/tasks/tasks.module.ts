@@ -5,6 +5,7 @@ import { TasksController } from './tasks.controller';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { MailModule } from 'src/mail/mail.module';
 import { AchievementModule } from 'src/achievement/achievement.module';
+import { LoginTokenModule } from 'src/login-token/login-token.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { AchievementModule } from 'src/achievement/achievement.module';
     PrismaModule,
     MailModule,
     AchievementModule,
+    LoginTokenModule,
   ],
   controllers: [TasksController],
   providers: [TasksService],

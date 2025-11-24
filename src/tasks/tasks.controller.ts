@@ -29,12 +29,6 @@ export class TasksController {
   }
   // ─── Interval & Timeout ────────────────────────────────────────────────────
 
-  /**  Runs every 10 seconds  */
-  //   @Interval(10_000)
-  //   handleInterval() {
-  //     this.logger.debug('Called every 10 seconds');
-  //   }
-
   /**  Runs once, 20 seconds after app start  */
   //   @Timeout(20_000)
   //   handleTimeout() {

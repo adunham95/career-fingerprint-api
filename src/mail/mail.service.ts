@@ -167,7 +167,7 @@ export class MailService {
       },
     });
   }
-   
+
   async addContactToMailTrap(userData: {
     email: string;
     lastName: string;

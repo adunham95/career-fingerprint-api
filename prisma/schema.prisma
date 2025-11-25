@@ -578,3 +578,12 @@ model Contact {
 
   @@index([userID, email])
 }
+
+model GoalSkill {
+  id          String   @id @default(uuid())
+  name        String
+  description String
+  category    String
+  keywords    String[]
+  actions     String[]
+}

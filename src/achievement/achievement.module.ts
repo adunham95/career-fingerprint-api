@@ -3,11 +3,16 @@ import { AchievementService } from './achievement.service';
 import { AchievementController } from './achievement.controller';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { PdfModule } from 'src/pdf/pdf.module';
+import { BullModule } from '@nestjs/bull';
 
 @Module({
   controllers: [AchievementController],
   providers: [AchievementService],
-  imports: [PrismaModule, PdfModule],
+  imports: [
+    PrismaModule,
+    PdfModule,
+    BullModule.registerQueue({ name: 'goal' }),
+  ],
   exports: [AchievementService],
 })
 export class AchievementModule {}

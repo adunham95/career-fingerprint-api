@@ -56,6 +56,7 @@ import { ClientsModule } from './clients/clients.module';
 import { ThankYousModule } from './thank-yous/thank-yous.module';
 import { ContactsModule } from './contacts/contacts.module';
 import { LoginTokenModule } from './login-token/login-token.module';
+import { GoalModule } from './goal/goal.module';
 
 @Module({
   imports: [
@@ -141,6 +142,7 @@ import { LoginTokenModule } from './login-token/login-token.module';
     ThankYousModule,
     ContactsModule,
     LoginTokenModule,
+    GoalModule,
   ],
   controllers: [AppController, HealthController, SkillListController],
   providers: [

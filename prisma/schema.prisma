@@ -67,6 +67,7 @@ model User {
   passwordRestRequired Boolean             @default(false)
   contacts             Contact[]
   LoginToken           LoginToken[]
+  goals                Goal[]
 
   @@index([email, inviteCode, stripeCustomerID])
 }
@@ -311,6 +312,7 @@ model Achievement {
   education      Education?       @relation(fields: [educationID], references: [id])
   highlights     Highlight[]      @relation("highlightAchievements")
   tags           AchievementTag[] @relation("achievementTags")
+  goals          Goal[]           @relation("linkedGoalAchievement")
 
   @@index([userID])
 }
@@ -586,4 +588,22 @@ model GoalSkill {
   category    String
   keywords    String[]
   actions     String[]
+}
+
+model Goal {
+  id                       String        @id @default(uuid())
+  createdAt                DateTime      @default(now())
+  updatedAt                DateTime      @default(now()) @updatedAt
+  name                     String
+  userID                   Int
+  user                     User          @relation(references: [id], fields: [userID])
+  keywords                 String[]
+  actions                  String[]
+  targetCount              Int           @default(5) //Total points needed to be complete
+  completedAt              DateTime?
+  lastProgressCalculatedAt DateTime?
+  status                   String        @default("active")
+  progress                 Float           @default(0) //Percentage
+  currentPoints            Float         @default(0) // The current points set
+  linkedAchievements       Achievement[] @relation("linkedGoalAchievement")
 }

@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "public"."Goal" ALTER COLUMN "progress" SET DEFAULT 0,
+ALTER COLUMN "progress" SET DATA TYPE DOUBLE PRECISION;

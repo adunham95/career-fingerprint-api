@@ -1,8 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
   IsArray,
-  IsBoolean,
   IsBooleanString,
+  IsInt,
   IsNumber,
   IsOptional,
   IsString,
@@ -31,12 +32,14 @@ export class CreateGoalDto {
 
 export class GoalQueryDto {
   @IsOptional()
-  @IsNumber()
+  @Type(() => Number)
+  @IsInt()
   @Min(1)
   page?: number;
 
   @IsOptional()
-  @IsNumber()
+  @Type(() => Number)
+  @IsInt()
   @Min(1)
   limit?: number;
 

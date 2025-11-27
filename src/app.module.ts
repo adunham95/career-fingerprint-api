@@ -57,6 +57,7 @@ import { ThankYousModule } from './thank-yous/thank-yous.module';
 import { ContactsModule } from './contacts/contacts.module';
 import { LoginTokenModule } from './login-token/login-token.module';
 import { GoalModule } from './goal/goal.module';
+import { SseModule } from './sse/sse.module';
 
 @Module({
   imports: [
@@ -143,6 +144,7 @@ import { GoalModule } from './goal/goal.module';
     ContactsModule,
     LoginTokenModule,
     GoalModule,
+    SseModule,
   ],
   controllers: [AppController, HealthController, SkillListController],
   providers: [

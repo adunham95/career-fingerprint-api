@@ -150,4 +150,12 @@ export class MailService {
       },
     });
   }
+
+  async addContactToMailTrap(userData: {
+    email: string;
+    lastName: string;
+    firstName: string;
+  }) {
+    await this.mailQueue.add('addMailTrapContact', userData);
+  }
 }

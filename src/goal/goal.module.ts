@@ -3,11 +3,15 @@ import { GoalService } from './goal.service';
 import { GoalController } from './goal.controller';
 import { BullModule } from '@nestjs/bull';
 import { GoalProcessor } from './goal.processor';
+import { MailModule } from 'src/mail/mail.module';
+import { SseModule } from 'src/sse/sse.module';
 
 @Module({
   controllers: [GoalController],
   providers: [GoalService, GoalProcessor],
   imports: [
+    MailModule,
+    SseModule,
     BullModule.registerQueue({
       name: 'goal',
       defaultJobOptions: {

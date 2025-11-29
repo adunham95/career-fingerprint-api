@@ -48,6 +48,7 @@ export class GoalProcessor {
         }
 
         console.log('progress', {
+          goalID: goal.id,
           progress,
           totalPoints,
           newPoints,
@@ -69,8 +70,8 @@ export class GoalProcessor {
           },
         });
 
-        if (progress >= goal.targetCount && !goal.completedAt) {
-          this.goalService.completeGoal(goal.id);
+        if (progress >= 1) {
+          await this.goalService.completeGoal(goal.id);
         }
       }
     }

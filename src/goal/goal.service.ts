@@ -4,16 +4,16 @@ import { UpdateGoalDto } from './dto/update-goal.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CacheService } from 'src/cache/cache.service';
 import { Achievement, Goal, Prisma } from '@prisma/client';
-
-type GoalWithProgress = Goal & {
-  progress?: number;
-};
+import { SseService } from 'src/sse/sse.service';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class GoalService {
   constructor(
     private prisma: PrismaService,
     private cache: CacheService,
+    private sse: SseService,
+    private mailService: MailService,
   ) {}
   create(createGoalDto: CreateGoalDto) {
     return this.prisma.goal.create({
@@ -155,5 +155,43 @@ export class GoalService {
     return score;
   }
 
-  completeGoal(goalID: string) {}
+  async completeGoal(goalID: string) {
+    console.log('goal complete');
+    const goal = await this.prisma.goal.findFirst({
+      where: { id: goalID },
+      include: {
+        user: true,
+        linkedAchievements: {
+          orderBy: { createdAt: 'desc' },
+          take: 5,
+        },
+      },
+    });
+
+    if (goal?.userID) {
+      this.sse.emitToUser(goal.userID, {
+        type: 'success',
+        message: `You Completed Your Goal: ${goal.name}`,
+      });
+    }
+    if (goal?.user) {
+      await this.mailService.sendGoalComplete({
+        to: goal.user.email,
+        context: {
+          firstName: goal.user.firstName,
+          goalName: goal.name,
+          recentAchievements: goal.linkedAchievements
+            .filter((a) => a.myContribution !== null)
+            .map((a) => {
+              return a.myContribution || '';
+            }),
+        },
+      });
+    }
+
+    return this.prisma.goal.update({
+      where: { id: goalID },
+      data: { status: 'complete', completedAt: new Date(), progress: 1 },
+    });
+  }
 }

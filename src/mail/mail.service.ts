@@ -150,4 +150,21 @@ export class MailService {
       },
     });
   }
+
+  async sendGoalComplete(params: {
+    to: string;
+    context: {
+      goalName: string;
+      firstName: string;
+      recentAchievements: string[] | null;
+    };
+  }) {
+    console.log('send coal complete email');
+    await this.mailQueue.add('goalComplete', {
+      to: [params.to],
+      context: {
+        ...params.context,
+      },
+    });
+  }
 }

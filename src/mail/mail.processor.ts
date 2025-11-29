@@ -389,4 +389,39 @@ export class MailProcessor {
       throw error;
     }
   }
+
+  @Process('goalComplete')
+  async goalComplete(
+    job: Job<{
+      to: string[];
+      context: {
+        goalName: string;
+        firstName: string;
+        recentAchievements: string[] | null;
+      };
+    }>,
+  ) {
+    const { to, context } = job.data;
+
+    const template = 'goal-complete';
+    const subject = 'You Completed Your Goal!';
+
+    console.log(`📧 Sending email to ${to.join(',')}`);
+
+    console.log('data', job.data);
+
+    try {
+      await this.mailerService.sendMail({
+        sender: process.env.SMTP_FROM_EMAIL,
+        to,
+        template,
+        subject,
+        context,
+      });
+      console.log(`✅ Email sent to ${to.join(',')}`);
+    } catch (error) {
+      console.log(`❌ Email not sent`, error);
+      throw error;
+    }
+  }
 }

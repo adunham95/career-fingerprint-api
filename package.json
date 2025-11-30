@@ -20,7 +20,8 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "sentry:sourcemaps": "sentry-cli sourcemaps inject --org career-fingerprint --project backend-api ./dist && sentry-cli sourcemaps upload --org career-fingerprint --project backend-api ./dist",
-    "seed:plans": "ts-node prisma/plans.seed.ts"
+    "seed:plans": "ts-node prisma/plans.seed.ts",
+    "seed:skills": "ts-node prisma/goalSkills.seed.ts"
   },
   "dependencies": {
     "@keyv/redis": "^5.1.3",

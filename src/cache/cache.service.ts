@@ -30,9 +30,11 @@ export class CacheService {
       return cached;
     }
 
+    const ttl = process.env.NODE_ENV === 'prod' ? ttlSeconds : 10;
+
     const value = await fetchFn();
     if (value !== undefined && value !== null) {
-      await this.set(key, value, ttlSeconds);
+      await this.set(key, value, ttl);
     }
     return value;
   }

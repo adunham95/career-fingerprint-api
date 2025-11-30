@@ -8,6 +8,8 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { CacheService } from 'src/cache/cache.service';
 import { DateTime } from 'luxon';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
 
 @Injectable()
 export class AchievementService {
@@ -15,14 +17,15 @@ export class AchievementService {
   constructor(
     private prisma: PrismaService,
     private cache: CacheService,
+    @InjectQueue('goal') private goalQueue: Queue,
   ) {}
 
-  create(createAchievementDto: CreateAchievementDto) {
+  async create(createAchievementDto: CreateAchievementDto) {
     const tags = createAchievementDto?.achievementTags || [];
 
     delete createAchievementDto.achievementTags;
 
-    return this.prisma.achievement.create({
+    const newAchievement = await this.prisma.achievement.create({
       data: {
         ...createAchievementDto,
         tags: {
@@ -44,6 +47,13 @@ export class AchievementService {
         },
       },
     });
+
+    await this.goalQueue.add('recalculateGoalProgress', {
+      userId: createAchievementDto.userID,
+      achievementId: newAchievement.id,
+    });
+
+    return;
   }
 
   findAll() {

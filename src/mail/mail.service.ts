@@ -70,13 +70,13 @@ export class MailService {
 
   async sendWeeklyReminderEmail(params: {
     to: string;
-    context: { firstName: string; streakCount?: number };
+    context: { firstName: string; streakCount?: number; loginToken: string };
   }) {
-    await this.mailQueue.add('weeklyEmail', {
+    return this.mailQueue.add('weeklyEmail', {
       to: params.to,
       context: {
         ...params.context,
-        weeklyLink: `${process.env.FRONT_END_URL}/dashboard/weekly`,
+        weeklyLink: `${process.env.FRONT_END_URL}/login/${params.context.loginToken}`,
       },
     });
   }
@@ -149,5 +149,30 @@ export class MailService {
         ...params.context,
       },
     });
+  }
+
+  async sendGoalComplete(params: {
+    to: string;
+    context: {
+      goalName: string;
+      firstName: string;
+      recentAchievements: string[] | null;
+    };
+  }) {
+    console.log('send coal complete email');
+    await this.mailQueue.add('goalComplete', {
+      to: [params.to],
+      context: {
+        ...params.context,
+      },
+    });
+  }
+   
+  async addContactToMailTrap(userData: {
+    email: string;
+    lastName: string;
+    firstName: string;
+  }) {
+    await this.mailQueue.add('addMailTrapContact', userData);
   }
 }

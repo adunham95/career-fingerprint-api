@@ -25,6 +25,52 @@ export class MailProcessor {
     console.log(`✅ Email sent to ${to}`);
   }
 
+  @Process('addMailTrapContact')
+  async addMailtrapContact(
+    job: Job<{
+      email: string;
+      lastName: string;
+      firstName: string;
+    }>,
+  ) {
+    console.log(`Adding User To Mailtrap Contacts`);
+    const { email, firstName, lastName } = job.data;
+
+    if (process.env.MAILTRAP_ACCOUNT_ID && process.env.MAILTRAP_API_KEY) {
+      console.log('Sending Contact to Mailtrap');
+      const url = `https://mailtrap.io/api/accounts/${process.env.MAILTRAP_ACCOUNT_ID}/contacts`;
+      const options = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          'Api-Token': process.env.MAILTRAP_API_KEY,
+        },
+        body: JSON.stringify({
+          contact: {
+            email: email,
+            fields: {
+              first_name: firstName,
+              last_name: lastName,
+            },
+            list_ids: [process.env.MAILTRAP_NEW_USER_LIST_ID],
+          },
+        }),
+      };
+
+      const res = await fetch(url, options);
+      if (!res.ok) {
+        throw new Error(`Failed to create mailtrap user: ${res.statusText}`);
+      }
+      const resData = await res.json();
+
+      console.log({ resData });
+      console.log(`✅ User Added to Mailtrap`);
+    } else {
+      console.log("Missing ENV's");
+    }
+  }
+
   @Process('sendECardNotification')
   async handleSendECardNotification(
     job: Job<{
@@ -378,6 +424,41 @@ export class MailProcessor {
         from: `"${context.senderName} (via Career Fingerprint)" <${process.env.SMTP_FROM_EMAIL}>`,
         sender: process.env.SMTP_FROM_EMAIL,
         replyTo: userEmail,
+        to,
+        template,
+        subject,
+        context,
+      });
+      console.log(`✅ Email sent to ${to.join(',')}`);
+    } catch (error) {
+      console.log(`❌ Email not sent`, error);
+      throw error;
+    }
+  }
+
+  @Process('goalComplete')
+  async goalComplete(
+    job: Job<{
+      to: string[];
+      context: {
+        goalName: string;
+        firstName: string;
+        recentAchievements: string[] | null;
+      };
+    }>,
+  ) {
+    const { to, context } = job.data;
+
+    const template = 'goal-complete';
+    const subject = 'You Completed Your Goal!';
+
+    console.log(`📧 Sending email to ${to.join(',')}`);
+
+    console.log('data', job.data);
+
+    try {
+      await this.mailerService.sendMail({
+        sender: process.env.SMTP_FROM_EMAIL,
         to,
         template,
         subject,

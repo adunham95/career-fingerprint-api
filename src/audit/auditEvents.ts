@@ -1,6 +1,8 @@
 export enum AUDIT_EVENT {
   LOGIN_SUCCESS = 'login_success',
+  LOGIN_SUCCESS_TOKEN = 'login_success_w_token',
   LOGIN_FAILED = 'login_failed',
+  LOGIN_FAILED_TOKEN = 'login_failed_w_token',
   LOGOUT = 'logout',
   PASSWORD_RESET = 'password_reset',
   PASSWORD_RESET_REQUESTED = 'password_reset_requested',

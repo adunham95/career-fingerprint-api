@@ -94,6 +94,8 @@ export class UsersService {
 
     await this.stripeService.newStripeCustomer({ user });
 
+    await this.mailService.addContactToMailTrap(user);
+
     if (!doNotSendWelcomeEmail) {
       await this.mailService.sendWelcomeEmail({
         to: user.email,

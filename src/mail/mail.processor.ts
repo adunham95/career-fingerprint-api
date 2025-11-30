@@ -25,6 +25,52 @@ export class MailProcessor {
     console.log(`✅ Email sent to ${to}`);
   }
 
+  @Process('addMailTrapContact')
+  async addMailtrapContact(
+    job: Job<{
+      email: string;
+      lastName: string;
+      firstName: string;
+    }>,
+  ) {
+    console.log(`Adding User To Mailtrap Contacts`);
+    const { email, firstName, lastName } = job.data;
+
+    if (process.env.MAILTRAP_ACCOUNT_ID && process.env.MAILTRAP_API_KEY) {
+      console.log('Sending Contact to Mailtrap');
+      const url = `https://mailtrap.io/api/accounts/${process.env.MAILTRAP_ACCOUNT_ID}/contacts`;
+      const options = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          'Api-Token': process.env.MAILTRAP_API_KEY,
+        },
+        body: JSON.stringify({
+          contact: {
+            email: email,
+            fields: {
+              first_name: firstName,
+              last_name: lastName,
+            },
+            list_ids: [process.env.MAILTRAP_NEW_USER_LIST_ID],
+          },
+        }),
+      };
+
+      const res = await fetch(url, options);
+      if (!res.ok) {
+        throw new Error(`Failed to create mailtrap user: ${res.statusText}`);
+      }
+      const resData = await res.json();
+
+      console.log({ resData });
+      console.log(`✅ User Added to Mailtrap`);
+    } else {
+      console.log("Missing ENV's");
+    }
+  }
+
   @Process('sendECardNotification')
   async handleSendECardNotification(
     job: Job<{

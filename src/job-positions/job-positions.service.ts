@@ -7,6 +7,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class JobPositionsService {
   constructor(private prisma: PrismaService) {}
   create(createJobPositionDto: CreateJobPositionDto) {
+    console.log({ createJobPositionDto });
     if (createJobPositionDto.startDate) {
       createJobPositionDto.startDate = new Date(createJobPositionDto.startDate);
     }

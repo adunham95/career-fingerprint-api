@@ -18,6 +18,9 @@ import { UpdateJobPositionDto } from './dto/update-job-position.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { Request } from 'express';
+import { RequirePermission } from 'src/permission/permission.decorator';
+import { OrgMemberGuard } from 'src/org/org-admin.guard';
+import { PermissionGuard } from 'src/permission/permission.guard';
 
 @Controller('job-positions')
 export class JobPositionsController {
@@ -34,6 +37,18 @@ export class JobPositionsController {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
     }
     createJobPositionDto.userID = req.user.id;
+    return this.jobPositionsService.create(createJobPositionDto);
+  }
+
+  @Post('client/:userID')
+  @RequirePermission('career:edit')
+  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
+  createForClient(
+    @Body() createJobPositionDto: CreateJobPositionDto,
+    @Param('userID') userID: string,
+  ) {
+    createJobPositionDto.userID = +userID;
+    console.log({ createJobPositionDto });
     return this.jobPositionsService.create(createJobPositionDto);
   }
 
@@ -96,8 +111,25 @@ export class JobPositionsController {
     return this.jobPositionsService.update(id, updateJobPositionDto);
   }
 
+  @Patch(':id/client/:userID')
+  @RequirePermission('career:edit')
+  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
+  updateClient(
+    @Param('id') id: string,
+    @Body() updateJobPositionDto: UpdateJobPositionDto,
+  ) {
+    return this.jobPositionsService.update(id, updateJobPositionDto);
+  }
+
   @Delete(':id')
   remove(@Param('id') id: string) {
+    return this.jobPositionsService.remove(id);
+  }
+
+  @Delete(':id/client/:userID')
+  @RequirePermission('career:edit')
+  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
+  removeUser(@Param('id') id: string) {
     return this.jobPositionsService.remove(id);
   }
 

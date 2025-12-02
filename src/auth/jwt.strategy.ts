@@ -20,6 +20,12 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     super({
       jwtFromRequest: (req: Request) => {
         this.logger.verbose('request cookies', req.cookies);
+
+        if (req.cookies?.orgAccess) {
+          this.logger.debug('Has orgAccess cookie');
+          return req.cookies.orgAccess as string;
+        }
+
         if (req?.cookies?.accessToken) {
           this.logger.debug('Has Access Token Cookie');
           return req.cookies.accessToken as string;
@@ -37,7 +43,14 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
   }
 
-  async validate(payload: { userID: number; roles: string[] }) {
+  async validate(payload: {
+    userID: number;
+    roles: string[];
+    mode: 'org' | 'user';
+    orgId?: string;
+    permissions: string[];
+    email: string;
+  }) {
     this.logger.debug('validate', payload);
     const user = await this.cache.wrap(`currentUser:${payload.userID}`, () => {
       return this.usersService.user(
@@ -66,14 +79,20 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
 
     const planLevel = subscription?.plan?.level ?? 0; // 0 = Free
 
-    const permissionList = this.permissionService.getPermissionsForRoles(
-      payload.roles,
-    );
+    const permissionList =
+      payload.permissions ??
+      this.permissionService.getPermissionsForRoles(payload.roles ?? []);
 
     this.logger.debug('current user details', user);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...currentUser } = user;
 
-    return { ...currentUser, planLevel, subscription, permissionList };
+    return {
+      ...payload,
+      ...currentUser,
+      planLevel,
+      subscription,
+      permissionList,
+    };
   }
 }

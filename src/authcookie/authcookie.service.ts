@@ -22,7 +22,28 @@ export class AuthCookieService {
     }
   }
 
+  setAuthOrgCookie(response: Response, accessToken: string) {
+    response.cookie('orgAccess', accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+      domain: process.env.COOKIE_DOMAIN,
+    });
+  }
+
+  clearAuthOrgCookie(response: Response) {
+    response.clearCookie('orgAccess', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      domain: process.env.COOKIE_DOMAIN,
+      maxAge: -1,
+    });
+  }
+
   clearAuthCookie(response: Response) {
+    this.clearAuthOrgCookie(response);
     response.clearCookie('accessToken', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

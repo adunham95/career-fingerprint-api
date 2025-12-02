@@ -18,6 +18,9 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { Request } from 'express';
 import { PlatformAdminGuard } from 'src/auth/platform-admin.guard';
+import { OrgMemberGuard } from 'src/org/org-admin.guard';
+import { PermissionGuard } from 'src/permission/permission.guard';
+import { RequirePermission } from 'src/permission/permission.decorator';
 
 @Controller('users')
 export class UsersController {
@@ -66,6 +69,12 @@ export class UsersController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
+    return this.usersService.user({ id: +id });
+  }
+  @Get('client/:id')
+  @RequirePermission('client:view')
+  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
+  findClient(@Param('id') id: string) {
     return this.usersService.user({ id: +id });
   }
 

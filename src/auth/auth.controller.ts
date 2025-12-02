@@ -83,7 +83,7 @@ export class AuthController {
       secure: process.env.NODE_ENV === 'production',
       cookieDomain: process.env.COOKIE_DOMAIN,
     });
-    this.authCookieService.setAuthCookie(response, accessToken);
+    this.authCookieService.setAuthOrgCookie(response, accessToken);
     return { accessToken, user };
   }
 

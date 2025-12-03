@@ -93,7 +93,7 @@ export class JobPositionsService {
   }
 
   remove(id: string) {
-    return this.prisma.jobPosition.delete({ where: { id } });
+    return this.prisma.jobPosition.update({ where: { id }, data: { status } });
   }
 
   removeBulletPoint(id: string) {

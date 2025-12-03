@@ -21,10 +21,15 @@ import { Request } from 'express';
 import { RequirePermission } from 'src/permission/permission.decorator';
 import { OrgMemberGuard } from 'src/org/org-admin.guard';
 import { PermissionGuard } from 'src/permission/permission.guard';
+import { AuditService } from 'src/audit/audit.service';
+import { AUDIT_EVENT } from 'src/audit/auditEvents';
 
 @Controller('job-positions')
 export class JobPositionsController {
-  constructor(private readonly jobPositionsService: JobPositionsService) {}
+  constructor(
+    private readonly jobPositionsService: JobPositionsService,
+    private auditService: AuditService,
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard)
@@ -43,28 +48,21 @@ export class JobPositionsController {
   @Post('client/:userID')
   @RequirePermission('career:edit')
   @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
-  createForClient(
+  async createForClient(
     @Body() createJobPositionDto: CreateJobPositionDto,
     @Param('userID') userID: string,
+    @Req() req: Request,
   ) {
+    await this.auditService.logEvent(
+      AUDIT_EVENT.ADMIN_EDITED_DATA,
+      undefined,
+      undefined,
+      { admin: req.user?.id, client: userID, type: 'addedJobPosition' },
+    );
     createJobPositionDto.userID = +userID;
     console.log({ createJobPositionDto });
     return this.jobPositionsService.create(createJobPositionDto);
   }
-
-  // @Post(':id/bullet-point')
-  // @UseGuards(JwtAuthGuard)
-  // createBulletPoint(
-  //   @Body() createBulletPointDto: CreateBulletPointDto,
-  //   @Req() req: Request,
-  // ) {
-  //   if (!req.user) {
-  //     throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
-  //   }
-  //   createBulletPointDto.userID = req.user.id;
-  //   createBulletPointDto.jobPositionID = req.params.id;
-  //   return this.jobPositionsService.createBulletPoint(createBulletPointDto);
-  // }
 
   @Post('application')
   @UseGuards(JwtAuthGuard)
@@ -114,11 +112,24 @@ export class JobPositionsController {
   @Patch(':id/client/:userID')
   @RequirePermission('career:edit')
   @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
-  updateClient(
+  async updateClient(
     @Param('id') id: string,
+    @Param('userID') userID: string,
     @Body() updateJobPositionDto: UpdateJobPositionDto,
+    @Req() req: Request,
   ) {
-    return this.jobPositionsService.update(id, updateJobPositionDto);
+    await this.auditService.logEvent(
+      AUDIT_EVENT.ADMIN_EDITED_DATA,
+      undefined,
+      undefined,
+      {
+        admin: req.user?.id,
+        client: userID,
+        type: 'updatedJobPosition',
+        id: id,
+      },
+    );
+    return this.jobPositionsService.update(userID, updateJobPositionDto);
   }
 
   @Delete(':id')
@@ -129,7 +140,22 @@ export class JobPositionsController {
   @Delete(':id/client/:userID')
   @RequirePermission('career:edit')
   @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
-  removeUser(@Param('id') id: string) {
+  async removeUser(
+    @Param('id') id: string,
+    @Param('userID') userID: string,
+    @Req() req: Request,
+  ) {
+    await this.auditService.logEvent(
+      AUDIT_EVENT.ADMIN_EDITED_DATA,
+      undefined,
+      undefined,
+      {
+        admin: req.user?.id,
+        client: userID,
+        type: 'deleteJobPosition',
+        id: id,
+      },
+    );
     return this.jobPositionsService.remove(id);
   }
 

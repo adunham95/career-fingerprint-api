@@ -267,6 +267,9 @@ model JobPosition {
   projects        Project[]
   jobOptions      ResumeObject[]
   meetings        Meeting[]
+  status          String?        @default("active")
+  archivedAt      DateTime?
+  archivedById    Int?
 }
 
 model BulletPoint {
@@ -344,6 +347,9 @@ model Education {
   achievements     Achievement[]
   meetings         Meeting[]
   eduResumeObjects ResumeObject[]
+  status           String?        @default("active")
+  archivedAt       DateTime?
+  archivedById     Int?
 
   @@index([userID])
 }

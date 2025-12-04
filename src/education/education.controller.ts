@@ -20,10 +20,15 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RequirePermission } from 'src/permission/permission.decorator';
 import { OrgMemberGuard } from 'src/org/org-admin.guard';
 import { PermissionGuard } from 'src/permission/permission.guard';
+import { AuditService } from 'src/audit/audit.service';
+import { AUDIT_EVENT } from 'src/audit/auditEvents';
 
 @Controller('education')
 export class EducationController {
-  constructor(private readonly educationService: EducationService) {}
+  constructor(
+    private readonly educationService: EducationService,
+    private auditService: AuditService,
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard)
@@ -38,11 +43,17 @@ export class EducationController {
   @Post('client/:userID')
   @RequirePermission('career:edit')
   @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
-  createClient(
+  async createClient(
     @Body() createEducationDto: CreateEducationDto,
     @Req() req: Request,
     @Param('userID') userID: string,
   ) {
+    await this.auditService.logEvent(
+      AUDIT_EVENT.ADMIN_EDITED_DATA,
+      undefined,
+      undefined,
+      { admin: req.user?.id, client: userID, type: 'addedEducation' },
+    );
     createEducationDto.userID = +userID;
     return this.educationService.create(createEducationDto);
   }
@@ -82,23 +93,41 @@ export class EducationController {
   @Patch(':id/client/:userID')
   @RequirePermission('career:edit')
   @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
-  updateClient(
+  async updateClient(
     @Param('id') id: string,
     @Body() updateEducationDto: UpdateEducationDto,
+    @Req() req: Request,
+    @Param('userID') userID: string,
   ) {
+    await this.auditService.logEvent(
+      AUDIT_EVENT.ADMIN_EDITED_DATA,
+      undefined,
+      undefined,
+      { admin: req.user?.id, client: userID, type: 'updatedEducation' },
+    );
     return this.educationService.update(id, updateEducationDto);
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
-  remove(@Param('id') id: string) {
-    return this.educationService.remove(id);
+  remove(@Param('id') id: string, @Req() req: Request) {
+    return this.educationService.remove(id, req.user?.id);
   }
 
   @Delete(':id/client/:userID')
   @RequirePermission('career:edit')
   @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
-  removeClientObject(@Param('id') id: string) {
-    return this.educationService.remove(id);
+  async removeClientObject(
+    @Param('id') id: string,
+    @Req() req: Request,
+    @Param('userID') userID: string,
+  ) {
+    await this.auditService.logEvent(
+      AUDIT_EVENT.ADMIN_EDITED_DATA,
+      undefined,
+      undefined,
+      { admin: req.user?.id, client: userID, type: 'updatedEducation' },
+    );
+    return this.educationService.remove(id, req.user?.id);
   }
 }

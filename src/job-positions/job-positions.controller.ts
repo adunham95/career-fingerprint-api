@@ -133,8 +133,8 @@ export class JobPositionsController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.jobPositionsService.remove(id);
+  remove(@Param('id') id: string, @Req() req: Request) {
+    return this.jobPositionsService.remove(id, req.user?.id);
   }
 
   @Delete(':id/client/:userID')
@@ -156,7 +156,7 @@ export class JobPositionsController {
         id: id,
       },
     );
-    return this.jobPositionsService.remove(id);
+    return this.jobPositionsService.remove(id, req.user?.id);
   }
 
   @Delete('bullet-point/:id')

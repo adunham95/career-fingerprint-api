@@ -29,7 +29,7 @@ export class ResumeService {
     });
 
     const myJobs = await this.prisma.jobPosition.findMany({
-      where: { userID: createResumeDto.userID || 1 },
+      where: { userID: createResumeDto.userID || 1, status: 'active' },
       select: { description: true, id: true },
     });
 
@@ -45,7 +45,7 @@ export class ResumeService {
     }
 
     const myEducation = await this.prisma.education.findMany({
-      where: { userID: createResumeDto.userID },
+      where: { userID: createResumeDto.userID, status: 'active' },
       select: { description: true, id: true },
     });
 
@@ -206,7 +206,7 @@ export class ResumeService {
     if (jobPositionID) {
       type = 'job';
       const currentJob = await this.prisma.jobPosition.findFirst({
-        where: { id: jobPositionID },
+        where: { id: jobPositionID, status: 'active' },
       });
 
       if (!currentJob) {
@@ -216,7 +216,7 @@ export class ResumeService {
     } else if (educationID) {
       type = 'eduction';
       const currentEdu = await this.prisma.education.findFirst({
-        where: { id: educationID },
+        where: { id: educationID, status: 'active' },
       });
 
       if (!currentEdu) {

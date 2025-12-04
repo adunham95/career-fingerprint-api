@@ -134,6 +134,7 @@ export class ReportsService {
       }),
       this.prisma.jobPosition.findMany({
         where: {
+          status: 'active',
           user: {
             subscriptions: {
               some: {

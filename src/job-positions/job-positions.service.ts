@@ -56,7 +56,7 @@ export class JobPositionsService {
   ) {
     const { includeAchievements = true } = options ?? {};
     return this.prisma.jobPosition.findMany({
-      where: { userID },
+      where: { userID, status: 'active' },
       orderBy: { startDate: { sort: 'desc', nulls: 'last' } },
       include: {
         achievements: includeAchievements,
@@ -92,8 +92,15 @@ export class JobPositionsService {
     });
   }
 
-  remove(id: string) {
-    return this.prisma.jobPosition.update({ where: { id }, data: { status } });
+  remove(id: string, userID?: number) {
+    return this.prisma.jobPosition.update({
+      where: { id },
+      data: {
+        status: 'archived',
+        archivedAt: new Date(),
+        archivedById: userID,
+      },
+    });
   }
 
   removeBulletPoint(id: string) {

@@ -79,10 +79,6 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
 
     const planLevel = subscription?.plan?.level ?? 0; // 0 = Free
 
-    const permissionList = this.permissionService.getPermissionsForRoles(
-      payload.roles,
-    );
-
     const permissionList =
       payload.permissions ??
       this.permissionService.getPermissionsForRoles(payload.roles ?? []);

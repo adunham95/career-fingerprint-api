@@ -22,7 +22,7 @@ export class EducationService {
   findMyEducation(userID: number, options?: { includeAchievements: boolean }) {
     const { includeAchievements = true } = options ?? {};
     return this.prisma.education.findMany({
-      where: { userID },
+      where: { userID, status: 'active' },
       include: {
         achievements: includeAchievements,
       },
@@ -51,7 +51,14 @@ export class EducationService {
     });
   }
 
-  remove(id: string) {
-    return this.prisma.education.delete({ where: { id } });
+  remove(id: string, userID?: number) {
+    return this.prisma.education.update({
+      where: { id },
+      data: {
+        status: 'archived',
+        archivedAt: new Date(),
+        archivedById: userID,
+      },
+    });
   }
 }

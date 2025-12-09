@@ -108,10 +108,10 @@ export class RegisterController {
     });
     const org = await this.prisma.organization.findFirst({
       where: { id: body.orgID },
-      select: { seatCount: true },
+      select: { maxSeatCount: true },
     });
 
-    const maxUsers = org?.seatCount ?? 0; // fallback if not set
+    const maxUsers = org?.maxSeatCount ?? 0; // fallback if not set
     const userCount = rows.length - 1; // assuming first row is header
 
     if (currentUsers + userCount > maxUsers) {

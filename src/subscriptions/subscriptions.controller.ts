@@ -69,6 +69,16 @@ export class SubscriptionsController {
     return this.subscriptionsService.findUpgradePlan(req.user?.planLevel);
   }
 
+  @Get('plans/type/:id')
+  @UseGuards(JwtAuthGuard)
+  getPlansByType(@Req() req: Request, @Param('id') type: string) {
+    if (!req.user) {
+      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+    }
+    console.log('req.user', req.user.planLevel);
+    return this.subscriptionsService.findPlanByType(type);
+  }
+
   @Get('plans/:key')
   getPlanByKey(@Param('key') key: string) {
     return this.subscriptionsService.findPlanByID(key);

@@ -50,3 +50,20 @@ export class CreateStripeOrgSubscriptionDto {
 
   user: User;
 }
+
+export class CreateStripeCoachSubscriptionDto {
+  @ApiProperty()
+  @IsString()
+  planID: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
+  couponID: string;
+
+  @ApiProperty()
+  @IsString()
+  orgID: string;
+
+  user: User;
+}

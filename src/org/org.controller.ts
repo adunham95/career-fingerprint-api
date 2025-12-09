@@ -27,6 +27,7 @@ import { Request } from 'express';
 import { RequirePermission } from 'src/permission/permission.decorator';
 import { PermissionGuard } from 'src/permission/permission.guard';
 import { OrgMemberGuard } from './org-admin.guard';
+import { Cron, CronExpression } from '@nestjs/schedule';
 // import { UpdateOrgDto } from './dto/update-org.dto';
 // import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 // import { Request } from 'express';
@@ -196,8 +197,9 @@ export class OrgController {
     return this.orgService.xmlToSSOData(id, setSSOMetadata.xml);
   }
 
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.orgService.remove(+id);
-  // }
+  @Cron(CronExpression.EVERY_DAY_AT_3AM)
+  async runDailyReferralCredits() {
+    // this.logger.log('Running daily referral credit job...');
+    await this.orgService.updateOrgQuantity();
+  }
 }

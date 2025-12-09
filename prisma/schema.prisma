@@ -79,7 +79,9 @@ model Organization {
   name                 String
   domain               String?
   domainVerified       Boolean?            @default(false)
-  seatCount            Int                 @default(100)
+  maxSeatCount         Int                 @default(100) @map("seatCount")
+  maxAdminSeats        Int?                @default(1)
+  currentSeats         Int?                @default(0)
   stripeCustomerID     String?
   defaultPlanID        String?
   logoURL              String?
@@ -169,43 +171,52 @@ model Plan {
   id                   String         @id @default(uuid())
   key                  String         @unique
   level                Int?           @default(0)
+  type                 String         @default("user")
   name                 String
   description          String         @default("")
   featureList          String[]
   priceCents           Int? // e.g. 0 for Free, 1000 for $10
   priceCentsYear       Int? // e.g. 0 for Free, 1000 for $10
+  priceCentsSeats      Int?
   interval             String // 'month', 'year'
   features             String[] // Optional
+  maxSeats             Int?
+  maxAdminSeats        Int?           @default(1)
   metadata             Json?
   subscriptions        Subscription[]
   createdAt            DateTime       @default(now())
   updatedAt            DateTime       @updatedAt
   monthlyStripePriceID String?
   annualStripePriceID  String?
+  seatStripPriceID     String?
   hasOrgManagement     Boolean        @default(false)
+  hasMeteredSeats      Boolean        @default(false) // We calculate the number of seats for billing reasons
   userKey              String?
 
   @@index([key])
 }
 
 model Subscription {
-  id               String              @id @default(uuid())
-  userID           Int?
-  orgID            String?
-  planID           String
-  status           String              @default("trialing")
-  stripeSubId      String?
-  stripeSessionID  String?
-  trialEndsAt      DateTime?
-  currentPeriodEnd DateTime?
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
-  user             User?               @relation(fields: [userID], references: [id], onDelete: Cascade)
-  org              Organization?       @relation(fields: [orgID], references: [id], "orgSubscription")
-  plan             Plan                @relation(fields: [planID], references: [id])
-  events           SubscriptionEvent[]
-  managedByID      String?
-  managedBy        Organization?       @relation(references: [id], fields: [managedByID], "managedSubscriptions")
+  id                  String              @id @default(uuid())
+  userID              Int?
+  orgID               String?
+  planID              String
+  status              String              @default("trialing")
+  stripeSubId         String?
+  stripeSessionID     String?
+  trialEndsAt         DateTime?
+  currentPeriodStart  DateTime?
+  currentPeriodEnd    DateTime?
+  isMetered           Boolean             @default(false)
+  meterCyclePeakSeats Int                 @default(0)
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  user                User?               @relation(fields: [userID], references: [id], onDelete: Cascade)
+  org                 Organization?       @relation(fields: [orgID], references: [id], "orgSubscription")
+  plan                Plan                @relation(fields: [planID], references: [id])
+  events              SubscriptionEvent[]
+  managedByID         String?
+  managedBy           Organization?       @relation(references: [id], fields: [managedByID], "managedSubscriptions")
 
   @@index([planID, stripeSubId, stripeSessionID])
 }
@@ -609,7 +620,7 @@ model Goal {
   completedAt              DateTime?
   lastProgressCalculatedAt DateTime?
   status                   String        @default("active")
-  progress                 Float           @default(0) //Percentage
+  progress                 Float         @default(0) //Percentage
   currentPoints            Float         @default(0) // The current points set
   linkedAchievements       Achievement[] @relation("linkedGoalAchievement")
 }

@@ -58,7 +58,7 @@ export class SubscriptionsService {
       86400,
     );
 
-    if ((org?.seatCount || 0) <= currentUsersCount) {
+    if ((org?.maxSeatCount || 0) <= currentUsersCount) {
       throw Error('Max Seats Claimed');
     }
 
@@ -196,6 +196,29 @@ export class SubscriptionsService {
         annualStripePriceID: true,
         monthlyStripePriceID: true,
         priceCents: true,
+        name: true,
+        priceCentsYear: true,
+        description: true,
+        featureList: true,
+      },
+    });
+  }
+
+  async findPlanByType(planType: string) {
+    return this.prisma.plan.findMany({
+      where: {
+        type: planType,
+      },
+      orderBy: { priceCents: 'asc' },
+      select: {
+        id: true,
+        annualStripePriceID: true,
+        monthlyStripePriceID: true,
+        seatStripPriceID: true,
+        maxSeats: true,
+        maxAdminSeats: true,
+        priceCents: true,
+        priceCentsSeats: true,
         name: true,
         priceCentsYear: true,
         description: true,

@@ -58,7 +58,7 @@ projects:
           - type: web
             name: career-fingerprint-api-stage
             runtime: 'node'
-            plan: free
+            plan: starter
             branch: 'main'
             buildCommand: |
               yarn install

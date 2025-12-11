@@ -17,6 +17,7 @@ const plans = [
       'Schedule Jobs',
       'Track Job Applications',
     ],
+    type: 'user',
   },
   {
     key: 'pro-beta',
@@ -31,6 +32,7 @@ const plans = [
       'Meeting Prep',
       'Reminder Achievement Emails',
     ],
+    type: 'user',
   },
   {
     key: 'pro-edu',
@@ -45,6 +47,7 @@ const plans = [
       'Meeting Prep',
       'Reminder Achievement Emails',
     ],
+    type: 'user',
   },
   {
     key: 'pro',
@@ -59,6 +62,7 @@ const plans = [
       'Meeting Prep',
       'Reminder Achievement Emails',
     ],
+    type: 'user',
   },
   {
     key: 'organization',
@@ -69,6 +73,8 @@ const plans = [
     description:
       'For organizations to provide subscriptions to large organizations of people',
     featureList: ['People Management', 'Subscription Management'],
+    type: 'org',
+    maxAdminSeats: 100,
   },
   {
     key: 'org-premium',
@@ -80,6 +86,8 @@ const plans = [
       'For organizations to provide premium subscriptions to large organizations of peopled.',
     featureList: ['People Management', 'Subscription Management'],
     userKey: 'pro',
+    type: 'org',
+    maxAdminSeats: 100,
   },
   {
     key: 'org-basic',
@@ -91,6 +99,56 @@ const plans = [
       'For organizations to provide subscriptions to large organizations of peopled. ',
     featureList: ['People Management', 'Subscription Management'],
     userKey: 'free',
+    type: 'org',
+    maxAdminSeats: 100,
+  },
+  {
+    key: 'coach-starter',
+    level: 3,
+    name: 'Coach Starter',
+    description:
+      'Everything a solo coach needs to manage clients simply and professionally.',
+    priceCents: 1499,
+    priceCentsSeats: 600,
+    interval: 'Month',
+    featureList: ['People Management', 'Subscription Management'],
+    userKey: 'pro',
+    hasMeteredSeats: true,
+    type: 'coach',
+    maxAdminSeats: 1,
+    maxSeats: 20,
+  },
+  {
+    key: 'coach-growth',
+    level: 3,
+    name: 'Coach Growth',
+    priceCents: 4999,
+    priceCentsSeats: 500,
+    interval: 'Month',
+    description:
+      'Built for coaches scaling their practice with more clients and light team support.',
+    featureList: ['People Management', 'Subscription Management'],
+    userKey: 'pro',
+    type: 'coach',
+    hasMeteredSeats: true,
+    maxAdminSeats: 50,
+    maxSeats: 75,
+  },
+  {
+    key: 'coach-agency',
+    level: 3,
+    name: 'Coach Agency',
+    priceCents: 19999,
+    priceCentsSeats: 350,
+    interval: 'Month',
+    description:
+      'A full client-management platform for high-volume teams and agencies.',
+    featureList: ['People Management', 'Subscription Management'],
+    userKey: 'pro',
+    type: 'coach',
+    hasMeteredSeats: true,
+    maxAdminSeats: 100,
+    maxSeats: 250,
   },
 ];
 
@@ -107,9 +165,14 @@ async function main() {
         priceCents: plan.priceCents,
         interval: plan.interval,
         priceCentsYear: plan.priceCentsYear,
+        priceCentsSeats: plan.priceCentsSeats,
         description: plan.description,
         featureList: plan.featureList,
         userKey: plan.userKey,
+        hasMeteredSeats: plan.hasMeteredSeats,
+        type: plan.type,
+        maxAdminSeats: plan.maxAdminSeats,
+        maxSeats: plan.maxSeats,
       },
       create: plan,
     });

@@ -76,7 +76,7 @@ export class OrgService {
     const newOrg = await this.prisma.organization.create({
       data: {
         name: createOrgDto.orgName,
-        seatCount: roundUpToNext100(createOrgDto.orgSize) || 0,
+        maxSeatCount: roundUpToNext100(createOrgDto.orgSize) || 0,
         email: createOrgDto.orgEmail.toLowerCase(),
         logoURL: createOrgDto.orgLogo,
         defaultPlanID: plan?.id,
@@ -160,7 +160,7 @@ export class OrgService {
       );
     }
 
-    if ((org?.seatCount || 0) > currentUsers) {
+    if ((org?.maxSeatCount || 0) > currentUsers) {
       return { hasOpenSeats: true, org, plan };
     }
     return { hasOpenSeats: false, org: undefined, plan: undefined };
@@ -194,7 +194,7 @@ export class OrgService {
         this.prisma.user.count({
           where: {
             subscriptions: {
-              some: { managedByID: id },
+              some: { managedByID: id, status: 'org-managed' },
             },
           },
         }),
@@ -476,7 +476,7 @@ export class OrgService {
     return this.prisma.organization.update({
       where: { id },
       data: {
-        seatCount: updateOrgDto.userCount,
+        maxSeatCount: updateOrgDto.userCount,
         defaultPlanID: userPlan?.id,
       },
     });
@@ -591,5 +591,20 @@ export class OrgService {
     console.log({ entryPoint, cert, issuer });
 
     return { entryPoint, cert, issuer };
+  }
+
+  updateOrgQuantity() {
+    // const totalCount = await this.cache.wrap(
+    //   `totalOrgUsers:${id}`,
+    //   () =>
+    //     this.prisma.user.count({
+    //       where: {
+    //         subscriptions: {
+    //           some: { managedByID: id, status: 'org-managed' },
+    //         },
+    //       },
+    //     }),
+    //   600,
+    // );
   }
 }

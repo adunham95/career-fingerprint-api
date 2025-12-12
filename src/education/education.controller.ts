@@ -22,6 +22,8 @@ import { OrgMemberGuard } from 'src/org/org-admin.guard';
 import { PermissionGuard } from 'src/permission/permission.guard';
 import { AuditService } from 'src/audit/audit.service';
 import { AUDIT_EVENT } from 'src/audit/auditEvents';
+import { MinPlanLevel } from 'src/decorators/min-plan-level.decorator';
+import { SubscriptionGuard } from 'src/auth/subscription.guard';
 
 @Controller('education')
 export class EducationController {
@@ -31,7 +33,8 @@ export class EducationController {
   ) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @MinPlanLevel(1)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   create(@Body() createEducationDto: CreateEducationDto, @Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -65,7 +68,8 @@ export class EducationController {
 
   @Get('my')
   @Header('Cache-Control', 'private, max-age=30')
-  @UseGuards(JwtAuthGuard)
+  @MinPlanLevel(1)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   findMyEducation(@Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -75,14 +79,16 @@ export class EducationController {
   }
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard)
+  @MinPlanLevel(1)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   @Header('Cache-Control', 'private, max-age=30')
   findOne(@Param('id') id: string) {
     return this.educationService.findOne(id);
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard)
+  @MinPlanLevel(1)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   update(
     @Param('id') id: string,
     @Body() updateEducationDto: UpdateEducationDto,
@@ -109,7 +115,8 @@ export class EducationController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
+  @MinPlanLevel(1)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   remove(@Param('id') id: string, @Req() req: Request) {
     return this.educationService.remove(id, req.user?.id);
   }

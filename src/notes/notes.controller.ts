@@ -17,13 +17,16 @@ import { NotesService } from './notes.service';
 import { CreateNoteDto } from './dto/create-note.dto';
 import { UpdateNoteDto } from './dto/update-note.dto';
 import { Request, Response } from 'express';
+import { MinPlanLevel } from 'src/decorators/min-plan-level.decorator';
+import { SubscriptionGuard } from 'src/auth/subscription.guard';
 
 @Controller('notes')
 export class NotesController {
   constructor(private readonly notesService: NotesService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @MinPlanLevel(2)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   create(@Body() createNoteDto: CreateNoteDto, @Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -38,7 +41,8 @@ export class NotesController {
   }
 
   @Get('my')
-  @UseGuards(JwtAuthGuard)
+  @MinPlanLevel(2)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   findMyNotes(@Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -47,7 +51,8 @@ export class NotesController {
   }
 
   @Get('job-application/:id')
-  @UseGuards(JwtAuthGuard)
+  @MinPlanLevel(2)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   findJobAppNotes(@Param('id') id: string, @Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -56,13 +61,15 @@ export class NotesController {
   }
 
   @Get('meeting/:id')
-  @UseGuards(JwtAuthGuard)
+  @MinPlanLevel(2)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   findMeetingNOtes(@Param('id') id: string) {
     return this.notesService.findByMeeting(id);
   }
 
   @Get('meeting/:id/pdf')
-  @UseGuards(JwtAuthGuard)
+  @MinPlanLevel(2)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   async findOneNotesPdfDoc(@Param('id') id: string, @Res() res: Response) {
     const stream = await this.notesService.getMeetingNotesDocPdf(id);
     res.setHeader('Content-Type', 'application/pdf');
@@ -71,16 +78,22 @@ export class NotesController {
   }
 
   @Get(':id')
+  @MinPlanLevel(2)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   findOne(@Param('id') id: string) {
     return this.notesService.findOne(+id);
   }
 
   @Patch(':id')
+  @MinPlanLevel(2)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   update(@Param('id') id: string, @Body() updateNoteDto: UpdateNoteDto) {
     return this.notesService.update(id, updateNoteDto);
   }
 
   @Delete(':id')
+  @MinPlanLevel(2)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   remove(@Param('id') id: string) {
     return this.notesService.remove(id);
   }

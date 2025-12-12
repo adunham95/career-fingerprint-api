@@ -184,7 +184,7 @@ export class MailProcessor {
     } = job.data;
 
     const template = 'welcome';
-    const subject = 'Start Your Free Premium Trial';
+    const subject = 'Welcome To Career Fingerprint';
 
     console.log(`📧 Sending email to ${to}`);
 

@@ -241,6 +241,7 @@ export class TasksService {
       const loginToken = await this.loginTokenService.createLoginToken(
         user.email,
         'check-in',
+        true,
       );
 
       await this.mailService.sendWeeklyReminderEmail({

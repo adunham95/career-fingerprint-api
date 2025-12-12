@@ -161,26 +161,7 @@ export class RegisterService {
 
     await this.cache.del(`activeUserSubscription:${verifyToken.userID}`);
 
-    if (!data.showFreeTrial) {
-      return { verified: true, userID: verifyToken.userID };
-    }
-
-    const plan = await this.cache.wrap(
-      `plan:${process.env.DEFAULT_SUBSCRIPTION_KEY}`,
-      () => {
-        return this.prisma.plan.findFirst({
-          where: { key: process.env.DEFAULT_SUBSCRIPTION_KEY },
-        });
-      },
-      86400,
-    );
-
-    const { org, plan: orgPlan } = await this.org.hasSpace(user.email);
-
     return {
-      plan: orgPlan || plan,
-      orgID: org?.id,
-      orgName: org?.name,
       verified: true,
       userID: verifyToken.userID,
     };

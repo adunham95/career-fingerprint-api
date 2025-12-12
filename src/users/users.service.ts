@@ -255,6 +255,31 @@ export class UsersService {
     return { success: true };
   }
 
+  async getStripeStatus(userID: number) {
+    const user = await this.prisma.user.findFirst({
+      where: { id: userID },
+    });
+
+    if (!user) {
+      throw Error('User Not Found');
+    }
+
+    if (user?.stripeCustomerID) {
+      return user.stripeCustomerID;
+    }
+
+    const stripeCustomer = await this.stripeService.createStripeCustomer(user);
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        stripeCustomerID: stripeCustomer.id,
+      },
+    });
+
+    return { stripeID: stripeCustomer.id };
+  }
+
   private async createEmailValidationCode(userID: number, extended?: boolean) {
     const now = new Date();
 

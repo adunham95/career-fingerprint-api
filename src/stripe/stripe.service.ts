@@ -182,9 +182,7 @@ export class StripeService {
     priceID: string,
     couponID?: string,
   ) {
-    console.log({ priceID, couponID });
     const stripeUserID = user?.stripeCustomerID || '';
-    console.log({ stripeUserID });
     if (stripeUserID === null || stripeUserID === '') {
       throw Error('Missing stripeUserID');
     }
@@ -211,6 +209,9 @@ export class StripeService {
         planKey: planDetails?.key || 'Pro',
         planID: planDetails.id,
       },
+      subscription_data: {
+        trial_period_days: !user.redeemedFreeTrial ? 14 : 0,
+      },
       discounts: [
         {
           promotion_code: couponID,
@@ -221,7 +222,12 @@ export class StripeService {
       expand: ['subscription'],
     });
 
-    console.log({ checkoutSession });
+    if (user.redeemedFreeTrial) {
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { redeemedFreeTrial: true },
+      });
+    }
 
     await this.prisma.subscription.create({
       data: {

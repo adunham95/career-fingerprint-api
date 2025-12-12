@@ -67,6 +67,15 @@ export class UsersController {
     return this.usersService.inviteCodeStats(req.user.id);
   }
 
+  @Get('me/billing-status')
+  @UseGuards(JwtAuthGuard)
+  getMyStripeStatus(@Req() req: Request) {
+    if (!req.user) {
+      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+    }
+    return this.usersService.getStripeStatus(req.user.id);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.usersService.user({ id: +id });

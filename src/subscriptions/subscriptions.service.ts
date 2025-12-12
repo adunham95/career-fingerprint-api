@@ -184,11 +184,8 @@ export class SubscriptionsService {
   }
 
   async findUpgradePlan(planLevel: number) {
-    const nextPlanLevel = planLevel + 1;
-
     return this.prisma.plan.findFirst({
       where: {
-        level: nextPlanLevel,
         key: process.env.DEFAULT_SUBSCRIPTION_KEY || 'pro',
       },
       select: {
@@ -200,6 +197,7 @@ export class SubscriptionsService {
         priceCentsYear: true,
         description: true,
         featureList: true,
+        level: true,
       },
     });
   }

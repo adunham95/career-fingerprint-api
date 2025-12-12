@@ -23,13 +23,16 @@ import {
   MeetingQueryDto,
   SingleMeetingQueryDto,
 } from './dto/meeting-query.dto';
+import { MinPlanLevel } from 'src/decorators/min-plan-level.decorator';
+import { SubscriptionGuard } from 'src/auth/subscription.guard';
 
 @Controller('meetings')
 export class MeetingsController {
   constructor(private readonly meetingsService: MeetingsService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @MinPlanLevel(1)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   create(@Body() createMeetingDto: CreateMeetingDto, @Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -44,7 +47,8 @@ export class MeetingsController {
   }
 
   @Get('my')
-  @UseGuards(JwtAuthGuard)
+  @MinPlanLevel(1)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   @Header('Cache-Control', 'private, max-age=30')
   findMine(@Req() req: Request, @Query() query: MeetingQueryDto) {
     if (!req.user) {
@@ -54,7 +58,8 @@ export class MeetingsController {
   }
 
   @Get('my/upcoming')
-  @UseGuards(JwtAuthGuard)
+  @MinPlanLevel(1)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   @Header('Cache-Control', 'private, max-age=10')
   findMineUpcoming(@Req() req: Request, @Query() query: MeetingQueryDto) {
     if (!req.user) {
@@ -64,7 +69,8 @@ export class MeetingsController {
   }
 
   @Get('my/previous')
-  @UseGuards(JwtAuthGuard)
+  @MinPlanLevel(1)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   @Header('Cache-Control', 'private, max-age=10')
   findMinePrevious(@Req() req: Request, @Query() query: MeetingQueryDto) {
     if (!req.user) {
@@ -73,6 +79,7 @@ export class MeetingsController {
     return this.meetingsService.findMinePrevious(req.user.id, query);
   }
 
+  // TODO Add Org Admin Guard
   @Get('my/:userID')
   @UseGuards(JwtAuthGuard)
   @Header('Cache-Control', 'private, max-age=30')
@@ -85,20 +92,23 @@ export class MeetingsController {
   }
 
   @Get('job-application/:id')
-  @UseGuards(JwtAuthGuard)
+  @MinPlanLevel(1)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   findRelatedToJobApplication(@Param('id') id: string) {
     return this.meetingsService.findRelatedToJob(id);
   }
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard)
+  @MinPlanLevel(1)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   @Header('Cache-Control', 'private, max-age=30')
   findOne(@Param('id') id: string, @Query() query: SingleMeetingQueryDto) {
     return this.meetingsService.findOne(id, query);
   }
 
   @Get(':id/pdf')
-  @UseGuards(JwtAuthGuard)
+  @MinPlanLevel(2)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   async findOnePrepPdfDoc(@Param('id') id: string, @Res() res: Response) {
     const stream = await this.meetingsService.getPrepDocPdf(id);
     res.setHeader('Content-Type', 'application/pdf');
@@ -110,12 +120,15 @@ export class MeetingsController {
   }
 
   @Patch(':id')
+  @MinPlanLevel(1)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   update(@Param('id') id: string, @Body() updateMeetingDto: UpdateMeetingDto) {
     return this.meetingsService.update(id, updateMeetingDto);
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
+  @MinPlanLevel(1)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   remove(@Param('id') id: string) {
     return this.meetingsService.remove(id);
   }

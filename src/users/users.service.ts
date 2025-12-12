@@ -10,6 +10,7 @@ import { AuditService } from 'src/audit/audit.service';
 import { AUDIT_EVENT } from 'src/audit/auditEvents';
 
 export const roundsOfHashing = 10;
+const FREE_TIER_DEPRECATED_AT = new Date('2024-01-02T00:00:00Z');
 
 @Injectable()
 export class UsersService {
@@ -84,13 +85,18 @@ export class UsersService {
       ipAddress,
     );
 
-    await this.prisma.subscription.create({
-      data: {
-        userID: user.id,
-        planID: freePlan.id,
-        status: 'active',
-      },
-    });
+    if (user.createdAt < FREE_TIER_DEPRECATED_AT) {
+      await this.prisma.subscription.create({
+        data: {
+          userID: user.id,
+          planID: freePlan.id,
+          status: 'active',
+        },
+      });
+    } else {
+      // 🚫 No free subscription for new users
+      // They will be required to start a paid plan before accessing app features.
+    }
 
     await this.stripeService.newStripeCustomer({ user });
 

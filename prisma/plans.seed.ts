@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 const plans = [
   {
     key: 'free',
-    level: 2,
+    level: 1,
     name: 'Free',
     priceCents: 0,
     interval: 'month',

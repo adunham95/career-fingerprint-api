@@ -10,7 +10,8 @@ import { AuditService } from 'src/audit/audit.service';
 import { AUDIT_EVENT } from 'src/audit/auditEvents';
 
 export const roundsOfHashing = 10;
-const FREE_TIER_DEPRECATED_AT = new Date('2024-01-02T00:00:00Z');
+const FREE_TIER_DEPRECATED_AT =
+  process.env.FREE_TIER_GRANDFATHER_BEFORE || new Date('2024-01-02T00:00:00Z');
 
 @Injectable()
 export class UsersService {

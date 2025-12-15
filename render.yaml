@@ -12,6 +12,7 @@ projects:
               yarn install
               yarn prisma migrate deploy
               yarn seed:plans
+              yarn seed:skills
               yarn build
             startCommand: yarn start:prod
             envVars:

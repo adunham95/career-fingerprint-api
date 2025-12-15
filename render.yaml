@@ -44,7 +44,9 @@ projects:
               - key: SMTP_PASSWORD
                 sync: false
               - key: DEFAULT_SUBSCRIPTION_KEY
-                value: 'pro-beta'
+                value: 'pro'
+              - key: FREE_TIER_GRANDFATHER_BEFORE
+                value: '2025-12-15T00:00:00Z'
           - type: keyvalue
             name: lightning
             ipAllowList: []
@@ -59,7 +61,7 @@ projects:
           - type: web
             name: career-fingerprint-api-stage
             runtime: 'node'
-            plan: free
+            plan: starter
             branch: 'main'
             buildCommand: |
               yarn install
@@ -96,7 +98,9 @@ projects:
               - key: SMTP_PASSWORD
                 sync: false
               - key: DEFAULT_SUBSCRIPTION_KEY
-                value: 'pro-beta'
+                value: 'pro'
+              - key: FREE_TIER_GRANDFATHER_BEFORE
+                value: '2025-12-15T00:00:00Z'
           - type: keyvalue
             name: lightning-stage
             ipAllowList: []

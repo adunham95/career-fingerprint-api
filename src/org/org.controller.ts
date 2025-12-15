@@ -26,6 +26,8 @@ import { PlatformAdminGuard } from 'src/auth/platform-admin.guard';
 import { Request } from 'express';
 import { RequirePermission } from 'src/permission/permission.decorator';
 import { PermissionGuard } from 'src/permission/permission.guard';
+import { OrgMemberGuard } from './org-admin.guard';
+import { Cron, CronExpression } from '@nestjs/schedule';
 // import { UpdateOrgDto } from './dto/update-org.dto';
 // import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 // import { Request } from 'express';
@@ -42,7 +44,7 @@ export class OrgController {
 
   @Get(':orgID/users')
   @RequirePermission('client:list')
-  @UseGuards(JwtAuthGuard, PermissionGuard)
+  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
   @Header('Cache-Control', 'private, max-age=30')
   getOrgUser(
     @Param('orgID') id: string,
@@ -54,7 +56,7 @@ export class OrgController {
 
   @Get(':orgID/admins')
   @RequirePermission('admins:view')
-  @UseGuards(JwtAuthGuard, PermissionGuard)
+  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
   @Header('Cache-Control', 'private, max-age=30')
   getOrgAdmins(@Param('orgID') id: string) {
     return this.orgService.getOrgAdmins(id);
@@ -62,7 +64,7 @@ export class OrgController {
 
   @Post(':orgID/admins')
   @RequirePermission('admins:manage')
-  @UseGuards(JwtAuthGuard, PermissionGuard)
+  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
   newOrgAdmin(
     @Param('orgID') id: string,
     @Body()
@@ -84,7 +86,7 @@ export class OrgController {
 
   @Delete(':orgID/user/:userID')
   @RequirePermission('client:remove')
-  @UseGuards(JwtAuthGuard, PermissionGuard)
+  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
   removeUserFromOrg(
     @Param('orgID') id: string,
     @Param('userID') userID: string,
@@ -94,7 +96,7 @@ export class OrgController {
 
   @Delete(':orgID/admin/:userID')
   @RequirePermission('admins:manage')
-  @UseGuards(JwtAuthGuard, PermissionGuard)
+  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
   removeAdminFromOrg(
     @Param('orgID') id: string,
     @Param('userID') userID: string,
@@ -104,7 +106,7 @@ export class OrgController {
 
   @Patch(':orgID/admin/:userID')
   @RequirePermission('admins:manage')
-  @UseGuards(JwtAuthGuard, PermissionGuard)
+  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
   updateAdminFromOrg(
     @Param('orgID') id: string,
     @Param('userID') userID: string,
@@ -131,7 +133,7 @@ export class OrgController {
 
   @Get(':id/roles')
   @RequirePermission('admins:manage')
-  @UseGuards(JwtAuthGuard, PermissionGuard)
+  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
   myOrgRoles(@Param('id') id: string) {
     return this.orgService.getRolesForOrg(id);
   }
@@ -172,13 +174,13 @@ export class OrgController {
 
   @Patch(':id')
   @RequirePermission('org:update_details')
-  @UseGuards(JwtAuthGuard, PermissionGuard)
+  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
   update(@Param('id') id: string, @Body() updateOrgDto: UpdateOrgDto) {
     return this.orgService.update(id, updateOrgDto);
   }
 
   @Patch(':id/add-subscription')
-  @UseGuards(JwtAuthGuard, PlatformAdminGuard)
+  @UseGuards(JwtAuthGuard, OrgMemberGuard, PlatformAdminGuard)
   updatePlatformAdmin(
     @Param('id') id: string,
     @Body() updateOrgDto: UpdateOrgSubscriptionDto,
@@ -195,8 +197,9 @@ export class OrgController {
     return this.orgService.xmlToSSOData(id, setSSOMetadata.xml);
   }
 
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.orgService.remove(+id);
-  // }
+  @Cron(CronExpression.EVERY_DAY_AT_3AM)
+  async runDailyReferralCredits() {
+    // this.logger.log('Running daily referral credit job...');
+    await this.orgService.updateOrgQuantity();
+  }
 }

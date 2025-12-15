@@ -17,13 +17,16 @@ import { CreateCoverLetterDto } from './dto/create-cover-letter.dto';
 import { UpdateCoverLetterDto } from './dto/update-cover-letter.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { Request, Response } from 'express';
+import { MinPlanLevel } from 'src/decorators/min-plan-level.decorator';
+import { SubscriptionGuard } from 'src/auth/subscription.guard';
 
 @Controller('cover-letters')
 export class CoverLettersController {
   constructor(private readonly coverLettersService: CoverLettersService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @MinPlanLevel(1)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   create(
     @Body() createCoverLetterDto: CreateCoverLetterDto,
     @Req() req: Request,
@@ -41,24 +44,29 @@ export class CoverLettersController {
   }
 
   @Get('my')
-  @UseGuards(JwtAuthGuard)
+  @MinPlanLevel(1)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   findMine() {
     return this.coverLettersService.findAll();
   }
 
   @Get(':id')
+  @MinPlanLevel(1)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   findOne(@Param('id') id: string) {
     return this.coverLettersService.findOne(id);
   }
 
   @Get('jobApp/:jobAppID')
-  @UseGuards(JwtAuthGuard)
+  @MinPlanLevel(1)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   findOneWithJob(@Param('jobAppID') id: string) {
     return this.coverLettersService.findOneFromJob(id);
   }
 
   @Get('jobApp/:jobAppID/pdf')
-  @UseGuards(JwtAuthGuard)
+  @MinPlanLevel(2)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   async findOneWithJobMakePDF(
     @Param('jobAppID') id: string,
     @Res() res: Response,
@@ -70,7 +78,8 @@ export class CoverLettersController {
   }
 
   @Patch('jobApp/:jobAppID')
-  @UseGuards(JwtAuthGuard)
+  @MinPlanLevel(1)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   patch(
     @Param('jobAppID') id: string,
     @Body() createCoverLetterDto: CreateCoverLetterDto,
@@ -84,7 +93,8 @@ export class CoverLettersController {
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard)
+  @MinPlanLevel(1)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   update(
     @Param('id') id: string,
     @Body() updateCoverLetterDto: UpdateCoverLetterDto,
@@ -93,7 +103,8 @@ export class CoverLettersController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
+  @MinPlanLevel(1)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   remove(@Param('id') id: string) {
     return this.coverLettersService.remove(id);
   }

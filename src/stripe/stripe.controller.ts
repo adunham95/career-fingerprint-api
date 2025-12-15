@@ -13,6 +13,7 @@ import { StripeService } from './stripe.service';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { Request } from 'express';
 import {
+  CreateStripeCoachSubscriptionDto,
   CreateStripeOrgSubscriptionDto,
   CreateStripeSubscriptionDto,
 } from './dto/create-stripe-subscription.dto';
@@ -69,6 +70,23 @@ export class StripeController {
       req.user,
       createCheckoutSessionDto.priceID,
       createCheckoutSessionDto.quantity,
+      createCheckoutSessionDto.orgID,
+      createCheckoutSessionDto.couponID,
+    );
+  }
+
+  @Post('create-checkout-session/coach')
+  @UseGuards(JwtAuthGuard)
+  createCheckoutCoachSession(
+    @Body() createCheckoutSessionDto: CreateStripeCoachSubscriptionDto,
+    @Req() req: Request,
+  ) {
+    if (!req.user) {
+      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+    }
+    return this.stripeService.createCheckoutSessionForCoach(
+      req.user,
+      createCheckoutSessionDto.planID,
       createCheckoutSessionDto.orgID,
       createCheckoutSessionDto.couponID,
     );

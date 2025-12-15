@@ -18,6 +18,8 @@ import { CreateAchievementTagDto } from './dto/create-achievement-tag.dto';
 // import { UpdateAchievementTagDto } from './dto/update-achievement-tag.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { Request } from 'express';
+import { MinPlanLevel } from 'src/decorators/min-plan-level.decorator';
+import { SubscriptionGuard } from 'src/auth/subscription.guard';
 
 @Controller('achievement-tags')
 export class AchievementTagsController {
@@ -26,7 +28,8 @@ export class AchievementTagsController {
   ) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @MinPlanLevel(1)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   create(
     @Req() req: Request,
     @Body() createAchievementTagDto: CreateAchievementTagDto,
@@ -39,7 +42,8 @@ export class AchievementTagsController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard)
+  @MinPlanLevel(1)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   findAll(@Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -48,7 +52,8 @@ export class AchievementTagsController {
   }
 
   @Get('autocomplete')
-  @UseGuards(JwtAuthGuard)
+  @MinPlanLevel(1)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   findAutocomplete(
     @Query('query') query: string,
     @Query('limit') limit = 10,
@@ -62,11 +67,15 @@ export class AchievementTagsController {
 
   @Get(':id')
   @Header('Cache-Control', 'private, max-age=30')
+  @MinPlanLevel(1)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   findOne(@Param('id') id: string) {
     return this.achievementTagsService.findOne(+id);
   }
 
   @Patch(':id')
+  @MinPlanLevel(1)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   update(
     @Param('id') id: string,
     // @Body() updateAchievementTagDto: UpdateAchievementTagDto,
@@ -76,7 +85,8 @@ export class AchievementTagsController {
   }
 
   @Patch(':id/ach/:achievement_id')
-  @UseGuards(JwtAuthGuard)
+  @MinPlanLevel(1)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   linkToAchievementID(
     @Param('id') id: string,
     @Param('achievement_id') achievement_id: string,
@@ -85,6 +95,8 @@ export class AchievementTagsController {
   }
 
   @Delete(':id')
+  @MinPlanLevel(1)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   remove(@Param('id') id: string) {
     return this.achievementTagsService.remove(+id);
   }

@@ -182,9 +182,7 @@ export class StripeService {
     priceID: string,
     couponID?: string,
   ) {
-    console.log({ priceID, couponID });
     const stripeUserID = user?.stripeCustomerID || '';
-    console.log({ stripeUserID });
     if (stripeUserID === null || stripeUserID === '') {
       throw Error('Missing stripeUserID');
     }
@@ -211,6 +209,9 @@ export class StripeService {
         planKey: planDetails?.key || 'Pro',
         planID: planDetails.id,
       },
+      subscription_data: {
+        trial_period_days: !user.redeemedFreeTrial ? 14 : 0,
+      },
       discounts: [
         {
           promotion_code: couponID,
@@ -221,7 +222,12 @@ export class StripeService {
       expand: ['subscription'],
     });
 
-    console.log({ checkoutSession });
+    if (user.redeemedFreeTrial) {
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { redeemedFreeTrial: true },
+      });
+    }
 
     await this.prisma.subscription.create({
       data: {
@@ -298,6 +304,79 @@ export class StripeService {
         orgID: orgID,
         stripeSessionID: checkoutSession.id,
         status: 'checkout',
+      },
+    });
+
+    return {
+      checkoutSessionClientSecret: checkoutSession.client_secret,
+    };
+  }
+
+  async createCheckoutSessionForCoach(
+    user: UserEntity,
+    planID: string,
+    orgID: string,
+    couponID?: string,
+  ) {
+    console.log({ planID, couponID });
+    console.log({ user });
+
+    const org = await this.prisma.organization.findFirst({
+      where: { id: orgID },
+    });
+
+    const stripeUserID = org?.stripeCustomerID || '';
+    console.log({ stripeUserID });
+    if (stripeUserID === null || stripeUserID === '') {
+      throw Error('Missing stripeUserID');
+    }
+
+    const planDetails = await this.prisma.plan.findFirst({
+      where: {
+        id: planID,
+      },
+    });
+
+    if (!planDetails) {
+      throw new Error(`No plan found for plan ID: ${planID}`);
+    }
+
+    if (!planDetails.monthlyStripePriceID || !planDetails.seatStripPriceID) {
+      throw new Error(`No pricing ids for plan ID: ${planID}`);
+    }
+
+    const checkoutSession = await this.stripe.checkout.sessions.create({
+      ui_mode: 'custom',
+      customer: stripeUserID,
+      line_items: [
+        { price: planDetails.monthlyStripePriceID, quantity: 1 },
+        { price: planDetails.seatStripPriceID },
+      ],
+      metadata: {
+        userID: user.id,
+        planKey: planDetails?.key || 'Pro',
+        planID: planDetails.id,
+        orgID: orgID,
+      },
+      discounts: [
+        {
+          promotion_code: couponID,
+        },
+      ],
+      mode: 'subscription',
+      return_url: `${this.frontEndUrl}/org/thank-you?session_id={CHECKOUT_SESSION_ID}`,
+      expand: ['subscription'],
+    });
+
+    console.log({ checkoutSession });
+
+    await this.prisma.subscription.create({
+      data: {
+        planID: planDetails.id,
+        orgID: orgID,
+        stripeSessionID: checkoutSession.id,
+        status: 'checkout',
+        isMetered: true,
       },
     });
 
@@ -430,9 +509,86 @@ export class StripeService {
     }
   }
 
+  async processClientCount() {
+    const today = new Date();
+
+    const subscriptions = await this.prisma.subscription.findMany({
+      where: { status: 'active', isMetered: true },
+      include: { org: true },
+    });
+
+    for (const sub of subscriptions) {
+      if (!sub.orgID) continue;
+      if (!sub.currentPeriodStart) continue;
+
+      const currentSeats = await this.calculateCurrentSeats(sub.orgID);
+
+      let newPeak = sub.meterCyclePeakSeats || 0;
+
+      if (currentSeats > newPeak) {
+        newPeak = currentSeats;
+
+        await this.prisma.subscription.update({
+          where: { id: sub.id },
+          data: { meterCyclePeakSeats: newPeak },
+        });
+      }
+
+      const periodStart = sub.currentPeriodStart;
+      const isStart =
+        today.getUTCFullYear() === periodStart.getUTCFullYear() &&
+        today.getUTCMonth() === periodStart.getUTCMonth() &&
+        today.getUTCDate() === periodStart.getUTCDate();
+
+      if (!isStart) continue;
+
+      if (sub.org?.stripeCustomerID) {
+        await this.stripe.billing.meterEvents.create({
+          event_name: 'coach_clients',
+          payload: {
+            value: newPeak.toString(),
+            stripe_customer_id: sub.org.stripeCustomerID,
+          },
+        });
+      }
+
+      await this.prisma.subscription.update({
+        where: { id: sub.id },
+        data: {
+          meterCyclePeakSeats: currentSeats,
+        },
+      });
+
+      await this.prisma.organization.update({
+        where: { id: sub.orgID },
+        data: { currentSeats },
+      });
+    }
+  }
+
+  private async calculateCurrentSeats(orgId?: string): Promise<number> {
+    if (!orgId) {
+      return 0;
+    }
+
+    const active = await this.prisma.subscription.count({
+      where: {
+        managedByID: orgId,
+        status: 'org-managed',
+      },
+    });
+    return active;
+  }
+
   @Cron(CronExpression.EVERY_DAY_AT_2AM)
   async runDailyReferralCredits() {
     this.logger.log('Running daily referral credit job...');
     await this.processEligibleRewards();
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  async runDailyActiveClientCount() {
+    this.logger.log('Running daily active client count...');
+    await this.processClientCount();
   }
 }

@@ -34,7 +34,7 @@ export class ReportsService {
         const org = await this.prisma.organization.findUnique({
           where: { id: orgID },
           select: {
-            seatCount: true,
+            maxSeatCount: true,
             _count: { select: { orgAdminLinks: true } },
           },
         });
@@ -50,7 +50,7 @@ export class ReportsService {
         });
         return {
           seatsUsed: users,
-          seatLimit: org?.seatCount ?? 0,
+          seatLimit: org?.maxSeatCount ?? 0,
           admins: org?._count.orgAdminLinks ?? 0,
         };
       },
@@ -134,6 +134,7 @@ export class ReportsService {
       }),
       this.prisma.jobPosition.findMany({
         where: {
+          status: 'active',
           user: {
             subscriptions: {
               some: {

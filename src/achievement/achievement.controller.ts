@@ -1,3 +1,4 @@
+import { SubscriptionGuard } from './../auth/subscription.guard';
 import {
   Controller,
   Get,
@@ -22,6 +23,7 @@ import { ApiBearerAuth } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { PaginationQueryDto } from 'src/dto/default-pagination-query.dto';
 import { PdfService } from 'src/pdf/pdf.service';
+import { MinPlanLevel } from 'src/decorators/min-plan-level.decorator';
 
 interface MyAchievementQuery extends PaginationQueryDto {
   includeLinked?: string;
@@ -39,7 +41,8 @@ export class AchievementController {
   ) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @MinPlanLevel(1)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   @ApiBearerAuth()
   create(
     @Body() createAchievementDto: CreateAchievementDto,
@@ -58,7 +61,8 @@ export class AchievementController {
   }
 
   @Get('my')
-  @UseGuards(JwtAuthGuard)
+  @MinPlanLevel(1)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   @Header('Cache-Control', 'private, max-age=30')
   findMyAchievements(@Req() req: Request, @Query() query: MyAchievementQuery) {
     if (!req.user) {
@@ -79,7 +83,8 @@ export class AchievementController {
   }
 
   @Get('my/pdf')
-  @UseGuards(JwtAuthGuard)
+  @MinPlanLevel(2)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   @Header('Cache-Control', 'private, max-age=30')
   async getMyAchievementsPDF(
     @Req() req: Request,
@@ -111,6 +116,7 @@ export class AchievementController {
     return stream.pipe(res);
   }
 
+  //Org Admin Guard
   @Get('my/:userID')
   @UseGuards(JwtAuthGuard)
   @Header('Cache-Control', 'private, max-age=30')
@@ -134,14 +140,16 @@ export class AchievementController {
   }
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard)
+  @MinPlanLevel(1)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   @Header('Cache-Control', 'private, max-age=30')
   @ApiBearerAuth()
   findOne(@Param('id') id: string) {
     return this.achievementService.findOne(id);
   }
   @Patch(':id')
-  @UseGuards(JwtAuthGuard)
+  @MinPlanLevel(1)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   @ApiBearerAuth()
   update(
     @Param('id') id: string,
@@ -151,7 +159,8 @@ export class AchievementController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
+  @MinPlanLevel(1)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
   @ApiBearerAuth()
   remove(@Param('id') id: string) {
     return this.achievementService.remove(id);

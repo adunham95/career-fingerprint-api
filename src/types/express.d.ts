@@ -2,6 +2,8 @@ import { UserEntity } from '../users/entities/user.entity'; // adjust path as ne
 
 interface UserModule extends UserEntity {
   planLevel: number;
+  mode: 'user' | 'org';
+  permissionList: string[];
 }
 
 declare module 'express' {

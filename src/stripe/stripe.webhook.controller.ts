@@ -102,6 +102,29 @@ export class StripeWebhookController {
         console.log('✅ Invoice paid:', invoice.id);
         break;
       }
+      case 'invoice.created': {
+        const invoice = event.data.object;
+
+        const subLine = invoice.lines.data.find((line) => line.subscription);
+
+        if (!subLine) break;
+
+        const subId = subLine.subscription as string;
+
+        const periodStart = new Date(subLine.period.start * 1000);
+        const periodEnd = new Date(subLine.period.end * 1000);
+
+        await this.prisma.subscription.updateMany({
+          where: { stripeSubId: subId },
+          data: {
+            currentPeriodStart: periodStart,
+            currentPeriodEnd: periodEnd,
+            meterCyclePeakSeats: 0, // reset at start of cycle
+          },
+        });
+
+        break;
+      }
       case 'invoice.payment_failed': {
         const invoice = event.data.object;
         console.log(' Invoice payment failed:', invoice.id);

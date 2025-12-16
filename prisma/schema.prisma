@@ -90,6 +90,7 @@ model Organization {
   ssoEntryPoint        String? // SSO URL
   ssoIssuer            String? // Entity ID
   ssoCert              String? // x509 cert
+  type                 String              @default("org")
   orgAdmins            User[]              @relation("OrgAdmins")
   managedSubscriptions Subscription[]      @relation("managedSubscriptions")
   orgSubscription      Subscription[]      @relation("orgSubscription")

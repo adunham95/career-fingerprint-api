@@ -63,6 +63,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
                   id: true,
                   name: true,
                   logoURL: true,
+                  type: true,
                 },
               },
             },

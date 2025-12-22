@@ -146,7 +146,7 @@ export class AuthService {
     const roles = membership?.roles || [];
     const permissions = this.permissionService.getPermissionsForRoles(roles);
     const features =
-      membership?.organization.orgSubscription?.[0].plan.features;
+      membership?.organization.orgSubscription?.[0]?.plan?.features || [];
 
     const payload = {
       mode: 'org',

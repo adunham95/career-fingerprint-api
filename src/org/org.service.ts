@@ -421,7 +421,9 @@ export class OrgService {
       where: { id },
       include: {
         domains: true,
-        orgSubscription: includeSubscription === 'true' || false,
+        orgSubscription: {
+          include: { plan: includeSubscription === 'true' || false },
+        },
       },
     });
   }
@@ -527,6 +529,13 @@ export class OrgService {
       console.log(error);
       throw Error('Error Parsing file');
     }
+  }
+
+  getOrgCoupon(id: string) {
+    return this.prisma.promoCode.findFirst({
+      where: { orgId: id },
+      select: { id: true, code: true },
+    });
   }
 
   async parseSamlMetadata(metadataUrl: string) {

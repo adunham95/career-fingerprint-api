@@ -113,6 +113,7 @@ const plans = [
     interval: 'Month',
     featureList: ['People Management', 'Subscription Management'],
     userKey: 'pro',
+    features: ['org:createPromoCode'],
     hasMeteredSeats: true,
     type: 'coach',
     maxAdminSeats: 1,
@@ -129,6 +130,7 @@ const plans = [
       'Built for coaches scaling their practice with more clients and light team support.',
     featureList: ['People Management', 'Subscription Management'],
     userKey: 'pro',
+    features: ['org:createCustomPromoCode', 'org:createPromoCode'],
     type: 'coach',
     hasMeteredSeats: true,
     maxAdminSeats: 50,
@@ -144,6 +146,7 @@ const plans = [
     description:
       'A full client-management platform for high-volume teams and agencies.',
     featureList: ['People Management', 'Subscription Management'],
+    features: ['org:createCustomPromoCode', 'org:createPromoCode'],
     userKey: 'pro',
     type: 'coach',
     hasMeteredSeats: true,
@@ -173,6 +176,7 @@ async function main() {
         type: plan.type,
         maxAdminSeats: plan.maxAdminSeats,
         maxSeats: plan.maxSeats,
+        features: plan.features || [],
       },
       create: plan,
     });

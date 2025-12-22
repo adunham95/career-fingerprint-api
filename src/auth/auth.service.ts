@@ -116,11 +116,21 @@ export class AuthService {
     };
   }
 
-  async loginUserOrg(userId: number, orgId: string) {
+  async loginUserOrg(userId: number, orgID: string) {
     const membership = await this.prisma.organizationAdmin.findFirst({
       where: {
         userId,
-        orgId,
+        orgId: orgID,
+      },
+      select: {
+        roles: true,
+        organization: {
+          select: {
+            orgSubscription: {
+              select: { plan: { select: { features: true } } },
+            },
+          },
+        },
       },
     });
 
@@ -135,14 +145,17 @@ export class AuthService {
 
     const roles = membership?.roles || [];
     const permissions = this.permissionService.getPermissionsForRoles(roles);
+    const features =
+      membership?.organization.orgSubscription?.[0].plan.features;
 
     const payload = {
       mode: 'org',
-      orgId,
+      orgID,
       roles: roles || [],
       permissions,
       userID: userId,
       email: user.email,
+      features: features || [],
     };
 
     const token = await this.jwtService.signAsync(payload);

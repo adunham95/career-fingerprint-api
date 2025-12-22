@@ -138,6 +138,13 @@ export class OrgController {
     return this.orgService.getRolesForOrg(id);
   }
 
+  @Get(':id/coupon')
+  @RequirePermission('org:view_promo_code')
+  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
+  myOrgCoupon(@Param('id') id: string) {
+    return this.orgService.getOrgCoupon(id);
+  }
+
   @Get('my')
   @UseGuards(JwtAuthGuard)
   findMine(@Req() req: Request) {

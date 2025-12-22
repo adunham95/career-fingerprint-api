@@ -1,10 +1,13 @@
 import { CreateStripeSubscriptionDto } from './dto/create-stripe-subscription.dto';
 import { InjectQueue } from '@nestjs/bull';
 import {
+  BadRequestException,
+  ConflictException,
   HttpException,
   HttpStatus,
   Inject,
   Injectable,
+  InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
@@ -15,6 +18,8 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { UserEntity } from 'src/users/entities/user.entity';
 import Stripe from 'stripe';
 import { DateTime } from 'luxon';
+import Filter from 'leo-profanity';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 @Injectable()
 export class StripeService {
@@ -406,6 +411,16 @@ export class StripeService {
   }
 
   async validatePromo(code: string) {
+    const internalPromo = await this.prisma.promoCode.findFirst({
+      where: {
+        code,
+      },
+    });
+
+    if (!internalPromo) {
+      return { valid: false };
+    }
+
     const promo = await this.stripe.promotionCodes.list({
       code,
       active: true,
@@ -476,6 +491,111 @@ export class StripeService {
 
   async cancelSubscriptionNow(subscriptionId: string) {
     return this.stripe.subscriptions.update(subscriptionId);
+  }
+
+  async createPromoCode(promoCode: string, orgID?: string | null) {
+    const orgPlan = await this.prisma.subscription.findFirst({
+      where: { orgID },
+      select: {
+        plan: { select: { features: true } },
+      },
+    });
+
+    const featureList = orgPlan?.plan.features || [];
+
+    if (!featureList.includes('org:createPromoCode')) {
+      throw new InternalServerErrorException({
+        code: 'PERMISSION_NOT_FOUND',
+        message: 'Permission not provided.',
+      });
+    }
+
+    console.log({ orgPlan, featureList });
+
+    const stripePromoID = process.env.COACH_COUPON_ID || '';
+
+    if (!stripePromoID) {
+      throw new InternalServerErrorException({
+        code: 'STRIPE_COUPON_NOT_CONFIGURED',
+        message: 'Promo code system is not configured.',
+      });
+    }
+
+    if (promoCode && featureList.includes('org:createCustomPromoCode')) {
+      const matchesPattern = /^[A-Z0-9][A-Z0-9-]{2,18}[A-Z0-9]$/.test(
+        promoCode,
+      );
+
+      if (!matchesPattern) {
+        throw new BadRequestException({
+          code: 'INVALID_PROMO_CODE_FORMAT',
+          message:
+            'Promo code must be 4-20 characters and use only A-Z, 0-9, and hyphens.',
+        });
+      }
+
+      const RESERVED_WORDS = [
+        'FREE',
+        'ADMIN',
+        'ROOT',
+        'SUPPORT',
+        'CAREERFINGERPRINT',
+        'STRIPE',
+        '100OFF',
+        'LIFETIME',
+        'UNLIMITED',
+        'TEST',
+      ];
+
+      const normalized = promoCode.replace(/-/g, '');
+      for (const word of RESERVED_WORDS) {
+        if (normalized.includes(word)) {
+          throw new BadRequestException({
+            code: 'INVALID_PROMO_CODE',
+            message: 'Promo code contains invalid text.',
+          });
+        }
+      }
+
+      if (Filter.check(promoCode)) {
+        throw new BadRequestException({
+          code: 'PROFANE_PROMO_CODE',
+          message: 'Promo code contains inappropriate language.',
+        });
+      }
+
+      try {
+        const promoData = await this.prisma.promoCode.create({
+          data: {
+            code: promoCode,
+            orgId: orgID,
+          },
+        });
+
+        await this.stripe.promotionCodes.create({
+          code: promoCode,
+          coupon: stripePromoID,
+        });
+        return promoData;
+      } catch (error) {
+        if (error instanceof PrismaClientKnownRequestError) {
+          if (error.code === 'P2002') {
+            throw new ConflictException({
+              code: 'PROMO_CODE_EXISTS',
+              message: 'This promo code is already in use.',
+            });
+          }
+        }
+        throw error;
+      }
+    } else {
+      const generatedPromoCode = await this.createGeneratedCoupon(orgID);
+      await this.stripe.promotionCodes.create({
+        code: generatedPromoCode.code,
+        coupon: stripePromoID,
+      });
+      return generatedPromoCode;
+    }
   }
 
   async processEligibleRewards() {
@@ -590,5 +710,51 @@ export class StripeService {
   async runDailyActiveClientCount() {
     this.logger.log('Running daily active client count...');
     await this.processClientCount();
+  }
+
+  async createGeneratedCoupon(orgId?: string | null) {
+    for (let i = 0; i < 5; i++) {
+      const code = this.generatePromoCode('CF');
+
+      try {
+        return await this.prisma.promoCode.create({
+          data: {
+            orgId,
+            code,
+            source: 'SYSTEM',
+          },
+        });
+      } catch (error) {
+        if (error instanceof PrismaClientKnownRequestError) {
+          // Check for the unique constraint violation error code
+          if (error.code === 'P2002') {
+            // Provide a user-friendly error message, e.g., "An account with this email already exists"
+            console.error(
+              'Unique constraint failed: The provided email is already in use.',
+            );
+            throw new ConflictException({
+              code: 'PROMO_CODE_EXISTS',
+              message: 'This promo code is already in use.',
+            });
+            // You can then throw a new, more descriptive error or return a specific response
+          }
+        }
+        // Re-throw other errors if not handled specifically
+        throw error;
+      }
+    }
+
+    throw new Error('Failed to generate unique promo code');
+  }
+
+  generatePromoCode(prefix = 'CF'): string {
+    const CHARSET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    const segment = (len: number) =>
+      Array.from(
+        { length: len },
+        () => CHARSET[Math.floor(Math.random() * CHARSET.length)],
+      ).join('');
+
+    return `${prefix}-${segment(4)}-${segment(3)}`;
   }
 }

@@ -625,3 +625,20 @@ model Goal {
   currentPoints            Float         @default(0) // The current points set
   linkedAchievements       Achievement[] @relation("linkedGoalAchievement")
 }
+
+enum CouponStatus {
+  ACTIVE
+  DISABLED
+  FLAGGED
+}
+
+model PromoCode {
+  id              String       @id @default(uuid())
+  orgId           String?
+  code            String       @unique
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @default(now()) @updatedAt
+  status          CouponStatus @default(ACTIVE)
+  source          String?
+  createdByUserId String?
+}

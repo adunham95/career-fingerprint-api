@@ -1,0 +1,116 @@
+doctype html
+html
+  head
+    meta(charset='UTF-8')
+    meta(name='viewport', content='width=device-width, initial-scale=1.0')
+  body(
+    style='margin: 0; padding: 0; background-color: #fdfaf9; font-family: Arial, sans-serif'
+  )
+    include header.pug
+
+    table(
+      width='100%',
+      cellpadding='0',
+      cellspacing='0',
+      border='0',
+      style='padding: 20px 0'
+    )
+      tr
+        td(align='center')
+          table(
+            width='600',
+            cellpadding='0',
+            cellspacing='0',
+            border='0',
+            style='border-radius: 8px; overflow: hidden; background-color: #ffffff'
+          )
+            // Greeting (firstName optional)
+            tr
+              td(style='padding: 20px 30px 0 30px')
+                if firstName
+                  p(
+                    style='color: #333; font-size: 16px; margin: 0 0 10px 0; font-weight: bold'
+                  ) Hi #{ firstName },
+                else
+                  p(
+                    style='color: #333; font-size: 16px; margin: 0 0 10px 0; font-weight: bold'
+                  ) Hi,
+
+            // Intro (explicitly coach/org initiated)
+            tr
+              td(style='padding: 0 30px 10px 30px')
+                p(style='color: #333; font-size: 15px; margin: 0')
+                  strong #{ orgName }
+                  |
+                  | invited you to join them on Career Fingerprint.
+
+            // What to expect
+            tr
+              td(style='padding: 16px 30px 0 30px')
+                p(
+                  style='color: #333; font-size: 15px; margin: 0 0 8px 0; font-weight: bold'
+                ) What you’ll do next
+                ul(
+                  style='padding-left: 18px; margin: 0; color: #333; font-size: 14px'
+                )
+                  li(style='margin-bottom: 6px')
+                    | Create or sign in to your Career Fingerprint account
+                  li(style='margin-bottom: 6px')
+                    | Join #{ orgName } using your invite code
+                  li(style='margin-bottom: 6px')
+                    | Start logging achievements, goals, and career progress
+
+            // Permissions note (reassurance)
+            tr
+              td(style='padding: 16px 30px 0 30px')
+                p(style='color: #333; font-size: 14px; margin: 0')
+                  | You’re always in control of your information. You choose what
+                  | #{ orgName }
+                  | can view, and you can update permissions at any time.
+
+            // Invite Code (group-safe language)
+            if inviteCode
+              tr
+                td(style='padding: 20px 30px 0 30px')
+                  p(
+                    style='color: #113a5d; font-size: 14px; margin: 0 0 6px 0; font-weight: bold'
+                  ) Your invite code
+                  p(
+                    style='background-color: #f4f8fb; border: 1px dashed #113a5d; padding: 10px; border-radius: 6px; font-size: 14px; margin: 0 0 6px 0; text-align: center'
+                  )
+                    strong #{ inviteCode }
+                  p(style='color: #666; font-size: 12px; margin: 0')
+                    | This code can be used to join #{ orgName }.
+
+            // Coupon (optional)
+            if couponCode
+              tr
+                td(style='padding: 20px 30px 0 30px')
+                  p(
+                    style='color: #113a5d; font-size: 14px; margin: 0 0 6px 0; font-weight: bold'
+                  ) Your coach shared a coupon
+                  p(
+                    style='background-color: #fdf0f2; border: 1px dashed #ff7a8a; padding: 10px; border-radius: 6px; font-size: 14px; margin: 0'
+                  )
+                    | Use code
+                    strong &nbsp;#{ couponCode }&nbsp;
+                    | during signup to unlock special access.
+
+            // CTA (neutral to email/account mismatch)
+            tr
+              td(style='padding: 24px 30px 30px 30px; text-align: center')
+                a(
+                  href=loginLink,
+                  style='background-color: #ff7a8a; color: #000000; text-decoration: none; padding: 12px 24px; border-radius: 6px; display: inline-block; font-weight: bold'
+                ) Join #{ orgName }
+
+            // Footer note
+            tr
+              td(style='padding: 0 30px 30px 30px')
+                p(
+                  style='color: #666; font-size: 12px; margin: 0; text-align: center'
+                )
+                  | Career Fingerprint helps you capture your work, build confidence,
+                  | and prepare for what’s next.
+
+    include footer.pug

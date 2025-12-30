@@ -490,7 +490,7 @@ export class MailProcessor {
     const subject = `${context.orgName} has invited you`;
 
     context.loginLink = context?.inviteCode
-      ? `${process.env.FRONT_END_URL}/settings/connections/${context.inviteCode}`
+      ? `${process.env.FRONT_END_URL}/settings/connections?joinCode=${context.inviteCode}`
       : `${process.env.FRONT_END_URL}/login`;
 
     console.log(`📧 Sending email to ${to.join(',')}`);

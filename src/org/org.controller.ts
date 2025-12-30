@@ -62,6 +62,7 @@ export class OrgController {
     return this.orgService.getOrgAdmins(id);
   }
 
+  /** @deprecated Moved to org users */
   @Post(':orgID/admins')
   @RequirePermission('admins:manage')
   @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
@@ -81,6 +82,28 @@ export class OrgController {
       createOrgDto.roles,
       createOrgDto.firstName,
       createOrgDto.lastName,
+    );
+  }
+
+  /** @deprecated Moved to org users */
+  @Post(':orgID/members')
+  @RequirePermission('users:create')
+  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
+  newOrgMember(
+    @Param('orgID') id: string,
+    @Body()
+    createOrgDtoMember: {
+      firstName?: string;
+      lastName?: string;
+      email: string;
+      type: 'client' | 'member';
+    },
+  ) {
+    return this.orgService.addOrgMember(
+      id,
+      createOrgDtoMember.email,
+      createOrgDtoMember.firstName,
+      createOrgDtoMember.lastName,
     );
   }
 

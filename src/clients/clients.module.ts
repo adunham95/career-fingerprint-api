@@ -11,4 +11,5 @@ import { MailModule } from 'src/mail/mail.module';
   providers: [ClientsService],
   imports: [UsersModule, PrismaModule, MailModule, SubscriptionsModule],
 })
+/** @deprecated Moved to org users */
 export class ClientsModule {}

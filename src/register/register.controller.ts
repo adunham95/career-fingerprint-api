@@ -103,9 +103,13 @@ export class RegisterController {
     }
 
     // Find Current User Count
-    const currentUsers = await this.prisma.subscription.count({
-      where: { managedByID: body.orgID },
+
+    const currentUsers = await this.prisma.orgUser.count({
+      where: {
+        orgId: body.orgID,
+      },
     });
+
     const org = await this.prisma.organization.findFirst({
       where: { id: body.orgID },
       select: { maxSeatCount: true },

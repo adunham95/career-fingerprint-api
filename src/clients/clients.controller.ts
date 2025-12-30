@@ -19,6 +19,7 @@ import { Request } from 'express';
 export class ClientsController {
   constructor(private readonly clientsService: ClientsService) {}
 
+  /** @deprecated switch to use org users */
   @Post()
   @RequirePermission('users:add')
   @UseGuards(JwtAuthGuard, PermissionGuard)
@@ -26,6 +27,7 @@ export class ClientsController {
     return this.clientsService.create(createClientDto);
   }
 
+  /** @deprecated switch to use org users */
   @Post('invite')
   @RequirePermission('client:add')
   @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)

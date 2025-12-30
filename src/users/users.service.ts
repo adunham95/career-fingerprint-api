@@ -33,6 +33,42 @@ export class UsersService {
     });
   }
 
+  async getCurrentUser(id: number) {
+    const currentUserBase = await this.prisma.user.findUnique({
+      where: { id },
+      include: {
+        orgAdminLinks: {
+          include: {
+            organization: {
+              select: {
+                id: true,
+                name: true,
+                logoURL: true,
+                type: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const myOrgs = await this.prisma.orgUser.findMany({
+      where: { userId: id },
+      include: {
+        org: {
+          select: {
+            id: true,
+            name: true,
+            logoURL: true,
+            type: true,
+          },
+        },
+      },
+    });
+
+    return { ...currentUserBase, myOrgs };
+  }
+
   async users(params: {
     skip?: number;
     take?: number;
@@ -159,13 +195,18 @@ export class UsersService {
       ipAddress,
     );
 
-    await this.prisma.subscription.create({
-      data: {
-        userID: user.id,
-        planID: freePlan.id,
-        status: 'active',
-      },
-    });
+    if (user.createdAt < FREE_TIER_DEPRECATED_AT) {
+      await this.prisma.subscription.create({
+        data: {
+          userID: user.id,
+          planID: freePlan.id,
+          status: 'active',
+        },
+      });
+    } else {
+      // 🚫 No free subscription for new users
+      // They will be required to start a paid plan before accessing app features.
+    }
 
     await this.stripeService.newStripeCustomer({ user });
 

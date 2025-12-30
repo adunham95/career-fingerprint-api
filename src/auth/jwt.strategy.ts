@@ -53,26 +53,10 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   }) {
     this.logger.debug('validate', payload);
     const user = await this.cache.wrap(`currentUser:${payload.userID}`, () => {
-      return this.usersService.user(
-        { id: payload.userID },
-        {
-          orgAdminLinks: {
-            include: {
-              organization: {
-                select: {
-                  id: true,
-                  name: true,
-                  logoURL: true,
-                  type: true,
-                },
-              },
-            },
-          },
-        },
-      );
+      return this.usersService.getCurrentUser(payload.userID);
     });
 
-    if (!user) {
+    if (!user?.id) {
       throw new UnauthorizedException();
     }
 

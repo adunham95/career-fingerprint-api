@@ -18,6 +18,7 @@ export class ClientsService {
     private subscriptions: SubscriptionsService,
   ) {}
 
+  /** @deprecated Moved to org users */
   async create(createClientDto: CreateClientDto) {
     const org = await this.prisma.organization.findFirst({
       where: { id: createClientDto.orgID },
@@ -63,6 +64,7 @@ export class ClientsService {
     }
   }
 
+  /** @deprecated Moved to org users */
   async invite(inviteClientDto: InviteClientDto) {
     const org = await this.prisma.organization.findFirst({
       where: { id: inviteClientDto.orgID },
@@ -107,10 +109,12 @@ export class ClientsService {
     }
   }
 
+  /** @deprecated Moved to org */
   private randomChar(): string {
     return INVITE_ALPHABET[randomInt(INVITE_ALPHABET.length)];
   }
 
+  /** @deprecated Moved to org users */
   generateInviteCode(): string {
     const part1 = Array.from({ length: 6 }, () => this.randomChar()).join('');
 
@@ -119,6 +123,7 @@ export class ClientsService {
     return `${part1}-${part2}`;
   }
 
+  /** @deprecated Moved to org users */
   private async createOrgInviteCode({
     orgID,
     role = 'client',

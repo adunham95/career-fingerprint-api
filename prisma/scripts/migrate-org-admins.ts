@@ -35,7 +35,7 @@ async function migrateOrgAdmins() {
         userId: admin.userId,
         orgId: admin.orgId,
         roles: admin.roles,
-        dataAccess: 'full',
+        dataAccess: 'none',
         subscriptionType: 'user-managed',
         status: 'active',
         joinedAt: admin.createdAt,

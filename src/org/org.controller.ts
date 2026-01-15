@@ -62,6 +62,20 @@ export class OrgController {
     return this.orgService.getOrgAdmins(id);
   }
 
+  @Get('invite-link')
+  @RequirePermission('admins:view')
+  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
+  getOrgSignUpLink(@Req() req: Request) {
+    if (!req.user) {
+      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+    }
+    const orgID = req.user?.orgID;
+    if (!orgID) {
+      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+    }
+    return this.orgService.getOrgSignUpLink(orgID, req.user?.id);
+  }
+
   /** @deprecated Moved to org users */
   @Post(':orgID/admins')
   @RequirePermission('admins:manage')

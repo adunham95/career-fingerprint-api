@@ -270,7 +270,7 @@ export class OrgUsersService {
     return { success: false };
   }
 
-  async verifyJoinCode(code: string) {
+  async verifyJoinCode(code: string, userID?: number) {
     const inviteCode = await this.prisma.orgInviteCode.findFirst({
       where: { code },
     });
@@ -280,19 +280,40 @@ export class OrgUsersService {
       return { valid: false, message: 'Could not find invite code' };
     }
 
+    const org = await this.prisma.organization.findFirst({
+      where: { id: inviteCode.orgID },
+    });
+
+    if (userID) {
+      const user = await this.prisma.orgUser.findFirst({
+        where: {
+          userId: userID,
+          orgId: inviteCode.orgID,
+        },
+      });
+
+      if (user) {
+        return { valid: false, message: 'User is part of org', org };
+      }
+    }
+
     if (inviteCode.disabledAt) {
-      return { valid: false, message: 'Invite has expired' };
+      return { valid: false, message: 'Invite has expired', org };
     }
 
     if (inviteCode.expiresAt && inviteCode.expiresAt < now) {
-      return { valid: false, message: 'Invite has expired' };
+      return { valid: false, message: 'Invite has expired', org };
     }
 
     if (
       inviteCode.maxUses !== null &&
       inviteCode.usedCount >= inviteCode.maxUses
     ) {
-      return { valid: false, message: 'Invite code has already been used' };
+      return {
+        valid: false,
+        message: 'Invite code has already been used',
+        org,
+      };
     }
 
     // TODO Check org to see if there is space
@@ -302,10 +323,6 @@ export class OrgUsersService {
     // ) {
     //   return { valid: false, message: 'Invite code has already been used' };
     // }
-
-    const org = await this.prisma.organization.findFirst({
-      where: { id: inviteCode.orgID },
-    });
 
     return { valid: true, org };
   }
@@ -340,8 +357,11 @@ export class OrgUsersService {
       },
     });
 
+    let subscriptionType = 'user-managed';
+    // TODO figure out rejoins
     switch (inviteCode.role) {
       case 'client':
+        subscriptionType = 'user-managed';
         await this.prisma.orgUser.upsert({
           where: {
             userId_orgId: {
@@ -354,17 +374,19 @@ export class OrgUsersService {
             orgId: inviteCode?.orgID,
             userId: userID,
             status: 'active',
-            subscriptionType: 'user-managed',
+            subscriptionType,
             roles: ['client'],
           },
           update: {
             dataAccess: 'consented',
-            subscriptionType: 'user-managed',
+            status: 'active',
+            subscriptionType,
             roles: ['client', ...(currentOrgUser?.roles || [])],
           },
         });
         break;
       case 'member':
+        subscriptionType = 'org-managed';
         await this.prisma.orgUser.upsert({
           where: {
             userId_orgId: {
@@ -377,12 +399,12 @@ export class OrgUsersService {
             orgId: inviteCode?.orgID,
             userId: userID,
             status: 'active',
-            subscriptionType: 'org-managed',
+            subscriptionType,
             roles: ['member'],
           },
           update: {
             dataAccess: 'full',
-            subscriptionType: 'org-managed',
+            subscriptionType,
             roles: ['member', ...(currentOrgUser?.roles || [])],
           },
         });
@@ -417,7 +439,7 @@ export class OrgUsersService {
       where: { code },
       data: { usedCount: inviteCode?.usedCount ? inviteCode.usedCount + 1 : 1 },
     });
-    return { success: true };
+    return { success: true, subscriptionType };
   }
 
   async findMyConnections(userID: number) {

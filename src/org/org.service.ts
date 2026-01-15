@@ -745,6 +745,27 @@ export class OrgService {
     // );
   }
 
+  async getOrgSignUpLink(orgID: string, currentUserID: number) {
+    let invite = await this.prisma.orgInviteCode.findFirst({
+      where: {
+        orgID,
+        publicCode: true,
+        disabledAt: null,
+        OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!invite) {
+      invite = await this.createOrgInviteCode({
+        orgID,
+        createdByID: currentUserID,
+      });
+    }
+
+    return { link: `${process.env.FRONT_END_URL}/join-org/${invite.code}` };
+  }
+
   async getOrGenerateInviteCode(orgID: string, currentUserID: number) {
     let invite = await this.prisma.orgInviteCode.findFirst({
       where: {
@@ -796,12 +817,14 @@ export class OrgService {
     createdByID,
     expiresAt = null,
     maxUses = null,
+    isPublic = false,
   }: {
     orgID: string;
     role?: string;
     createdByID: number;
     expiresAt?: null | Date;
     maxUses?: null | number;
+    isPublic?: boolean;
   }) {
     for (let i = 0; i < 5; i++) {
       try {
@@ -813,6 +836,7 @@ export class OrgService {
             code: this.generateInviteCode(),
             expiresAt,
             maxUses,
+            publicCode: isPublic,
           },
         });
       } catch (err: any) {

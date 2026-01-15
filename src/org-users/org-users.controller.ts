@@ -79,11 +79,11 @@ export class OrgUsersController {
     return this.orgUsersService.createOrgAdmin(createOrgAdminDto);
   }
 
-  @Throttle({ default: { limit: 3, ttl: 60000 } })
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Get('join/:joinCode')
-  @UseGuards(JwtAuthGuard)
-  verifyJoinCode(@Param('joinCode') joinCode: string) {
-    return this.orgUsersService.verifyJoinCode(joinCode);
+  verifyJoinCode(@Param('joinCode') joinCode: string, @Req() req: Request) {
+    const userID = req.user?.id;
+    return this.orgUsersService.verifyJoinCode(joinCode, userID);
   }
 
   @Post('join/:joinCode')
@@ -95,6 +95,16 @@ export class OrgUsersController {
     }
     return this.orgUsersService.joinOrgWithCode(joinCode, userID);
   }
+
+  // @Post('join')
+  // @UseGuards(JwtAuthGuard)
+  // createJoinCode(@Req() req: Request) {
+  //   const userID = req.user?.id;
+  //   if (!userID) {
+  //     throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+  //   }
+  //   return this.orgUsersService.joinOrgWithCode(joinCode, userID);
+  // }
 
   @Get('connections')
   @UseGuards(JwtAuthGuard)

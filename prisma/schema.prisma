@@ -61,15 +61,40 @@ model User {
   orgs                 Organization[]      @relation("OrgAdmins")
   verifyTokens         VerifyToken[]
   skills               Skills[]
-  orgAdminLinks        OrganizationAdmin[]
+  orgAdminLinks        OrganizationAdmin[] // @depreciated
   redeemedFreeTrial    Boolean             @default(false)
   userType             String              @default("user")
   passwordRestRequired Boolean             @default(false)
   contacts             Contact[]
   LoginToken           LoginToken[]
   goals                Goal[]
+  myOrgs               OrgUser[]
 
   @@index([email, inviteCode, stripeCustomerID])
+}
+
+enum OrgDataAccessLevel {
+  full // org can see everything (employees)
+  consented // user explicitly granted access (clients)
+  none // member but no data access
+}
+
+model OrgUser {
+  id               String             @id @default(uuid())
+  userId           Int
+  orgId            String
+  roles            String[]           @default(["viewer"])
+  status           String             @default("active")
+  subscriptionType String             @default("user-managed") // user-managed,org-managed,free
+  dataAccess       OrgDataAccessLevel
+  joinedAt         DateTime           @default(now())
+  removedAt        DateTime?
+  user             User               @relation(fields: [userId], references: [id])
+  org              Organization       @relation(fields: [orgId], references: [id])
+  DataConsent      DataConsent[]
+
+  @@unique([userId, orgId])
+  @@index([userId, roles, status])
 }
 
 model Organization {
@@ -91,12 +116,14 @@ model Organization {
   ssoIssuer            String? // Entity ID
   ssoCert              String? // x509 cert
   type                 String              @default("org")
-  orgAdmins            User[]              @relation("OrgAdmins")
-  managedSubscriptions Subscription[]      @relation("managedSubscriptions")
+  orgAdmins            User[]              @relation("OrgAdmins") // @depreciated
+  managedSubscriptions Subscription[]      @relation("managedSubscriptions") // @depreciated
   orgSubscription      Subscription[]      @relation("orgSubscription")
   domains              Domain[]
   weeklyReport         OrgWeeklyReport[]
   orgAdminLinks        OrganizationAdmin[]
+  inviteCodes          OrgInviteCode[]
+  users                OrgUser[]
 
   @@index([email, stripeCustomerID])
 }
@@ -641,4 +668,29 @@ model PromoCode {
   status          CouponStatus @default(ACTIVE)
   source          String?
   createdByUserId String?
+}
+
+model OrgInviteCode {
+  id          String       @id @default(cuid())
+  orgID       String
+  org         Organization @relation(fields: [orgID], references: [id])
+  code        String       @unique
+  role        String       @default("client") // client | coach | member | student
+  publicCode  Boolean      @default(false)
+  maxUses     Int? // null = unlimited
+  usedCount   Int          @default(0)
+  expiresAt   DateTime?
+  disabledAt  DateTime?
+  createdByID Int
+  createdAt   DateTime     @default(now())
+}
+
+model DataConsent {
+  id        String    @id @default(uuid())
+  orgUserId String
+  scope     String[] // ['fingerprint', 'resumes', 'achievements']
+  grantedAt DateTime  @default(now())
+  revokedAt DateTime?
+
+  orgUser OrgUser @relation(fields: [orgUserId], references: [id])
 }

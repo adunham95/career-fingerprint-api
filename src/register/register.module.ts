@@ -12,6 +12,7 @@ import { SubscriptionsModule } from 'src/subscriptions/subscriptions.module';
 import { RegisterUsersProcessor } from './register.processor';
 import { BullModule } from '@nestjs/bull';
 import { MailModule } from 'src/mail/mail.module';
+import { OrgUsersModule } from 'src/org-users/org-users.module';
 
 @Module({
   controllers: [RegisterController],
@@ -26,6 +27,7 @@ import { MailModule } from 'src/mail/mail.module';
     CacheModule,
     SubscriptionsModule,
     MailModule,
+    OrgUsersModule,
     BullModule.registerQueue({
       name: 'register-users',
     }),

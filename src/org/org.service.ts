@@ -12,7 +12,10 @@ import { parseStringPromise } from 'xml2js';
 import { PermissionsService } from 'src/permission/permission.service';
 import { AuditService } from 'src/audit/audit.service';
 import { AUDIT_EVENT } from 'src/audit/auditEvents';
-import { permissionRoles, permissionsMap } from 'src/permission/permissions';
+import { permissionRoles } from 'src/permission/permissions';
+import { randomInt } from 'crypto';
+
+const INVITE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
 interface SamlMetadata {
   EntityDescriptor?: {
@@ -99,6 +102,19 @@ export class OrgService {
           roles: ['org_owner'],
         },
       });
+      await this.prisma.orgUser.create({
+        data: {
+          dataAccess: 'full',
+          orgId: newOrg.id,
+          userId: createOrgDto.admin,
+          roles: ['org_owner'],
+        },
+      });
+
+      await this.createOrgInviteCode({
+        orgID: newOrg.id,
+        createdByID: createOrgDto.admin,
+      });
     }
     const address =
       createOrgDto.country && createOrgDto.postalCode
@@ -120,6 +136,7 @@ export class OrgService {
         stripeCustomerID: stripeCustomer.id,
       },
     });
+
     //TODO Send Verification Email
 
     return updatedOrg;
@@ -170,19 +187,29 @@ export class OrgService {
     const pageUsers = await this.cache.wrap(
       `orgUsers:${id}:page:${page}:size:${pageSize}`,
       () =>
-        this.prisma.user.findMany({
+        this.prisma.orgUser.findMany({
           where: {
-            subscriptions: {
-              some: {
-                managedByID: id,
-                status: 'org-managed',
-              },
+            orgId: id,
+            roles: {
+              has: 'member',
             },
+            status: 'active',
+            removedAt: null,
           },
           skip: (page - 1) * pageSize,
           take: pageSize,
           orderBy: {
-            createdAt: 'desc', // consistent ordering is important
+            joinedAt: 'desc', // consistent ordering is important
+          },
+          include: {
+            user: {
+              select: {
+                firstName: true,
+                lastName: true,
+                email: true,
+                id: true,
+              },
+            },
           },
         }),
       600,
@@ -191,11 +218,9 @@ export class OrgService {
     const totalCount = await this.cache.wrap(
       `totalOrgUsers:${id}`,
       () =>
-        this.prisma.user.count({
+        this.prisma.orgUser.count({
           where: {
-            subscriptions: {
-              some: { managedByID: id, status: 'org-managed' },
-            },
+            orgId: id,
           },
         }),
       600,
@@ -210,23 +235,22 @@ export class OrgService {
     const admins = await this.cache.wrap(
       `orgAdmins:${id}`,
       () =>
-        this.prisma.user.findMany({
+        this.prisma.orgUser.findMany({
           where: {
-            orgAdminLinks: {
-              some: { orgId: id },
-            },
+            orgId: id,
+            status: 'active',
+            roles: { hasSome: this.permissionService.adminPanelRoles() },
           },
           select: {
             id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            orgAdminLinks: {
-              where: { orgId: id },
+            roles: true,
+            user: {
               select: {
-                roles: true,
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
               },
-              take: 1,
             },
           },
         }),
@@ -236,7 +260,6 @@ export class OrgService {
 
     const result = admins.map((u) => ({
       ...u,
-      orgAdminLink: u.orgAdminLinks[0] || null,
     }));
 
     return result;
@@ -271,6 +294,15 @@ export class OrgService {
           roles: roles ? roles : ['viewer'],
         },
       });
+
+      await this.prisma.orgUser.create({
+        data: {
+          dataAccess: 'full',
+          orgId: orgID,
+          userId: user.id,
+          roles: roles ? roles : ['viewer'],
+        },
+      });
       await this.mailService.sendAdminAddedEmail({
         to: email,
         context: {
@@ -296,6 +328,14 @@ export class OrgService {
         roles: roles ? roles : ['viewer'],
       },
     });
+    await this.prisma.orgUser.create({
+      data: {
+        dataAccess: 'full',
+        orgId: orgID,
+        userId: newUser.id,
+        roles: roles ? roles : ['viewer'],
+      },
+    });
     await this.mailService.sendAdminAddedEmail({
       to: email,
       context: {
@@ -306,7 +346,73 @@ export class OrgService {
     return newUser;
   }
 
-  removeUserFromOrg(orgID: string, userID: number) {
+  /** @deprecated moved to org users service */
+  async addOrgMember(
+    orgID: string,
+    email: string,
+    firstName?: string,
+    lastName?: string,
+  ) {
+    const user = await this.prisma.user.findFirst({ where: { email } });
+    const org = await this.prisma.organization.findFirst({
+      where: { id: orgID },
+      select: { name: true },
+    });
+    console.log({ user });
+    await this.auditService.logEvent(
+      AUDIT_EVENT.USER_ADDED,
+      undefined,
+      undefined,
+      { email, orgID },
+    );
+    if (user !== null) {
+      await this.prisma.orgUser.create({
+        data: {
+          dataAccess: 'full',
+          orgId: orgID,
+          userId: user.id,
+          roles: ['member'],
+        },
+      });
+      await this.mailService.sendOrgUpgradedEmail({
+        to: email,
+        context: {
+          firstName: user.firstName,
+          orgName: org?.name || 'Organization',
+          tierName: 'Premium',
+        },
+      });
+      return user;
+    }
+    const newUser = await this.prisma.user.create({
+      data: {
+        password: '123abc',
+        firstName,
+        lastName,
+        passwordRestRequired: true,
+        email: email.toLowerCase(),
+      },
+    });
+    await this.prisma.orgUser.create({
+      data: {
+        dataAccess: 'full',
+        orgId: orgID,
+        userId: newUser.id,
+        roles: ['member'],
+      },
+    });
+    await this.mailService.sendAdminAddedEmail({
+      to: email,
+      context: {
+        firstName: newUser.firstName,
+        orgName: org?.name || 'Organization',
+      },
+    });
+    return newUser;
+  }
+
+  /** @deprecated Moving to use the org user functions */
+  async removeUserFromOrg(orgID: string, userID: number) {
     // Remove Cache
     return this.prisma.subscription.updateMany({
       where: {
@@ -358,7 +464,7 @@ export class OrgService {
         );
       }
     }
-    return this.prisma.organizationAdmin.update({
+    await this.prisma.organizationAdmin.update({
       where: {
         userId_orgId: {
           userId: userID,
@@ -366,6 +472,16 @@ export class OrgService {
         },
       },
       data: details,
+    });
+
+    return this.prisma.orgUser.update({
+      where: {
+        userId_orgId: {
+          userId: userID,
+          orgId: orgID,
+        },
+      },
+      data: { roles: details.roles },
     });
   }
 
@@ -378,12 +494,23 @@ export class OrgService {
       undefined,
       { orgID },
     );
-    return this.prisma.organizationAdmin.delete({
+    await this.prisma.organizationAdmin.delete({
       where: {
         userId_orgId: {
           userId: userID,
           orgId: orgID,
         },
+      },
+    });
+    await this.prisma.orgUser.update({
+      where: {
+        userId_orgId: {
+          userId: userID,
+          orgId: orgID,
+        },
+      },
+      data: {
+        status: 'deleted',
       },
     });
   }
@@ -505,6 +632,7 @@ export class OrgService {
 
   getRolesForOrg(orgID: string) {
     try {
+      // TODO filter by allowable roles
       const roles = permissionRoles;
       return roles;
     } catch (error) {
@@ -615,5 +743,107 @@ export class OrgService {
     //     }),
     //   600,
     // );
+  }
+
+  async getOrgSignUpLink(orgID: string, currentUserID: number) {
+    let invite = await this.prisma.orgInviteCode.findFirst({
+      where: {
+        orgID,
+        publicCode: true,
+        disabledAt: null,
+        OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!invite) {
+      invite = await this.createOrgInviteCode({
+        orgID,
+        createdByID: currentUserID,
+      });
+    }
+
+    return { link: `${process.env.FRONT_END_URL}/join-org/${invite.code}` };
+  }
+
+  async getOrGenerateInviteCode(orgID: string, currentUserID: number) {
+    let invite = await this.prisma.orgInviteCode.findFirst({
+      where: {
+        orgID,
+        disabledAt: null,
+        OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!invite) {
+      invite = await this.createOrgInviteCode({
+        orgID,
+        createdByID: currentUserID,
+      });
+    }
+
+    return invite;
+  }
+  async generateOnTimeInviteCode(orgID: string, currentUserID: number) {
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + 14);
+
+    const invite = await this.createOrgInviteCode({
+      orgID,
+      createdByID: currentUserID,
+      expiresAt: futureDate,
+      maxUses: 1,
+    });
+
+    return invite;
+  }
+
+  private randomChar(): string {
+    return INVITE_ALPHABET[randomInt(INVITE_ALPHABET.length)];
+  }
+
+  private generateInviteCode(): string {
+    const part1 = Array.from({ length: 6 }, () => this.randomChar()).join('');
+
+    const part2 = Array.from({ length: 3 }, () => this.randomChar()).join('');
+
+    return `${part1}-${part2}`;
+  }
+
+  private async createOrgInviteCode({
+    orgID,
+    role = 'client',
+    createdByID,
+    expiresAt = null,
+    maxUses = null,
+    isPublic = false,
+  }: {
+    orgID: string;
+    role?: string;
+    createdByID: number;
+    expiresAt?: null | Date;
+    maxUses?: null | number;
+    isPublic?: boolean;
+  }) {
+    for (let i = 0; i < 5; i++) {
+      try {
+        return await this.prisma.orgInviteCode.create({
+          data: {
+            orgID,
+            role,
+            createdByID,
+            code: this.generateInviteCode(),
+            expiresAt,
+            maxUses,
+            publicCode: isPublic,
+          },
+        });
+      } catch (err: any) {
+        if (err.code !== 'P2002') throw err;
+      }
+    }
+
+    throw new Error('Failed to generate invite code');
   }
 }

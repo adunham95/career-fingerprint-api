@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { permissionsMap } from './permissions';
+import { AdminPanelRoles, permissionsMap } from './permissions';
 
 @Injectable()
 export class PermissionsService {
@@ -12,5 +12,13 @@ export class PermissionsService {
     }
 
     return [...permissions];
+  }
+
+  isOrgAdmin(roles: string[]) {
+    return roles.some((r) => AdminPanelRoles.includes(r));
+  }
+
+  adminPanelRoles() {
+    return AdminPanelRoles;
   }
 }

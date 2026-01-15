@@ -10,4 +10,6 @@ export enum AUDIT_EVENT {
   ADMIN_ADDED = 'admin_added',
   ADMIN_REMOVE = 'admin_removed',
   ADMIN_EDITED_DATA = 'admin_edited_user_data',
+  USER_ADDED = 'user_added',
+  USER_INVITED = 'user_invited',
 }

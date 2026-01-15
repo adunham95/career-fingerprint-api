@@ -49,7 +49,6 @@ export class MeetingsController {
   @Get('my')
   @MinPlanLevel(1)
   @UseGuards(JwtAuthGuard, SubscriptionGuard)
-  @Header('Cache-Control', 'private, max-age=30')
   findMine(@Req() req: Request, @Query() query: MeetingQueryDto) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);

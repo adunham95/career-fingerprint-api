@@ -8,26 +8,64 @@ import {
   IsOptional,
   IsString,
   Min,
+  ValidateNested,
 } from 'class-validator';
+
+export class CreateMilestonesDto {
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  type: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  title: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString({ each: true })
+  @IsArray()
+  keywords: string[];
+
+  @ApiProperty()
+  @IsOptional()
+  @IsNumber()
+  streak: number;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsNumber()
+  targetCount: number;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  checklist: string[];
+}
 
 export class CreateGoalDto {
   userID: number;
 
   @ApiProperty()
+  @IsOptional()
   @IsString()
-  name: string;
+  templateKey?: string;
 
   @ApiProperty()
+  @IsString()
+  title: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  description?: string;
+
   @IsArray()
-  keywords: string[];
-
-  @ApiProperty()
-  @IsArray()
-  actions: string[];
-
-  @ApiProperty()
-  @IsNumber()
-  targetCount: number;
+  @ValidateNested({ each: true })
+  @Type(() => CreateMilestonesDto)
+  milestones: CreateMilestonesDto[];
 }
 
 export class GoalQueryDto {

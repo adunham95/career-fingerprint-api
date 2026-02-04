@@ -10,6 +10,7 @@ import { CacheService } from 'src/cache/cache.service';
 import { DateTime } from 'luxon';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
+import { normalizeSearchText } from 'src/utils/normaliseKeywords';
 
 @Injectable()
 export class AchievementService {
@@ -25,9 +26,14 @@ export class AchievementService {
 
     delete createAchievementDto.achievementTags;
 
+    const { tokens } = normalizeSearchText(
+      `${createAchievementDto.result ?? ''} ${createAchievementDto.myContribution ?? ''}`,
+    );
+
     const newAchievement = await this.prisma.achievement.create({
       data: {
         ...createAchievementDto,
+        autoKeyWords: tokens,
         tags: {
           connectOrCreate: tags.map((tagName) => {
             return {
@@ -48,7 +54,7 @@ export class AchievementService {
       },
     });
 
-    await this.goalQueue.add('recalculateGoalProgress', {
+    await this.goalQueue.add('linkToMilestone', {
       userId: createAchievementDto.userID,
       achievementId: newAchievement.id,
     });

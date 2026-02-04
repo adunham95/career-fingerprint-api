@@ -1,79 +1,149 @@
-import { Process, Processor } from '@nestjs/bull';
+import { CacheService } from './../cache/cache.service';
+import { InjectQueue, Process, Processor } from '@nestjs/bull';
 import { GoalService } from './goal.service';
-import { Job } from 'bull';
+import { Job, Queue } from 'bull';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { MilestoneKind } from '@prisma/client';
 
 @Processor('goal')
 export class GoalProcessor {
   constructor(
     private readonly goalService: GoalService,
+    private readonly cache: CacheService,
     private readonly prisma: PrismaService,
+    @InjectQueue('goal') private goalQueue: Queue,
   ) {}
 
-  @Process('recalculateGoalProgress')
-  async recalculateGoalProgress(
+  @Process('closeGoal')
+  async closeGoal(
+    job: Job<{
+      goalID: string;
+    }>,
+  ) {
+    console.log('running closeGoal');
+    const { goalID } = job.data;
+
+    await this.goalService.completeGoal(goalID);
+  }
+
+  @Process('updateGoalProgress')
+  async updateGoalProgress(
+    job: Job<{
+      goalID: string;
+    }>,
+  ) {
+    console.log('running recalculateGoalProgress');
+    const { goalID } = job.data;
+
+    await this.goalService.updateGoalProgress(goalID);
+  }
+
+  @Process('updateMilestoneProgress')
+  async updateMilestoneProgress(
+    job: Job<{
+      milestoneID: string;
+    }>,
+  ) {
+    console.log('running recalculateGoalProgress');
+    const { milestoneID } = job.data;
+
+    await this.goalService.updateMilestoneProgress(milestoneID);
+  }
+
+  @Process('linkToMilestone')
+  async linkAchievementToMilestone(
     job: Job<{
       userId: number;
       achievementId: string;
     }>,
   ) {
-    console.log('running recalculateGoalProgress');
+    console.log('running linkToMilestone');
     const { userId, achievementId } = job.data;
-    // const goals = await this.prisma.goal.findMany({
-    //   where: { userID: userId, status: 'active' },
-    // });
 
-    // const addedAchievement = await this.prisma.achievement.findFirst({
-    //   where: { id: achievementId },
-    // });
+    const achievement = await this.prisma.achievement.findUnique({
+      where: { id: achievementId },
+      select: { id: true, userID: true, autoKeyWords: true },
+    });
 
-    // if (!addedAchievement) {
-    //   return;
-    // }
+    if (!achievement || achievement.userID !== userId) return;
 
-    // for (const goal of goals) {
-    //   const newPoints = this.goalService.calculateAchievementPoints(
-    //     goal,
-    //     addedAchievement,
-    //   );
+    const kws = achievement?.autoKeyWords ?? [];
+    if (!kws?.length) return;
 
-    //   if (newPoints > 0) {
-    //     const target = goal.targetCount ?? 0;
-    //     const currentPoints = goal.currentPoints ?? 0;
-    //     const totalPoints = newPoints + currentPoints;
+    const achievementKeyWords = new Set(kws);
 
-    //     let progress = 0;
-    //     if (target > 0) {
-    //       progress = totalPoints / target;
-    //     }
+    const milestones = await this.getKeywordMilestonesForUser(userId);
 
-    //     console.log('progress', {
-    //       goalID: goal.id,
-    //       progress,
-    //       totalPoints,
-    //       newPoints,
-    //       currentPoints,
-    //     });
+    const links: Array<{ milestoneID: string; matchReason: string }> = [];
 
-    //     // Optional: cap progress at 100%
-    //     progress = Math.min(progress, 1);
+    for (const m of milestones) {
+      let first: string | null = null;
+      for (const k of m.keywords) {
+        if (achievementKeyWords.has(k)) {
+          first = k;
+          break;
+        }
+      }
+      if (first) {
+        links.push({
+          milestoneID: m.id,
+          matchReason: `keyword:${first}`,
+        });
+        await this.goalQueue.add('updateGoalProgress', {
+          goalID: m.goalID,
+        });
+      }
+    }
 
-    //     console.log('mined progress:', progress);
+    if (!links.length) return;
 
-    //     await this.prisma.goal.update({
-    //       where: { id: goal.id },
-    //       data: {
-    //         progress,
-    //         lastProgressCalculatedAt: new Date(),
-    //         currentPoints: totalPoints,
-    //         linkedAchievements: { connect: { id: achievementId } },
-    //       },
-    //     });
+    await this.prisma.evidence.createMany({
+      data: links.map((l) => ({
+        userID: userId,
+        milestoneID: l.milestoneID,
+        achievementID: achievementId,
+        kind: MilestoneKind.keywords_tags,
+        linkType: 'auto',
+        matchReason: l.matchReason,
+      })),
+      skipDuplicates: true,
+    });
+  }
 
-    //     if (progress >= 1) {
-    //       await this.goalService.completeGoal(goal.id);
-    //     }
-    //   }
-    // }
+  async getKeywordMilestonesForUser(userId: number) {
+    // try cache first
+    const cached = await this.cache.get(`kwMilestones:${userId}`);
+    if (cached)
+      return cached as Array<{
+        id: string;
+        keywords: string[];
+        goalID: string;
+      }>;
+
+    const rows = await this.prisma.goalMilestone.findMany({
+      where: {
+        userID: userId,
+        kind: 'keywords_tags',
+        goal: { status: 'active' },
+      },
+      select: { id: true, metricConfig: true, goalID: true },
+    });
+
+    const mapped = rows
+      .map((r) => {
+        const raw = ((r.metricConfig as { keywords: string[] })?.keywords ??
+          []) as unknown[];
+        const seen = new Set<string>();
+        const keywords = raw
+          .map((k) => String(k).trim().toLowerCase())
+          .filter(Boolean)
+          .filter((k) => (seen.has(k) ? false : (seen.add(k), true)));
+
+        return { id: r.id, keywords, goalID: r.goalID };
+      })
+      .filter((r) => r.keywords.length);
+
+    await this.cache.set(`kwMilestones:${userId}`, mapped, 60 * 10);
+    return mapped;
   }
 }

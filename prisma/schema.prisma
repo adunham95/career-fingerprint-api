@@ -72,6 +72,7 @@ model User {
   milestoneEvidence          Evidence[]
   GoalMilestoneManualState   GoalMilestoneManualState[]
   GoalMilestoneStreakCheckIn GoalMilestoneStreakCheckIn[]
+  GoalMilestone              GoalMilestone[]
 
   @@index([email, inviteCode, stripeCustomerID])
 }
@@ -358,6 +359,8 @@ model Achievement {
   highlights        Highlight[]      @relation("highlightAchievements")
   tags              AchievementTag[] @relation("achievementTags")
   milestoneEvidence Evidence[]
+  autoKeyWords      String[]
+  searchText        String?
 
   @@index([userID])
 }
@@ -721,10 +724,11 @@ model Goal {
 }
 
 model GoalMilestone {
-  id     String @id @default(cuid())
-  goalID String
-  goal   Goal   @relation(fields: [goalID], references: [id], onDelete: Cascade)
-
+  id          String  @id @default(cuid())
+  goalID      String
+  goal        Goal    @relation(fields: [goalID], references: [id], onDelete: Cascade)
+  userID      Int     @default(1)
+  user        User    @relation(fields: [userID], references: [id])
   title       String
   description String?
   order       Int     @default(0)

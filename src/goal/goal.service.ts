@@ -1,4 +1,4 @@
-import { Evidence } from './../../node_modules/.prisma/client/index.d';
+import { DateTime } from 'luxon';
 import {
   BadRequestException,
   Injectable,
@@ -8,15 +8,12 @@ import { CreateGoalDto, CreateMilestonesDto } from './dto/create-goal.dto';
 import { CheckoffMilestoneDto, UpdateGoalDto } from './dto/update-goal.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CacheService } from 'src/cache/cache.service';
-import {
-  Achievement,
-  Goal,
-  MilestoneKind,
-  Prisma,
-  PrismaClient,
-} from '@prisma/client';
+import { MilestoneKind, Prisma, PrismaClient } from '@prisma/client';
 import { SseService } from 'src/sse/sse.service';
 import { MailService } from 'src/mail/mail.service';
+import { startOfWeek, weekStartETJS } from 'src/utils/weekStart';
+import { Queue } from 'bull';
+import { InjectQueue } from '@nestjs/bull';
 
 type PrismaLike = PrismaClient | Prisma.TransactionClient;
 @Injectable()
@@ -26,6 +23,7 @@ export class GoalService {
     private cache: CacheService,
     private sse: SseService,
     private mailService: MailService,
+    @InjectQueue('goal') private goalQueue: Queue,
   ) {}
   create(createGoalDto: CreateGoalDto) {
     const { userID, templateKey, title, description, milestones } =
@@ -68,6 +66,7 @@ export class GoalService {
           kind,
           metricConfig,
           targetCount,
+          userID,
           ...(checklistItems ? { checklistItems } : {}),
         };
       });
@@ -164,12 +163,20 @@ export class GoalService {
           },
         },
       },
+      orderBy: {
+        createdAt: 'asc',
+      },
     });
 
     return data;
   }
 
-  async getMilestoneDetails(type: string, milestoneID: string) {
+  async getMilestoneDetails(
+    type: string,
+    milestoneID: string,
+    userID: number,
+    userTimeZone?: string,
+  ) {
     const kind = this.toKind(type);
 
     switch (kind) {
@@ -197,6 +204,54 @@ export class GoalService {
         return manualItem;
       }
 
+      case MilestoneKind.keywords_tags: {
+        const linkedAchievements = await this.prisma.evidence.findMany({
+          where: {
+            milestoneID,
+            kind: MilestoneKind.keywords_tags,
+            achievementID: { not: null },
+          },
+          include: { achievement: true },
+        });
+        return { linkedAchievements };
+      }
+
+      case MilestoneKind.streak: {
+        const thisWeekStart = weekStartETJS(new Date(), userTimeZone);
+
+        const [latest, thisWeek, milestone] = await this.prisma.$transaction([
+          this.prisma.goalMilestoneStreakCheckIn.findFirst({
+            where: { milestoneID, userID },
+            orderBy: { occurredAt: 'desc' },
+          }),
+
+          this.prisma.goalMilestoneStreakCheckIn.findUnique({
+            where: {
+              milestoneID_userID_weekStart: {
+                milestoneID,
+                userID,
+                weekStart: thisWeekStart,
+              },
+            },
+          }),
+
+          this.prisma.goalMilestone.findFirst({
+            where: {
+              id: milestoneID,
+            },
+            select: { progress: true },
+          }),
+        ]);
+
+        return {
+          streak: {
+            currentStreak: milestone?.progress || 0,
+            hasCheckInThisWeek: Boolean(thisWeek),
+            lastCheckIn: latest?.occurredAt ?? null,
+          },
+        };
+      }
+
       default:
         return {};
     }
@@ -210,13 +265,20 @@ export class GoalService {
   ) {
     const kind = this.toKind(type);
 
-    const newData = await this.prisma.$transaction(async (tx) => {
-      const milestone = await tx.goalMilestone.findUnique({
-        where: { id: milestoneID },
-        select: { id: true, kind: true },
-      });
+    const milestoneDetails = await this.cache.wrap(
+      `mileStoneGoal:${milestoneID}`,
+      () => {
+        return this.prisma.goalMilestone.findFirst({
+          where: { id: milestoneID },
+          select: { id: true, goalID: true, kind: true },
+        });
+      },
+      86400,
+    );
 
-      if (!milestone) throw new NotFoundException('Milestone not found');
+    if (!milestoneDetails) throw new NotFoundException('Milestone not found');
+
+    const newData = await this.prisma.$transaction(async (tx) => {
       switch (kind) {
         case MilestoneKind.checklist: {
           return this.checkoffChecklistItem(
@@ -241,6 +303,10 @@ export class GoalService {
           );
         }
 
+        case MilestoneKind.streak: {
+          return this.checkStreakThisWeek({ milestoneID, userID }, tx);
+        }
+
         default:
           throw new BadRequestException(
             `Checkoff not supported for milestone kind: ${type}`,
@@ -250,16 +316,12 @@ export class GoalService {
 
     console.log(newData);
 
-    const milestoneDetails = await this.prisma.goalMilestone.findFirst({
-      where: { id: milestoneID },
-    });
-
-    if (!milestoneDetails) throw new NotFoundException('Milestone not found');
-
-    const currentProgress = await this.updateMilestoneProgress(milestoneID);
+    const { goalProgress, milestoneProgress } =
+      await this.updateMilestoneProgress(milestoneID);
 
     return {
-      currentProgress,
+      goalProgress,
+      milestoneProgress,
       details: { goalID: milestoneDetails.goalID, id: milestoneDetails.id },
     };
   }
@@ -334,6 +396,48 @@ export class GoalService {
     return updatedItem;
   }
 
+  private async checkStreakThisWeek(
+    args: { milestoneID: string; userID: number },
+    db?: PrismaLike,
+  ) {
+    const prisma = db ?? this.prisma;
+    const { milestoneID, userID } = args;
+
+    const now = new Date();
+    const weekStart = weekStartETJS(now);
+
+    const checkIn = await prisma.goalMilestoneStreakCheckIn.upsert({
+      where: {
+        milestoneID_userID_weekStart: {
+          milestoneID,
+          userID,
+          weekStart,
+        },
+      },
+      create: {
+        milestoneID,
+        userID,
+        weekStart,
+        occurredAt: now,
+      },
+      update: {
+        // optional: refresh timestamp if they "check" again
+        occurredAt: now,
+      },
+    });
+
+    const weekKey = DateTime.fromJSDate(weekStart, {
+      zone: 'utc',
+    }).toISODate();
+
+    return {
+      checkIn,
+      hasCheckInThisWeek: true,
+      weekStart,
+      key: `week_${weekKey}`,
+    };
+  }
+
   private async createEvidence(
     data: { [key: string]: any },
     kind: string,
@@ -371,7 +475,7 @@ export class GoalService {
     return [];
   }
 
-  async updateMilestoneProgress(milestoneID: string, db?: PrismaLike) {
+  async calculateMilestoneProgress(milestoneID: string, db?: PrismaLike) {
     if (!db) {
       db = this.prisma;
     }
@@ -394,6 +498,7 @@ export class GoalService {
         return {
           progress: checked,
           targetCount: total,
+          complete: checked === total,
         };
       }
 
@@ -409,6 +514,7 @@ export class GoalService {
         return {
           progress,
           targetCount: 1,
+          complete: progress === 1,
         };
       }
 
@@ -431,50 +537,19 @@ export class GoalService {
         return {
           progress,
           targetCount,
+          complete: progress === targetCount,
         };
       }
 
       case MilestoneKind.streak: {
-        const weeks = Number(milestone.targetCount ?? 0);
-        if (!weeks) return { progress: 0, targetCount: 0, completedAt: null };
-
-        const checkIns = await db.goalMilestoneStreakCheckIn.findMany({
-          where: {
-            milestoneID,
-          },
-          select: { weekStart: true },
-          orderBy: { weekStart: 'asc' },
-        });
-
-        if (checkIns.length === 0) {
-          return { progress: 0, targetCount: weeks, completedAt: null };
-        }
-
-        // weekStart should be the FRIDAY date (normalized) for each checkin
-        // Dedup by weekStart just in case (should already be unique per user/weekStart)
-        const weekStarts = Array.from(
-          new Set(checkIns.map((c) => c.weekStart.getTime())),
-        )
-          .sort((a, b) => a - b)
-          .map((t) => new Date(t));
-
-        const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-
-        // Streak = consecutive Fridays ending at the latest recorded Friday
-        let streak = 1;
-        for (let i = weekStarts.length - 1; i > 0; i--) {
-          const cur = weekStarts[i].getTime();
-          const prev = weekStarts[i - 1].getTime();
-
-          if (cur - prev === ONE_WEEK_MS) streak++;
-          else break;
-        }
+        const { streak, weeks } = await this.calculateStreak(milestoneID, db);
 
         const progress = Math.min(streak, weeks);
 
         return {
           progress,
           targetCount: weeks,
+          complete: progress === weeks,
         };
       }
 
@@ -482,72 +557,224 @@ export class GoalService {
         return {
           progress: 0,
           targetCount: 0,
+          complete: false,
         };
     }
   }
 
-  async calculateGoalProgress(goal: Goal) {
-    return 0;
-    // Fetch achievements since the goal was created
-    // const achievements = await this.prisma.achievement.findMany({
-    //   where: {
-    //     userID: goal.userID,
-    //     createdAt: { gte: goal.createdAt },
-    //   },
-    //   include: {
-    //     tags: { select: { name: true } },
-    //   },
-    // });
+  async calculateGoalProgress(goalID: string, db?: PrismaLike) {
+    if (!db) {
+      db = this.prisma;
+    }
+    const goal = await db.goal.findUnique({
+      where: { id: goalID },
+      include: {
+        milestones: { select: { progress: true, targetCount: true } },
+      },
+    });
 
-    // // Calculate total weighted points
-    // let totalPoints = 0;
-    // for (const achievement of achievements) {
-    //   totalPoints += this.calculateAchievementPoints(goal, achievement);
-    // }
+    let totalProgress = 0;
+    let targetPoints = 0;
 
-    // const target = goal.targetCount ?? 0;
+    goal?.milestones.forEach((element) => {
+      const { progress, targetCount } = element;
+      targetPoints += targetCount;
+      totalProgress += progress;
+    });
 
-    // let progress = 0;
-    // if (target > 0) {
-    //   progress = totalPoints / target;
-    // }
+    let progress = totalProgress / targetPoints;
 
-    // // Optional: cap progress at 100%
-    // progress = Math.min(progress, 1);
+    progress = Math.min(progress, 1);
 
-    // return progress;
+    return Math.round(progress * 100);
   }
 
-  calculateAchievementPoints(goal: Goal, achievement: Achievement): number {
-    return 0;
-    // const text =
-    //   `${achievement.result ?? ''} ${achievement.myContribution ?? ''}`.toLowerCase();
-    // let score = 0;
-    // // --- KEYWORD SCORING ---
-    // const keywordMatches = goal.keywords.filter((k) =>
-    //   text.includes(k.toLowerCase()),
-    // ).length;
-    // const keywordMatchCount = Math.min(keywordMatches, 5); // cap at 3
-    // console.log('keyword score', {
-    //   score: keywordMatchCount * 0.25,
-    //   keywordMatchCount,
-    // });
-    // score += keywordMatchCount * 0.25; // weighted
-    // // --- ACTION SCORING ---
-    // const actionMatches = goal.actions.filter((a) =>
-    //   text.includes(a.toLowerCase()),
-    // ).length;
-    // console.log('action score', {
-    //   score: actionMatches * 1,
-    //   actionMatches,
-    // });
-    // score += actionMatches * 1; // weighted (full point per action)
-    // console.log('total score', score);
-    // return score;
+  async calculateStreak(milestoneID: string, db?: PrismaLike) {
+    if (!db) {
+      db = this.prisma;
+    }
+    const milestone = await db.goalMilestone.findUnique({
+      where: { id: milestoneID },
+      include: {
+        checklistItems: true,
+      },
+    });
+    if (!milestone) {
+      return { streak: 0, weeks: 0 };
+    }
+    const weeks = Number(milestone.targetCount ?? 0);
+    if (!weeks) return { streak: 0, weeks: 0 };
+
+    const checkIns = await db.goalMilestoneStreakCheckIn.findMany({
+      where: {
+        milestoneID,
+      },
+      select: { weekStart: true },
+      orderBy: { weekStart: 'asc' },
+    });
+
+    if (checkIns.length === 0) {
+      return { streak: 0, weeks: 0 };
+    }
+
+    // weekStart should be the FRIDAY date (normalized) for each checkin
+    // Dedup by weekStart just in case (should already be unique per user/weekStart)
+    const weekStarts = Array.from(
+      new Set(checkIns.map((c) => c.weekStart.getTime())),
+    )
+      .sort((a, b) => a - b)
+      .map((t) => new Date(t));
+
+    const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+    // Streak = consecutive Fridays ending at the latest recorded Friday
+    let streak = 1;
+    for (let i = weekStarts.length - 1; i > 0; i--) {
+      const cur = weekStarts[i].getTime();
+      const prev = weekStarts[i - 1].getTime();
+
+      if (cur - prev === ONE_WEEK_MS) streak++;
+      else break;
+    }
+
+    return { streak: streak || 0, weeks };
+  }
+
+  async resetStreakCounter() {
+    const weekStart = startOfWeek();
+
+    const milestonesToReset = await this.prisma.goalMilestone.findMany({
+      where: {
+        kind: 'streak',
+        completedAt: null,
+        NOT: {
+          GoalMilestoneStreakCheckIn: {
+            some: {
+              weekStart,
+            },
+          },
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!milestonesToReset.length) return;
+
+    const ids = milestonesToReset.map((m) => m.id);
+
+    for (let i = 0; i < ids.length; i++) {
+      const milestoneID = ids[i];
+      await this.goalQueue.add('updateMilestoneProgress', {
+        milestoneID,
+      });
+    }
+  }
+
+  async updateMilestoneProgress(milestoneID: string) {
+    const milestoneDetails = await this.cache.wrap(
+      `mileStoneGoal:${milestoneID}`,
+      () => {
+        return this.prisma.goalMilestone.findFirst({
+          where: { id: milestoneID },
+          select: { id: true, goalID: true, kind: true },
+        });
+      },
+      86400,
+    );
+
+    if (!milestoneDetails) {
+      return {
+        goalProgress: 0,
+        milestoneProgress: { targetCount: 0, progress: 0 },
+      };
+    }
+
+    const milestoneProgress =
+      await this.calculateMilestoneProgress(milestoneID);
+
+    await this.prisma.goalMilestone.update({
+      where: {
+        id: milestoneID,
+      },
+      data: {
+        targetCount: milestoneProgress.targetCount,
+        progress: milestoneProgress.progress,
+        completedAt: milestoneProgress.complete ? new Date() : null,
+      },
+    });
+
+    const goalProgress = await this.calculateGoalProgress(
+      milestoneDetails.goalID,
+    );
+
+    await this.prisma.goal.update({
+      where: { id: milestoneDetails.goalID },
+      data: { progress: goalProgress },
+    });
+
+    if (goalProgress >= 100) {
+      await this.goalQueue.add('closeGoal', {
+        goalID: milestoneDetails.goalID,
+      });
+    }
+
+    return { goalProgress, milestoneProgress };
+  }
+
+  async updateGoalProgress(goalID: string) {
+    const goalDetails = await this.prisma.goal.findFirst({
+      where: { id: goalID },
+      select: { id: true, milestones: { select: { id: true } } },
+    });
+
+    if (!goalDetails) {
+      return {
+        goalProgress: 0,
+      };
+    }
+
+    for (let i = 0; i < goalDetails.milestones.length; i++) {
+      const element = goalDetails.milestones[i];
+      const milestoneProgress = await this.calculateMilestoneProgress(
+        element.id,
+      );
+
+      await this.prisma.goalMilestone.update({
+        where: {
+          id: element.id,
+        },
+        data: {
+          targetCount: milestoneProgress.targetCount,
+          progress: milestoneProgress.progress,
+          completedAt: milestoneProgress.complete ? new Date() : null,
+        },
+      });
+    }
+
+    const goalProgress = await this.calculateGoalProgress(goalID);
+
+    await this.prisma.goal.update({
+      where: { id: goalID },
+      data: { progress: goalProgress },
+    });
+
+    if (goalProgress >= 100) {
+      await this.goalQueue.add('closeGoal', {
+        goalID: goalID,
+      });
+    }
+
+    return { goalProgress };
   }
 
   async completeGoal(goalID: string) {
-    // console.log('goal complete');
+    console.log('goal complete');
+    await this.prisma.goal.update({
+      where: { id: goalID },
+      data: { status: 'completed', completedAt: new Date() },
+    });
     // const goal = await this.prisma.goal.findFirst({
     //   where: { id: goalID },
     //   include: {

@@ -19,6 +19,7 @@ import { Request } from 'express';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { MinPlanLevel } from 'src/decorators/min-plan-level.decorator';
 import { SubscriptionGuard } from 'src/auth/subscription.guard';
+import { Cron } from '@nestjs/schedule';
 
 @Controller('goal')
 export class GoalController {
@@ -62,8 +63,20 @@ export class GoalController {
   @Get('milestone/:id/:type')
   @MinPlanLevel(2)
   @UseGuards(JwtAuthGuard, SubscriptionGuard)
-  findMilestoneItem(@Param('id') id: string, @Param('type') type: string) {
-    return this.goalService.getMilestoneDetails(type, id);
+  findMilestoneItem(
+    @Param('id') id: string,
+    @Param('type') type: string,
+    @Req() req: Request,
+  ) {
+    if (!req.user) {
+      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+    }
+    return this.goalService.getMilestoneDetails(
+      type,
+      id,
+      req.user.id,
+      req.user.timezone,
+    );
   }
 
   @Patch('milestone/:id/:type')
@@ -105,5 +118,11 @@ export class GoalController {
   @UseGuards(JwtAuthGuard, SubscriptionGuard)
   remove(@Param('id') id: string) {
     return this.goalService.remove(+id);
+  }
+
+  // Rest the streak counter of goals if they dont have a check in for the week
+  @Cron('30 2 * * 0')
+  resetStreakCounter() {
+    return this.goalService.resetStreakCounter();
   }
 }

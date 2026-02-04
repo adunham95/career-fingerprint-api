@@ -14,11 +14,12 @@ import {
 } from '@nestjs/common';
 import { GoalService } from './goal.service';
 import { CreateGoalDto, GoalQueryDto } from './dto/create-goal.dto';
-import { UpdateGoalDto } from './dto/update-goal.dto';
+import { CheckoffMilestoneDto, UpdateGoalDto } from './dto/update-goal.dto';
 import { Request } from 'express';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { MinPlanLevel } from 'src/decorators/min-plan-level.decorator';
 import { SubscriptionGuard } from 'src/auth/subscription.guard';
+import { Cron } from '@nestjs/schedule';
 
 @Controller('goal')
 export class GoalController {
@@ -53,30 +54,75 @@ export class GoalController {
   }
 
   @Get('skills')
-  @MinPlanLevel(1)
+  @MinPlanLevel(2)
   @UseGuards(JwtAuthGuard, SubscriptionGuard)
   findSkills() {
     return this.goalService.findGoalSkills();
   }
 
+  @Get('milestone/:id/:type')
+  @MinPlanLevel(2)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  findMilestoneItem(
+    @Param('id') id: string,
+    @Param('type') type: string,
+    @Req() req: Request,
+  ) {
+    if (!req.user) {
+      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+    }
+    return this.goalService.getMilestoneDetails(
+      type,
+      id,
+      req.user.id,
+      req.user.timezone,
+    );
+  }
+
+  @Patch('milestone/:id/:type')
+  @MinPlanLevel(2)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  updateMilestoneItem(
+    @Param('id') id: string,
+    @Body() checkoffItemBody: CheckoffMilestoneDto,
+    @Req() req: Request,
+    @Param('type') type: string,
+  ) {
+    if (!req.user) {
+      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+    }
+    return this.goalService.checkoffMilestone(
+      type,
+      id,
+      req.user.id,
+      checkoffItemBody,
+    );
+  }
+
   @Get(':id')
-  @MinPlanLevel(1)
+  @MinPlanLevel(2)
   @UseGuards(JwtAuthGuard, SubscriptionGuard)
   findOne(@Param('id') id: string) {
     return this.goalService.findOne(+id);
   }
 
   @Patch(':id')
-  @MinPlanLevel(1)
+  @MinPlanLevel(2)
   @UseGuards(JwtAuthGuard, SubscriptionGuard)
   update(@Param('id') id: string, @Body() updateGoalDto: UpdateGoalDto) {
     return this.goalService.update(+id, updateGoalDto);
   }
 
   @Delete(':id')
-  @MinPlanLevel(1)
+  @MinPlanLevel(2)
   @UseGuards(JwtAuthGuard, SubscriptionGuard)
   remove(@Param('id') id: string) {
     return this.goalService.remove(+id);
+  }
+
+  // Rest the streak counter of goals if they dont have a check in for the week
+  @Cron('30 2 * * 0')
+  resetStreakCounter() {
+    return this.goalService.resetStreakCounter();
   }
 }

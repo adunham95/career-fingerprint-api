@@ -15,6 +15,6 @@ export class LoginTokenController {
     if (process.env.NODE_ENV === 'production') {
       throw new ForbiddenException('Not allowed in production');
     }
-    return this.loginTokenService.createLoginToken(email, 'testing');
+    return this.loginTokenService.createLoginToken(email, 'check-in');
   }
 }

@@ -167,12 +167,27 @@ export class MailService {
       },
     });
   }
-   
+
   async addContactToMailTrap(userData: {
     email: string;
     lastName: string;
     firstName: string;
   }) {
     await this.mailQueue.add('addMailTrapContact', userData);
+  }
+
+  async sendClientInvite(params: {
+    to: string;
+    context: {
+      firstName?: string;
+      orgName: string;
+      couponCode?: string;
+      inviteCode?: string;
+    };
+  }) {
+    await this.mailQueue.add('clientInvite', {
+      to: [params.to],
+      context: params.context,
+    });
   }
 }

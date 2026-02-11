@@ -18,6 +18,9 @@ import {
   CreateStripeSubscriptionDto,
 } from './dto/create-stripe-subscription.dto';
 import { CacheService } from 'src/cache/cache.service';
+import { RequirePermission } from 'src/permission/permission.decorator';
+import { OrgMemberGuard } from 'src/org/org-admin.guard';
+import { PermissionGuard } from 'src/permission/permission.guard';
 
 @Controller('stripe')
 export class StripeController {
@@ -133,5 +136,22 @@ export class StripeController {
       createEstimateDto.stripeCustomerID = req.user.stripeCustomerID;
     }
     return this.stripeService.estimate(createEstimateDto);
+  }
+
+  @Post('create-promo-code')
+  @RequirePermission('org:create_promo_code')
+  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
+  async createPromoCode(
+    @Req() req: Request,
+    @Body()
+    createPromoCodeDto: {
+      promoCodeText: string;
+    },
+  ) {
+    const orgID = req.user?.orgID;
+    return this.stripeService.createPromoCode(
+      createPromoCodeDto.promoCodeText,
+      orgID,
+    );
   }
 }

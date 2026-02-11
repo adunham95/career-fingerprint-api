@@ -23,53 +23,82 @@ datasource db {
 }
 
 model User {
-  id                   Int                 @id @default(autoincrement())
-  firstName            String              @default("")
-  lastName             String              @default("")
-  username             String?             @unique
-  password             String
-  profileImage         String?             @default("")
-  email                String              @unique
-  createdAt            DateTime            @default(now())
-  updatedAt            DateTime            @updatedAt
-  accountStatus        String              @default("active")
-  pitch                String?
-  lookingFor           String?
-  stripeCustomerID     String?
-  inviteCode           String?
-  emailVerified        Boolean             @default(false)
-  timezone             String              @default("America/New_York")
-  nextSendAt           DateTime? // in UTC
-  preferredDay         Int                 @default(5)
-  resume               Resume[]
-  positions            JobPosition[]
-  achievements         Achievement[]
-  projects             Project[]
-  education            Education[]
-  subscriptions        Subscription[]
-  jobApplications      JobApplication[]
-  notes                Note[]
-  meetings             Meeting[]
-  resetTokens          ResetToken[]
-  highlights           Highlight[]
-  prepAnswers          PrepAnswer[]
-  achievementTags      AchievementTag[]
-  coverLetter          CoverLetter[]
-  bulletPoints         BulletPoint[]
-  sentRedemptions      InviteRedemption[]  @relation("InviterRedemptions")
-  receivedRedemptions  InviteRedemption[]  @relation("InviteeRedemptions")
-  orgs                 Organization[]      @relation("OrgAdmins")
-  verifyTokens         VerifyToken[]
-  skills               Skills[]
-  orgAdminLinks        OrganizationAdmin[]
-  redeemedFreeTrial    Boolean             @default(false)
-  userType             String              @default("user")
-  passwordRestRequired Boolean             @default(false)
-  contacts             Contact[]
-  LoginToken           LoginToken[]
-  goals                Goal[]
+  id                         Int                          @id @default(autoincrement())
+  firstName                  String                       @default("")
+  lastName                   String                       @default("")
+  username                   String?                      @unique
+  password                   String
+  profileImage               String?                      @default("")
+  email                      String                       @unique
+  createdAt                  DateTime                     @default(now())
+  updatedAt                  DateTime                     @updatedAt
+  accountStatus              String                       @default("active")
+  pitch                      String?
+  lookingFor                 String?
+  stripeCustomerID           String?
+  inviteCode                 String?
+  emailVerified              Boolean                      @default(false)
+  timezone                   String                       @default("America/New_York")
+  nextSendAt                 DateTime? // in UTC
+  preferredDay               Int                          @default(5)
+  resume                     Resume[]
+  positions                  JobPosition[]
+  achievements               Achievement[]
+  projects                   Project[]
+  education                  Education[]
+  subscriptions              Subscription[]
+  jobApplications            JobApplication[]
+  notes                      Note[]
+  meetings                   Meeting[]
+  resetTokens                ResetToken[]
+  highlights                 Highlight[]
+  prepAnswers                PrepAnswer[]
+  achievementTags            AchievementTag[]
+  coverLetter                CoverLetter[]
+  bulletPoints               BulletPoint[]
+  sentRedemptions            InviteRedemption[]           @relation("InviterRedemptions")
+  receivedRedemptions        InviteRedemption[]           @relation("InviteeRedemptions")
+  orgs                       Organization[]               @relation("OrgAdmins")
+  verifyTokens               VerifyToken[]
+  skills                     Skills[]
+  orgAdminLinks              OrganizationAdmin[] // @depreciated
+  redeemedFreeTrial          Boolean                      @default(false)
+  userType                   String                       @default("user")
+  passwordRestRequired       Boolean                      @default(false)
+  contacts                   Contact[]
+  LoginToken                 LoginToken[]
+  goals                      Goal[]
+  myOrgs                     OrgUser[]
+  milestoneEvidence          Evidence[]
+  GoalMilestoneManualState   GoalMilestoneManualState[]
+  GoalMilestoneStreakCheckIn GoalMilestoneStreakCheckIn[]
+  GoalMilestone              GoalMilestone[]
 
   @@index([email, inviteCode, stripeCustomerID])
+}
+
+enum OrgDataAccessLevel {
+  full // org can see everything (employees)
+  consented // user explicitly granted access (clients)
+  none // member but no data access
+}
+
+model OrgUser {
+  id               String             @id @default(uuid())
+  userId           Int
+  orgId            String
+  roles            String[]           @default(["viewer"])
+  status           String             @default("active")
+  subscriptionType String             @default("user-managed") // user-managed,org-managed,free
+  dataAccess       OrgDataAccessLevel
+  joinedAt         DateTime           @default(now())
+  removedAt        DateTime?
+  user             User               @relation(fields: [userId], references: [id])
+  org              Organization       @relation(fields: [orgId], references: [id])
+  DataConsent      DataConsent[]
+
+  @@unique([userId, orgId])
+  @@index([userId, roles, status])
 }
 
 model Organization {
@@ -90,12 +119,15 @@ model Organization {
   ssoEntryPoint        String? // SSO URL
   ssoIssuer            String? // Entity ID
   ssoCert              String? // x509 cert
-  orgAdmins            User[]              @relation("OrgAdmins")
-  managedSubscriptions Subscription[]      @relation("managedSubscriptions")
+  type                 String              @default("org")
+  orgAdmins            User[]              @relation("OrgAdmins") // @depreciated
+  managedSubscriptions Subscription[]      @relation("managedSubscriptions") // @depreciated
   orgSubscription      Subscription[]      @relation("orgSubscription")
   domains              Domain[]
   weeklyReport         OrgWeeklyReport[]
   orgAdminLinks        OrganizationAdmin[]
+  inviteCodes          OrgInviteCode[]
+  users                OrgUser[]
 
   @@index([email, stripeCustomerID])
 }
@@ -308,25 +340,27 @@ model BulletPoint {
 }
 
 model Achievement {
-  id             String           @id @default(uuid())
-  userID         Int
-  user           User             @relation(fields: [userID], references: [id])
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  description    String?
-  result         String?
-  myContribution String?
-  projectID      String?
-  startDate      DateTime?
-  endDate        DateTime?
-  project        Project?         @relation(fields: [projectID], references: [id])
-  jobPositionID  String?
-  jobPosition    JobPosition?     @relation(fields: [jobPositionID], references: [id])
-  educationID    String?
-  education      Education?       @relation(fields: [educationID], references: [id])
-  highlights     Highlight[]      @relation("highlightAchievements")
-  tags           AchievementTag[] @relation("achievementTags")
-  goals          Goal[]           @relation("linkedGoalAchievement")
+  id                String           @id @default(uuid())
+  userID            Int
+  user              User             @relation(fields: [userID], references: [id])
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  description       String?
+  result            String?
+  myContribution    String?
+  projectID         String?
+  startDate         DateTime?
+  endDate           DateTime?
+  project           Project?         @relation(fields: [projectID], references: [id])
+  jobPositionID     String?
+  jobPosition       JobPosition?     @relation(fields: [jobPositionID], references: [id])
+  educationID       String?
+  education         Education?       @relation(fields: [educationID], references: [id])
+  highlights        Highlight[]      @relation("highlightAchievements")
+  tags              AchievementTag[] @relation("achievementTags")
+  milestoneEvidence Evidence[]
+  autoKeyWords      String[]
+  searchText        String?
 
   @@index([userID])
 }
@@ -598,29 +632,202 @@ model Contact {
   @@index([userID, email])
 }
 
-model GoalSkill {
-  id          String   @id @default(uuid())
-  name        String
-  description String
-  category    String
-  keywords    String[]
-  actions     String[]
+enum CouponStatus {
+  ACTIVE
+  DISABLED
+  FLAGGED
+}
+
+model PromoCode {
+  id              String       @id @default(uuid())
+  orgId           String?
+  code            String       @unique
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @default(now()) @updatedAt
+  status          CouponStatus @default(ACTIVE)
+  source          String?
+  createdByUserId String?
+}
+
+model OrgInviteCode {
+  id          String       @id @default(cuid())
+  orgID       String
+  org         Organization @relation(fields: [orgID], references: [id])
+  code        String       @unique
+  role        String       @default("client") // client | coach | member | student
+  publicCode  Boolean      @default(false)
+  maxUses     Int? // null = unlimited
+  usedCount   Int          @default(0)
+  expiresAt   DateTime?
+  disabledAt  DateTime?
+  createdByID Int
+  createdAt   DateTime     @default(now())
+}
+
+model DataConsent {
+  id        String    @id @default(uuid())
+  orgUserId String
+  scope     String[] // ['fingerprint', 'resumes', 'achievements']
+  grantedAt DateTime  @default(now())
+  revokedAt DateTime?
+
+  orgUser OrgUser @relation(fields: [orgUserId], references: [id])
+}
+
+enum GoalStatus {
+  active
+  completed
+  archived
+}
+
+//
+// A Goal is now an OUTCOME container.
+// Progress is derived from Milestones.
+//
+
+enum MilestoneKind {
+  manual
+  checklist
+  keywords_tags
+  streak
+}
+
+enum EvidenceLinkType {
+  auto
+  manual
 }
 
 model Goal {
-  id                       String        @id @default(uuid())
-  createdAt                DateTime      @default(now())
-  updatedAt                DateTime      @default(now()) @updatedAt
-  name                     String
-  userID                   Int
-  user                     User          @relation(references: [id], fields: [userID])
-  keywords                 String[]
-  actions                  String[]
-  targetCount              Int           @default(5) //Total points needed to be complete
-  completedAt              DateTime?
-  lastProgressCalculatedAt DateTime?
-  status                   String        @default("active")
-  progress                 Float         @default(0) //Percentage
-  currentPoints            Float         @default(0) // The current points set
-  linkedAchievements       Achievement[] @relation("linkedGoalAchievement")
+  id     String @id @default(cuid())
+  userID Int
+  user   User   @relation(fields: [userID], references: [id])
+
+  title       String
+  description String?
+
+  status      GoalStatus @default(active)
+  targetDate  DateTime?
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  templateKey String?
+
+  progress Int @default(0)
+
+  /// Children of the outcome goal. Each milestone has exactly one tracking kind.
+  milestones GoalMilestone[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userID, status])
+}
+
+model GoalMilestone {
+  id          String  @id @default(cuid())
+  goalID      String
+  goal        Goal    @relation(fields: [goalID], references: [id], onDelete: Cascade)
+  userID      Int     @default(1)
+  user        User    @relation(fields: [userID], references: [id])
+  title       String
+  description String?
+  order       Int     @default(0)
+
+  /// manual | checklist | keywords_tags | streak
+  kind MilestoneKind @default(manual)
+
+  progress    Int @default(0)
+  targetCount Int @default(0)
+
+  /**
+   * Metric config by kind (v1):
+   * manual: {}
+   * checklist:
+   * { "items": [{ "key": "outline", "label": "Draft outline" }, ...] }
+   * (items are also stored in GoalMilestoneChecklistItem rows below; this field can remain {} for checklist)
+   * keywords_tags:
+   * { "targetCount": 3, "keywords": ["decision","tradeoff"], "tags": ["architecture"] }
+   * streak:
+   * { "timesPerWeek": 2, "weeks": 6 }
+   */
+  metricConfig Json @default("{}")
+
+  /// Manual completion (and optional override for other kinds if you choose later)
+  completedAt DateTime?
+
+  checklistItems GoalMilestoneChecklistItem[]
+  evidence       Evidence[]
+
+  createdAt                  DateTime                     @default(now())
+  updatedAt                  DateTime                     @updatedAt
+  GoalMilestoneManualState   GoalMilestoneManualState[]
+  GoalMilestoneStreakCheckIn GoalMilestoneStreakCheckIn[]
+
+  @@index([goalID, order])
+  @@index([goalID, kind])
+  @@index([goalID, completedAt])
+}
+
+model GoalMilestoneChecklistItem {
+  id          String        @id @default(cuid())
+  milestoneID String
+  milestone   GoalMilestone @relation(fields: [milestoneID], references: [id], onDelete: Cascade)
+  key         String
+  label       String
+  order       Int           @default(0)
+  checked     Boolean       @default(false)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@unique([milestoneID, key])
+  @@index([milestoneID, order])
+}
+
+model Evidence {
+  id            String           @id @default(cuid())
+  userID        Int
+  user          User             @relation(fields: [userID], references: [id])
+  milestoneID   String?
+  milestone     GoalMilestone?   @relation(fields: [milestoneID], references: [id], onDelete: Cascade)
+  kind          MilestoneKind
+  linkType      EvidenceLinkType @default(auto)
+  matchReason   String?
+  achievementID String?
+  achievement   Achievement?     @relation(fields: [achievementID], references: [id], onDelete: Cascade)
+  occurredAt    DateTime?
+  data          Json             @default("{}")
+  createdAt     DateTime         @default(now())
+
+  @@index([milestoneID, kind])
+  @@index([milestoneID, createdAt])
+  @@index([userID, kind])
+}
+
+model GoalMilestoneManualState {
+  id          String        @id @default(cuid())
+  milestoneID String
+  milestone   GoalMilestone @relation(fields: [milestoneID], references: [id], onDelete: Cascade)
+  userID      Int
+  user        User          @relation(fields: [userID], references: [id])
+  checked     Boolean       @default(false)
+  checkedAt   DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@unique([milestoneID, userID])
+  @@index([milestoneID, checked])
+}
+
+model GoalMilestoneStreakCheckIn {
+  id          String        @id @default(cuid())
+  milestoneID String
+  milestone   GoalMilestone @relation(fields: [milestoneID], references: [id], onDelete: Cascade)
+  userID      Int
+  user        User          @relation(fields: [userID], references: [id])
+  occurredAt  DateTime      @default(now())
+  weekStart   DateTime
+
+  @@unique([milestoneID, userID, weekStart])
+  @@index([milestoneID, userID, occurredAt])
+  @@index([milestoneID, weekStart])
 }

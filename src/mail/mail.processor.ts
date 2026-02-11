@@ -470,4 +470,45 @@ export class MailProcessor {
       throw error;
     }
   }
+
+  @Process('clientInvite')
+  async clientInvite(
+    job: Job<{
+      to: string[];
+      context: {
+        firstName?: string;
+        orgName: string;
+        couponCode?: string;
+        loginLink: string;
+        inviteCode?: string;
+      };
+    }>,
+  ) {
+    const { to, context } = job.data;
+
+    const template = 'client-invite';
+    const subject = `${context.orgName} has invited you`;
+
+    context.loginLink = context?.inviteCode
+      ? `${process.env.FRONT_END_URL}/settings/connections?joinCode=${context.inviteCode}`
+      : `${process.env.FRONT_END_URL}/login`;
+
+    console.log(`📧 Sending email to ${to.join(',')}`);
+
+    console.log('data', job.data);
+
+    try {
+      await this.mailerService.sendMail({
+        sender: process.env.SMTP_FROM_EMAIL,
+        to,
+        template,
+        subject,
+        context,
+      });
+      console.log(`✅ Email sent to ${to.join(',')}`);
+    } catch (error) {
+      console.log(`❌ Email not sent`, error);
+      throw error;
+    }
+  }
 }

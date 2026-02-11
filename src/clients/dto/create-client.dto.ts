@@ -31,3 +31,19 @@ export class CreateClientDto {
   @ApiProperty()
   timezone?: string;
 }
+
+export class InviteClientDto {
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  firstName?: string;
+
+  @MinLength(4)
+  @ApiProperty()
+  @IsEmail()
+  email: string;
+
+  orgID?: string;
+
+  userID: number;
+}

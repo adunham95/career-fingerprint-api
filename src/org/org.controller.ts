@@ -62,6 +62,21 @@ export class OrgController {
     return this.orgService.getOrgAdmins(id);
   }
 
+  @Get('invite-link')
+  @RequirePermission('admins:view')
+  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
+  getOrgSignUpLink(@Req() req: Request) {
+    if (!req.user) {
+      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+    }
+    const orgID = req.user?.orgID;
+    if (!orgID) {
+      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+    }
+    return this.orgService.getOrgSignUpLink(orgID, req.user?.id);
+  }
+
+  /** @deprecated Moved to org users */
   @Post(':orgID/admins')
   @RequirePermission('admins:manage')
   @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
@@ -81,6 +96,28 @@ export class OrgController {
       createOrgDto.roles,
       createOrgDto.firstName,
       createOrgDto.lastName,
+    );
+  }
+
+  /** @deprecated Moved to org users */
+  @Post(':orgID/members')
+  @RequirePermission('users:create')
+  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
+  newOrgMember(
+    @Param('orgID') id: string,
+    @Body()
+    createOrgDtoMember: {
+      firstName?: string;
+      lastName?: string;
+      email: string;
+      type: 'client' | 'member';
+    },
+  ) {
+    return this.orgService.addOrgMember(
+      id,
+      createOrgDtoMember.email,
+      createOrgDtoMember.firstName,
+      createOrgDtoMember.lastName,
     );
   }
 
@@ -136,6 +173,13 @@ export class OrgController {
   @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
   myOrgRoles(@Param('id') id: string) {
     return this.orgService.getRolesForOrg(id);
+  }
+
+  @Get(':id/coupon')
+  @RequirePermission('org:view_promo_code')
+  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
+  myOrgCoupon(@Param('id') id: string) {
+    return this.orgService.getOrgCoupon(id);
   }
 
   @Get('my')

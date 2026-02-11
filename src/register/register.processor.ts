@@ -3,6 +3,7 @@ import { Job } from 'bull';
 import { parse } from 'csv-parse';
 import * as fs from 'fs';
 import { MailService } from 'src/mail/mail.service';
+import { OrgUsersService } from 'src/org-users/org-users.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SubscriptionsService } from 'src/subscriptions/subscriptions.service';
 import { UsersService } from 'src/users/users.service';
@@ -20,6 +21,7 @@ export class RegisterUsersProcessor {
     private userService: UsersService,
     private subscriptionService: SubscriptionsService,
     private mailService: MailService,
+    private orgUserService: OrgUsersService,
   ) {}
 
   @Process('importUsers')
@@ -54,35 +56,12 @@ export class RegisterUsersProcessor {
           }
 
           try {
-            let emailType: 'addToOrg' | 'newUser' = 'addToOrg';
-            let user = await this.prismaService.user.findFirst({
-              where: { email: record.Email },
+            const user = await this.orgUserService.createOrgMember({
+              firstName: record['First Name'] || '',
+              lastName: record['Last Name'] || '',
+              email: record.Email,
+              orgID: orgID,
             });
-            if (!user) {
-              emailType = 'newUser';
-              console.log('adding user', record.Email);
-              user = await this.userService.createUser(
-                {
-                  email: record.Email,
-                  password: this.generateRandomString(10),
-                  firstName: record['First Name'],
-                  lastName: record['Last Name'],
-                },
-                true,
-              );
-            }
-
-            console.log(user);
-
-            const newOrgUser =
-              await this.subscriptionService.createOrgManagedSubscription(
-                {
-                  userID: user.id,
-                  orgID: orgID,
-                },
-                emailType,
-              );
-            console.log(newOrgUser);
 
             processed++;
             if (processed % 100 === 0) {

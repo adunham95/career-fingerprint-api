@@ -79,6 +79,7 @@ const plans = [
       'education:update',
       'education:delete',
       'skills:edit',
+      'goals:create',
     ],
     type: 'user',
   },
@@ -117,6 +118,7 @@ const plans = [
       'education:update',
       'education:delete',
       'skills:edit',
+      'goals:create',
     ],
     description: 'For people who want to elevate there career',
     featureList: [
@@ -158,6 +160,7 @@ const plans = [
       'education:update',
       'education:delete',
       'skills:edit',
+      'goals:create',
     ],
     priceCents: 799,
     interval: 'month',

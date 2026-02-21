@@ -56,6 +56,17 @@ export class JobApplicationsController {
     return this.jobApplicationsService.findMyJobApps(req.user.id);
   }
 
+  @Get('my/active')
+  @Header('Cache-Control', 'private, max-age=30')
+  @MinPlanLevel(1)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  findMyActive(@Req() req: Request) {
+    if (!req.user) {
+      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+    }
+    return this.jobApplicationsService.findMyActiveJobApps(req.user.id);
+  }
+
   @Get(':id')
   @Header('Cache-Control', 'private, max-age=30')
   @MinPlanLevel(1)

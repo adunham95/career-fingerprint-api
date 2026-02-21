@@ -20,17 +20,17 @@ export class CreateMeetingDto {
   @ApiProperty()
   @IsOptional()
   @IsString()
-  jobAppID?: string;
+  jobAppID?: string | null;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  jobPositionID?: string;
+  jobPositionID?: string | null;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
-  educationPositionID?: string;
+  educationID?: string | null;
 
   @ApiProperty()
   @IsOptional()

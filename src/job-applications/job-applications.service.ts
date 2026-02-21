@@ -15,14 +15,37 @@ export class JobApplicationsService {
     return this.prisma.jobApplication.findMany();
   }
 
-  findMyJobApps(userID: number) {
-    return this.prisma.jobApplication.findMany({
+  async findMyJobApps(userID: number) {
+    const apps = await this.prisma.jobApplication.findMany({
       where: { userID },
       include: {
         _count: { select: { meetings: true } },
         coverLetter: {
           select: { id: true }, // only fetch the id, not the whole object
         },
+      },
+    });
+    const statusOrder = [
+      'negotiating',
+      'interviewing',
+      'applied',
+      'accepted',
+      'ghosted',
+      'rejected',
+      'archived',
+    ];
+    return apps.sort((a, b) => {
+      return statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status);
+    });
+  }
+
+  findMyActiveJobApps(userID: number) {
+    return this.prisma.jobApplication.findMany({
+      where: { userID, status: { not: 'archived' } },
+      select: {
+        id: true,
+        title: true,
+        company: true,
       },
     });
   }

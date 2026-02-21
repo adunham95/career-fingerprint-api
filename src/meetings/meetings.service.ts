@@ -4,6 +4,7 @@ import { UpdateMeetingDto } from './dto/update-meeting.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SingleMeetingQueryDto } from './dto/meeting-query.dto';
 import { PdfService } from 'src/pdf/pdf.service';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class MeetingsService {
@@ -42,6 +43,10 @@ export class MeetingsService {
       orderBy: {
         time: 'desc',
       },
+      include: {
+        jobApp: { select: { company: true, title: true } },
+        jobPosition: { select: { company: true, name: true } },
+      },
     });
   }
 
@@ -72,6 +77,10 @@ export class MeetingsService {
       orderBy: {
         time: 'asc',
       },
+      include: {
+        jobApp: { select: { company: true, title: true } },
+        jobPosition: { select: { company: true, name: true } },
+      },
     });
   }
 
@@ -99,6 +108,10 @@ export class MeetingsService {
       },
       orderBy: {
         time: 'asc',
+      },
+      include: {
+        jobApp: { select: { company: true, title: true } },
+        jobPosition: { select: { company: true, name: true } },
       },
     });
   }
@@ -166,9 +179,57 @@ export class MeetingsService {
   }
 
   update(id: string, updateMeetingDto: UpdateMeetingDto) {
+    const {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      jobAppID,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      jobPositionID,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      educationID,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      userID,
+      ...meetingData
+    } = updateMeetingDto;
+    const data: Prisma.MeetingUpdateInput = meetingData;
+
+    if (updateMeetingDto.type === 'Interview') {
+      updateMeetingDto.jobPositionID = null;
+      updateMeetingDto.educationID = null;
+      data.jobPosition = { disconnect: true };
+      data.education = { disconnect: true };
+    }
+
+    if (updateMeetingDto.type === 'Internal') {
+      updateMeetingDto.jobAppID = null;
+      data.jobApp = { disconnect: true };
+    }
+
+    if ('jobAppID' in updateMeetingDto) {
+      if (updateMeetingDto.jobAppID === null)
+        data.jobApp = { disconnect: true };
+      else if (updateMeetingDto.jobAppID)
+        data.jobApp = { connect: { id: updateMeetingDto.jobAppID } };
+    }
+
+    if ('jobPositionID' in updateMeetingDto) {
+      if (updateMeetingDto.jobPositionID === null)
+        data.jobPosition = { disconnect: true };
+      else if (updateMeetingDto.jobPositionID)
+        data.jobPosition = { connect: { id: updateMeetingDto.jobPositionID } };
+    }
+
+    if ('educationID' in updateMeetingDto) {
+      if (updateMeetingDto.educationID === null)
+        data.education = { disconnect: true };
+      else if (updateMeetingDto.educationID)
+        data.education = {
+          connect: { id: updateMeetingDto.educationID },
+        };
+    }
+
     return this.prisma.meeting.update({
       where: { id },
-      data: updateMeetingDto,
+      data,
     });
   }
 

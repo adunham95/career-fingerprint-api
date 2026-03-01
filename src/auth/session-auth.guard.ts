@@ -1,21 +1,29 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Request } from 'express';
 import { AuthService } from './auth.service';
 import { UsersService } from 'src/users/users.service';
 import { SubscriptionsService } from 'src/subscriptions/subscriptions.service';
 import { CacheService } from 'src/cache/cache.service';
+import { PermissionsService } from 'src/permission/permission.service';
 
 @Injectable()
 export class SessionOrJwtGuard implements CanActivate {
   constructor(
     private authService: AuthService,
     private usersService: UsersService,
-    private subscriptionsService: SubscriptionsService,
+    private subscriptionService: SubscriptionsService,
     private cache: CacheService,
+    private permissionService: PermissionsService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    console.log('validate', context);
     const req = context.switchToHttp().getRequest<Request>();
     const sessionID = req.cookies?.sessionAccessToken as string | undefined;
 
@@ -26,17 +34,29 @@ export class SessionOrJwtGuard implements CanActivate {
           `currentUser:${session.userID}`,
           () => this.usersService.getCurrentUser(session.userID),
         );
+
+        if (!user?.id) {
+          throw new UnauthorizedException();
+        }
+
         if (user?.id) {
-          const subscription = await this.subscriptionsService.getActive(
-            user.id,
+          const subscription =
+            (await this.subscriptionService.getActive(user?.id)) || undefined;
+
+          const permissionList = this.permissionService.getPermissionsForRoles(
+            [],
           );
+
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { password, ...currentUser } = user;
           req.user = {
             ...currentUser,
+            password: '',
             planLevel: subscription?.plan?.level ?? 0,
             subscription,
-            sessionID,
-          };
+            // sessionID,
+            permissionList,
+          } as unknown as NonNullable<Request['user']>;
           return true;
         }
       }

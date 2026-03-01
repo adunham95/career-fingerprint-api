@@ -6,6 +6,7 @@ import { PrismaModule } from 'src/prisma/prisma.module';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt.strategy';
 import { AuthController } from './auth.controller';
+import { SessionOrJwtGuard } from './session-auth.guard';
 import { SubscriptionsModule } from 'src/subscriptions/subscriptions.module';
 import { MailModule } from 'src/mail/mail.module';
 import { AuthCookieModule } from 'src/authcookie/authcookie.module';
@@ -37,6 +38,7 @@ export const jwtSecret = process.env.SECRET || '123abc';
     JwtStrategy,
     FailedLoginService,
     DynamicSamlStrategy,
+    SessionOrJwtGuard,
   ],
   exports: [AuthService],
 })

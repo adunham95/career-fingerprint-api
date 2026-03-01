@@ -20,6 +20,7 @@ import {
 } from './dto/auth.dto';
 import { Request, Response } from 'express';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { SessionOrJwtGuard } from './session-auth.guard';
 import { UserEntity } from 'src/users/entities/user.entity';
 import { AuthCookieService } from 'src/authcookie/authcookie.service';
 import { Throttle } from '@nestjs/throttler';
@@ -47,6 +48,7 @@ export class AuthController {
     const {
       accessToken,
       user,
+      sessionID,
       resetRequired = false,
       resetToken,
     } = await this.authService.loginUser(email, password, getClientIp(req));
@@ -60,7 +62,7 @@ export class AuthController {
       secure: process.env.NODE_ENV === 'production',
       cookieDomain: process.env.COOKIE_DOMAIN,
     });
-    this.authCookieService.setAuthCookie(response, accessToken);
+    this.authCookieService.setAuthCookie(response, accessToken, sessionID);
     return { accessToken, user };
   }
 
@@ -73,7 +75,7 @@ export class AuthController {
     if (!req.user?.id) {
       throw Error('Missing User');
     }
-    const { accessToken, user } = await this.authService.loginUserOrg(
+    const { accessToken, user, sessionID } = await this.authService.loginUserOrg(
       req.user?.id,
       req.params.id,
     );
@@ -83,7 +85,7 @@ export class AuthController {
       secure: process.env.NODE_ENV === 'production',
       cookieDomain: process.env.COOKIE_DOMAIN,
     });
-    this.authCookieService.setAuthCookie(response, accessToken);
+    this.authCookieService.setAuthCookie(response, accessToken, sessionID);
     return { accessToken, user };
   }
 
@@ -115,11 +117,11 @@ export class AuthController {
     }
 
     // Reuse your existing helper
-    const { accessToken } = await this.authService.loginUserByID(
+    const { accessToken, sessionID } = await this.authService.loginUserByID(
       user.id,
       getClientIp(req),
     );
-    this.authCookieService.setAuthCookie(res, accessToken);
+    this.authCookieService.setAuthCookie(res, accessToken, sessionID);
 
     return res.redirect(
       `${process.env.APP_URL}/dashboard?token=${accessToken}`,
@@ -158,7 +160,7 @@ export class AuthController {
   }
 
   @Get('current-user')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(SessionOrJwtGuard)
   @ApiCookieAuth()
   @ApiOkResponse({ type: UserEntity })
   user(@Req() req: Request) {
@@ -169,7 +171,14 @@ export class AuthController {
   }
 
   @Get('logout')
-  logout(@Req() req: Request, @Res({ passthrough: true }) response: Response) {
+  async logout(
+    @Req() req: Request,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const sessionID = req.cookies?.sessionAccessToken as string | undefined;
+    if (sessionID) {
+      await this.authService.deleteSession(sessionID);
+    }
     this.authCookieService.clearAuthCookie(response);
     return this.authService.logout(getClientIp(req));
   }

@@ -40,12 +40,13 @@ export class LoginTokenService {
 
     await this.prisma.loginToken.delete({ where: { token: hashedToken } });
 
-    const accessToken = await this.authService.loginUserByID(userId);
+    const { accessToken, sessionID } = await this.authService.loginUserByID(userId);
 
     return {
       tokenValid: true,
       type: verifiedToken.type,
-      accessToken: accessToken.accessToken,
+      accessToken,
+      sessionID,
     };
   }
 

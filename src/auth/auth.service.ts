@@ -9,16 +9,19 @@ import { UsersService } from '../users/users.service';
 import bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma/prisma.service';
-import crypto from 'crypto';
+import crypto, { randomUUID } from 'crypto';
 import { MailService } from 'src/mail/mail.service';
 import { FailedLoginService } from './failed-login.service';
 import { AuditService } from 'src/audit/audit.service';
 import { AUDIT_EVENT } from 'src/audit/auditEvents';
 import { PermissionsService } from 'src/permission/permission.service';
+import { CacheService } from 'src/cache/cache.service';
 
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
+  private readonly SESSION_TTL = 60 * 60 * 24 * 7; // 7 days in seconds
+
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
@@ -27,7 +30,30 @@ export class AuthService {
     private failedLoginService: FailedLoginService,
     private auditService: AuditService,
     private permissionService: PermissionsService,
+    private cache: CacheService,
   ) {}
+
+  async createSession(userID: number, email: string): Promise<string> {
+    const sessionID = randomUUID();
+    await this.cache.set(
+      `session:${sessionID}`,
+      { userID, email, createdAt: new Date().toISOString() },
+      this.SESSION_TTL,
+    );
+    return sessionID;
+  }
+
+  async getSession(
+    sessionID: string,
+  ): Promise<{ userID: number; email: string } | null> {
+    return this.cache.get<{ userID: number; email: string }>(
+      `session:${sessionID}`,
+    );
+  }
+
+  async deleteSession(sessionID: string): Promise<void> {
+    await this.cache.del(`session:${sessionID}`);
+  }
 
   async loginUser(email: string, pass: string, ipAddress?: string) {
     if (await this.failedLoginService.isBlocked(email)) {
@@ -106,9 +132,12 @@ export class AuthService {
       ipAddress,
     );
 
+    const sessionID = await this.createSession(user.id, user.email);
+
     return {
       accessToken,
       user,
+      sessionID,
       mode: 'base',
       orgId: null,
       roles: [],
@@ -162,9 +191,12 @@ export class AuthService {
 
     console.log('new token: ', token);
 
+    const sessionID = await this.createSession(userId, user.email);
+
     return {
       accessToken: token,
       user: user,
+      sessionID,
     };
   }
 
@@ -193,9 +225,12 @@ export class AuthService {
 
     await this.auditService.logEvent(AUDIT_EVENT.LOGIN_SUCCESS, id, ipAddress);
 
+    const sessionID = await this.createSession(user.id, user.email);
+
     return {
       accessToken,
       user,
+      sessionID,
     };
   }
 

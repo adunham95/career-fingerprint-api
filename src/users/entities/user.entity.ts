@@ -48,7 +48,7 @@ export class UserEntity implements User {
 
   nextSendAt: Date | null;
 
-  org: Organization;
+  org: Organization | null;
 
   orgs: Organization[];
 

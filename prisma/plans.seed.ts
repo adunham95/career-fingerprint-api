@@ -39,6 +39,28 @@ const plans = [
     type: 'user',
   },
   {
+    key: 'free-v2',
+    level: 1,
+    name: 'Free',
+    priceCents: 0,
+    interval: 'month',
+    priceCentsYear: 0,
+    description:
+      'Perfect for job seekers who want a smarter way to organize and track their career progress',
+    featureList: ['Add Achievements'],
+    features: [
+      'achievements:create',
+      'achievements:update',
+      'jobPosition:create',
+      'jobPosition:update',
+      'jobPosition:delete',
+      'education:create',
+      'education:update',
+      'education:delete',
+    ],
+    type: 'user',
+  },
+  {
     key: 'pro-beta',
     level: 2,
     name: 'Premium',

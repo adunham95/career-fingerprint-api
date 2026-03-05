@@ -7,14 +7,24 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class JobPositionsService {
   constructor(private prisma: PrismaService) {}
   create(createJobPositionDto: CreateJobPositionDto) {
-    console.log({ createJobPositionDto });
-    if (createJobPositionDto.startDate) {
-      createJobPositionDto.startDate = new Date(createJobPositionDto.startDate);
-    }
-    if (createJobPositionDto.endDate) {
-      createJobPositionDto.endDate = new Date(createJobPositionDto.endDate);
-    }
-    return this.prisma.jobPosition.create({ data: createJobPositionDto });
+    const startDate = createJobPositionDto.startDate
+      ? new Date(createJobPositionDto.startDate)
+      : undefined;
+    const endDate = createJobPositionDto.endDate
+      ? new Date(createJobPositionDto.endDate)
+      : undefined;
+
+    return this.prisma.jobPosition.create({
+      data: {
+        userID: createJobPositionDto.userID,
+        name: createJobPositionDto.name,
+        company: createJobPositionDto.company,
+        description: createJobPositionDto.description,
+        currentPosition: createJobPositionDto.currentPosition,
+        startDate,
+        endDate,
+      },
+    });
   }
 
   async createFromJobApplication(userID: number, jobApplicationID: string) {

@@ -59,6 +59,7 @@ import { LoginTokenModule } from './login-token/login-token.module';
 import { GoalModule } from './goal/goal.module';
 import { SseModule } from './sse/sse.module';
 import { OrgUsersModule } from './org-users/org-users.module';
+import { OnboardingModule } from './onboarding/onboarding.module';
 
 @Module({
   imports: [
@@ -147,6 +148,7 @@ import { OrgUsersModule } from './org-users/org-users.module';
     GoalModule,
     SseModule,
     OrgUsersModule,
+    OnboardingModule,
   ],
   controllers: [AppController, HealthController, SkillListController],
   providers: [

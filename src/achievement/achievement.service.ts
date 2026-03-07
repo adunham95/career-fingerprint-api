@@ -155,6 +155,38 @@ export class AchievementService {
     return this.prisma.achievement.delete({ where: { id } });
   }
 
+  async getActivityHeatmap(
+    userId: number,
+    timeZone = 'UTC',
+  ): Promise<{ weekStart: string; count: number }[]> {
+    const now = DateTime.now().setZone(timeZone);
+    const currentWeekStart = now.startOf('week');
+    const rangeStart = currentWeekStart.minus({ weeks: 51 });
+
+    const achievements = await this.prisma.achievement.findMany({
+      where: {
+        userID: userId,
+        createdAt: { gte: rangeStart.toJSDate() },
+      },
+      select: { createdAt: true },
+    });
+
+    const weekCounts = new Map<string, number>();
+    for (const { createdAt } of achievements) {
+      const key = DateTime.fromJSDate(createdAt)
+        .setZone(timeZone)
+        .startOf('week')
+        .toISODate()!;
+      weekCounts.set(key, (weekCounts.get(key) ?? 0) + 1);
+    }
+
+    return Array.from({ length: 52 }, (_, i) => {
+      const weekStart = rangeStart.plus({ weeks: i });
+      const key = weekStart.toISODate()!;
+      return { weekStart: key, count: weekCounts.get(key) ?? 0 };
+    });
+  }
+
   async getWeeklyStreak(userId: number, timeZone = 'UTC'): Promise<number> {
     const now = DateTime.now().setZone(timeZone);
 

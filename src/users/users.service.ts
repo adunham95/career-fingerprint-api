@@ -98,20 +98,6 @@ export class UsersService {
 
     data.email = data.email.toLowerCase();
 
-    const freePlan = await this.cache.wrap(
-      'plan:free',
-      () => {
-        return this.prisma.plan.findFirst({
-          where: { key: 'free' },
-        });
-      },
-      86400,
-    );
-
-    if (!freePlan) {
-      throw new HttpException('Missing Plans', HttpStatus.FAILED_DEPENDENCY);
-    }
-
     const user = await this.prisma.user.create({
       data,
     });
@@ -123,6 +109,20 @@ export class UsersService {
     );
 
     if (user.createdAt < FREE_TIER_DEPRECATED_AT) {
+      const freePlan = await this.cache.wrap(
+        'plan:free',
+        () => {
+          return this.prisma.plan.findFirst({
+            where: { key: 'free' },
+          });
+        },
+        86400,
+      );
+
+      if (!freePlan) {
+        throw new HttpException('Missing Plans', HttpStatus.FAILED_DEPENDENCY);
+      }
+
       await this.prisma.subscription.create({
         data: {
           userID: user.id,

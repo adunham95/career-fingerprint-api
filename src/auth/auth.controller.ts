@@ -75,10 +75,8 @@ export class AuthController {
     if (!req.user?.id) {
       throw Error('Missing User');
     }
-    const { accessToken, user, sessionID } = await this.authService.loginUserOrg(
-      req.user?.id,
-      req.params.id,
-    );
+    const { accessToken, user, sessionID } =
+      await this.authService.loginUserOrg(req.user?.id, req.params.id);
 
     this.logger.verbose('login response', {
       accessToken,

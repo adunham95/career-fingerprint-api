@@ -1,4 +1,10 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma, User } from '@prisma/client';
 import bcrypt from 'bcrypt';
@@ -98,9 +104,20 @@ export class UsersService {
 
     data.email = data.email.toLowerCase();
 
-    const user = await this.prisma.user.create({
-      data,
-    });
+    let user: User;
+    try {
+      user = await this.prisma.user.create({ data });
+    } catch (error) {
+      if (
+        error instanceof PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new ConflictException(
+          'An account with this email already exists',
+        );
+      }
+      throw error;
+    }
 
     await this.auditService.logEvent(
       AUDIT_EVENT.USER_CREATED,

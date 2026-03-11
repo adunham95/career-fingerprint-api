@@ -1,4 +1,10 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma, User } from '@prisma/client';
 import bcrypt from 'bcrypt';
@@ -98,23 +104,20 @@ export class UsersService {
 
     data.email = data.email.toLowerCase();
 
-    const freePlan = await this.cache.wrap(
-      'plan:free',
-      () => {
-        return this.prisma.plan.findFirst({
-          where: { key: 'free' },
-        });
-      },
-      86400,
-    );
-
-    if (!freePlan) {
-      throw new HttpException('Missing Plans', HttpStatus.FAILED_DEPENDENCY);
+    let user: User;
+    try {
+      user = await this.prisma.user.create({ data });
+    } catch (error) {
+      if (
+        error instanceof PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new ConflictException(
+          'An account with this email already exists',
+        );
+      }
+      throw error;
     }
-
-    const user = await this.prisma.user.create({
-      data,
-    });
 
     await this.auditService.logEvent(
       AUDIT_EVENT.USER_CREATED,
@@ -123,6 +126,20 @@ export class UsersService {
     );
 
     if (user.createdAt < FREE_TIER_DEPRECATED_AT) {
+      const freePlan = await this.cache.wrap(
+        'plan:free',
+        () => {
+          return this.prisma.plan.findFirst({
+            where: { key: 'free' },
+          });
+        },
+        86400,
+      );
+
+      if (!freePlan) {
+        throw new HttpException('Missing Plans', HttpStatus.FAILED_DEPENDENCY);
+      }
+
       await this.prisma.subscription.create({
         data: {
           userID: user.id,

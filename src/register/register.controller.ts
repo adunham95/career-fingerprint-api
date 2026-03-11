@@ -39,12 +39,12 @@ export class RegisterController {
     const { user } =
       await this.registerService.registerNewUser(createRegisterDto);
 
-    const { accessToken } = await this.authService.loginUser(
+    const { accessToken, sessionID } = await this.authService.loginUser(
       user.email,
       createRegisterDto.password,
     );
 
-    this.authCookieService.setAuthCookie(response, accessToken);
+    this.authCookieService.setAuthCookie(response, accessToken, sessionID);
     return { accessToken, user };
   }
 
@@ -56,23 +56,27 @@ export class RegisterController {
     const { user, org } =
       await this.registerService.registerNewOrg(createRegisterOrgDto);
 
-    const { accessToken } = await this.authService.loginUser(
+    const { accessToken, sessionID } = await this.authService.loginUser(
       user.email,
       createRegisterOrgDto.password,
     );
 
-    this.authCookieService.setAuthCookie(response, accessToken);
+    this.authCookieService.setAuthCookie(response, accessToken, sessionID);
     return { accessToken, user, org };
   }
 
   @Post('verify')
-  async verifyEmail(@Body() data: { token: string; showFreeTrial: boolean }) {
+  async verifyEmail(
+    @Body() data: { token: string; showFreeTrial: boolean },
+    @Res({ passthrough: true }) response: Response,
+  ) {
     const verified = await this.registerService.verifyEmail(data);
 
-    const { accessToken } = await this.authService.loginUserByID(
+    const { accessToken, sessionID } = await this.authService.loginUserByID(
       verified.userID,
     );
 
+    this.authCookieService.setAuthCookie(response, accessToken, sessionID);
     return { ...verified, accessToken };
   }
 

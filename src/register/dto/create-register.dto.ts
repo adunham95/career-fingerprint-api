@@ -8,8 +8,16 @@ import {
 } from 'class-validator';
 
 export class CreateRegisterDto {
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
   firstName: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
   lastName: string;
+
   lookingFor: string;
   companyName: string;
   title: string;
@@ -17,7 +25,14 @@ export class CreateRegisterDto {
   degree: string;
   startDate: string;
   endDate: string;
+
+  @MinLength(4)
+  @ApiProperty()
+  @IsEmail()
   email: string;
+
+  @ApiProperty()
+  @MinLength(6)
   password: string;
   achievement: string;
   inviteCode: string;
@@ -28,6 +43,7 @@ export class CreateRegisterDto {
 export class CreateRegisterOrgDto {
   @ApiProperty()
   @IsString()
+  @IsOptional()
   firstName: string;
 
   @ApiProperty()

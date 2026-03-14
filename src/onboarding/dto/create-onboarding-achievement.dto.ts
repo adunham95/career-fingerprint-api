@@ -37,5 +37,10 @@ export class CreateOnboardingAchievementDto {
   @IsOptional()
   achievementTags?: string[];
 
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  jobName?: string;
+
   userID: number;
 }

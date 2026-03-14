@@ -5,6 +5,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateOnboardingAchievementDto } from './dto/create-onboarding-achievement.dto';
 import { CreateOnboardingJobDto } from './dto/create-onboarding-job.dto';
 import { CreateJobPositionDto } from 'src/job-positions/dto/create-job-position.dto';
+import { CreateAchievementDto } from 'src/achievement/dto/create-achievement.dto';
 
 @Injectable()
 export class OnboardingService {
@@ -52,15 +53,26 @@ export class OnboardingService {
   }
 
   async createAchievement(dto: CreateOnboardingAchievementDto) {
-    const latestJob = await this.prisma.jobPosition.findFirst({
-      where: { userID: dto.userID, status: 'active' },
-      orderBy: { createdAt: 'desc' },
-      select: { id: true },
-    });
+    if (dto.jobName) {
+      const newJob = await this.prisma.jobPosition.create({
+        data: { name: dto.jobName, userID: dto.userID },
+      });
 
-    return this.achievementService.create({
-      ...dto,
-      jobPositionID: latestJob?.id,
-    } as any);
+      dto.jobPositionID = newJob.id;
+    }
+
+    delete dto.jobName;
+
+    if (dto.jobPositionID) {
+      const jobPosition = await this.prisma.jobPosition.findFirst({
+        where: { userID: dto.userID, status: 'active' },
+        orderBy: { createdAt: 'desc' },
+        select: { id: true },
+      });
+
+      dto.jobPositionID = jobPosition?.id;
+    }
+
+    return this.achievementService.create(dto as CreateAchievementDto);
   }
 }

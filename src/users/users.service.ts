@@ -324,7 +324,7 @@ export class UsersService {
     }
 
     if (user?.stripeCustomerID) {
-      return user.stripeCustomerID;
+      return { stripeID: user.stripeCustomerID };
     }
 
     const stripeCustomer = await this.stripeService.createStripeCustomer(user);

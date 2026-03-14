@@ -121,14 +121,29 @@ export class AchievementController {
   @UseGuards(JwtAuthGuard, SubscriptionGuard)
   @Header('Cache-Control', 'private, max-age=300')
   @ApiBearerAuth()
-  getMyActivity(
-    @Req() req: Request,
-    @Query('timeZone') timeZone?: string,
-  ) {
+  getMyActivity(@Req() req: Request, @Query('timeZone') timeZone?: string) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
     }
-    return this.achievementService.getActivityHeatmap(req.user.id, timeZone);
+    return this.achievementService.getActivityHeatmap(
+      req.user.id,
+      req.user.timezone || timeZone,
+    );
+  }
+
+  @Get('my/streak')
+  @MinPlanLevel(1)
+  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @Header('Cache-Control', 'private, max-age=300')
+  @ApiBearerAuth()
+  getStreak(@Req() req: Request, @Query('timeZone') timeZone?: string) {
+    if (!req.user) {
+      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+    }
+    return this.achievementService.getWeeklyStreak(
+      req.user.id,
+      req.user.timezone || timeZone,
+    );
   }
 
   //Org Admin Guard

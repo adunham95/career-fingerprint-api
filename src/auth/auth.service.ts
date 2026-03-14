@@ -235,6 +235,15 @@ export class AuthService {
   }
 
   async generateResetToken(email: string, ipAddress?: string) {
+    const user = await this.usersService.user({ email: email.toLowerCase() });
+    if (!user) {
+      this.logger.warn('Password reset requested for non-existent email', {
+        email,
+        ipAddress,
+      });
+      return true;
+    }
+
     const tokenData = this.generateResetTokenData();
     await this.prisma.resetToken.create({
       data: {

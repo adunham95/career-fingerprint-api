@@ -59,9 +59,9 @@ export class OnboardingService {
       });
 
       dto.jobPositionID = newJob.id;
-
-      delete dto.jobName;
     }
+
+    delete dto.jobName;
 
     if (dto.jobPositionID) {
       const jobPosition = await this.prisma.jobPosition.findFirst({

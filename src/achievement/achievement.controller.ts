@@ -125,7 +125,10 @@ export class AchievementController {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
     }
-    return this.achievementService.getActivityHeatmap(req.user.id, timeZone);
+    return this.achievementService.getActivityHeatmap(
+      req.user.id,
+      req.user.timezone || timeZone,
+    );
   }
 
   @Get('my/streak')
@@ -137,7 +140,10 @@ export class AchievementController {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
     }
-    return this.achievementService.getWeeklyStreak(req.user.id, timeZone);
+    return this.achievementService.getWeeklyStreak(
+      req.user.id,
+      req.user.timezone || timeZone,
+    );
   }
 
   //Org Admin Guard

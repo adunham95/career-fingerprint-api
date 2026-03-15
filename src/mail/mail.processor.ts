@@ -471,6 +471,62 @@ export class MailProcessor {
     }
   }
 
+  @Process('abandonedOnboardingNoAchievement')
+  async abandonedOnboardingNoAchievement(
+    job: Job<{
+      to: string;
+      context: { firstName?: string; loginLink: string };
+    }>,
+  ) {
+    const { to, context } = job.data;
+
+    const template = 'abandoned-onboarding-no-achievement';
+    const subject = 'Your career wins are waiting to be captured';
+
+    console.log(`📧 Sending email to ${to}`);
+
+    try {
+      await this.mailerService.sendMail({
+        to: [to],
+        template,
+        subject,
+        context,
+      });
+      console.log(`✅ Email sent to ${to}`);
+    } catch (error) {
+      console.log(`❌ Email not sent`, error);
+      throw error;
+    }
+  }
+
+  @Process('abandonedOnboardingNoSubscription')
+  async abandonedOnboardingNoSubscription(
+    job: Job<{
+      to: string;
+      context: { firstName?: string; loginLink: string };
+    }>,
+  ) {
+    const { to, context } = job.data;
+
+    const template = 'abandoned-onboarding-no-subscription';
+    const subject = "You're one step away from the full experience";
+
+    console.log(`📧 Sending email to ${to}`);
+
+    try {
+      await this.mailerService.sendMail({
+        to: [to],
+        template,
+        subject,
+        context,
+      });
+      console.log(`✅ Email sent to ${to}`);
+    } catch (error) {
+      console.log(`❌ Email not sent`, error);
+      throw error;
+    }
+  }
+
   @Process('clientInvite')
   async clientInvite(
     job: Job<{

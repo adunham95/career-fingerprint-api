@@ -73,6 +73,7 @@ model User {
   GoalMilestoneManualState   GoalMilestoneManualState[]
   GoalMilestoneStreakCheckIn GoalMilestoneStreakCheckIn[]
   GoalMilestone              GoalMilestone[]
+  abandonedOnboardingEmailSentAt DateTime?
 
   @@index([email, inviteCode, stripeCustomerID])
 }

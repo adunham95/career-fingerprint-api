@@ -10,7 +10,10 @@ import passport from 'passport';
 
 async function bootstrap() {
   initializeSentry();
-  const app = await NestFactory.create(AppModule);
+  // Better Auth handles its own body parsing for /api/auth/** routes.
+  // The nestjs-better-auth module re-registers json/urlencoded parsers for
+  // all other routes, so disabling the built-in parser here is safe.
+  const app = await NestFactory.create(AppModule, { bodyParser: false });
 
   const { httpAdapter } = app.get(HttpAdapterHost);
   app.useGlobalFilters(new SentryFilter(httpAdapter));

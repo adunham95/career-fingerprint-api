@@ -1,6 +1,13 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AuthModule as BetterAuthNestModule } from '@thallesp/nestjs-better-auth';
+import { createAuth } from './auth/better-auth';
+import { createBetterAuthHooks } from './auth-better/better-auth-hooks';
+import { PrismaService } from './prisma/prisma.service';
+import { MailService } from './mail/mail.service';
+import { StripeService } from './stripe/stripe.service';
+import { AuditService } from './audit/audit.service';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { JobPositionsModule } from './job-positions/job-positions.module';
@@ -60,9 +67,35 @@ import { GoalModule } from './goal/goal.module';
 import { SseModule } from './sse/sse.module';
 import { OrgUsersModule } from './org-users/org-users.module';
 import { OnboardingModule } from './onboarding/onboarding.module';
+import { BetterAuthModule } from './auth-better/better-auth.module';
 
 @Module({
   imports: [
+    BetterAuthNestModule.forRootAsync({
+      imports: [MailModule],
+      useFactory: (
+        prisma: PrismaService,
+        mailService: MailService,
+        stripeService: StripeService,
+        auditService: AuditService,
+      ) => ({
+        auth: createAuth(
+          prisma,
+          async ({ email, url }) => {
+            await mailService.sendEmail({
+              to: email,
+              subject: 'Your Career Fingerprint login link',
+              template: 'magic-link',
+              context: { url },
+            });
+          },
+          createBetterAuthHooks(mailService, stripeService, auditService, prisma),
+        ),
+      }),
+      inject: [PrismaService, MailService, StripeService, AuditService],
+      isGlobal: true,
+      disableGlobalAuthGuard: true,
+    }),
     SentryModule.forRoot(),
     UsersModule,
     AuthModule,
@@ -149,6 +182,7 @@ import { OnboardingModule } from './onboarding/onboarding.module';
     SseModule,
     OrgUsersModule,
     OnboardingModule,
+    BetterAuthModule,
   ],
   controllers: [AppController, HealthController, SkillListController],
   providers: [

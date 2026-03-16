@@ -40,6 +40,6 @@ export const jwtSecret = process.env.SECRET || '123abc';
     DynamicSamlStrategy,
     SessionOrJwtGuard,
   ],
-  exports: [AuthService],
+  exports: [AuthService, SessionOrJwtGuard],
 })
 export class AuthModule {}

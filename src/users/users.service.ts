@@ -154,7 +154,7 @@ export class UsersService {
       // They will be required to start a paid plan before accessing app features.
     }
 
-    await this.stripeService.newStripeCustomer({ user });
+    // await this.stripeService.newStripeCustomer({ user });
 
     await this.mailService.addContactToMailTrap(user);
 

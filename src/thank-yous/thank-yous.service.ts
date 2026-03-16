@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateThankYousDto } from './dto/create-thank-yous.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { MailService } from 'src/mail/mail.service';
-import { User } from '@prisma/client';
+import { UserEntity } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class ThankYousService {
@@ -11,7 +11,7 @@ export class ThankYousService {
     private mail: MailService,
   ) {}
 
-  async create(user: User, createThankYousDto: CreateThankYousDto) {
+  async create(user: UserEntity, createThankYousDto: CreateThankYousDto) {
     if (createThankYousDto.message === '') {
       return Error('Missing Message');
     }

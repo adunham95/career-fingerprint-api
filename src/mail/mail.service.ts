@@ -168,6 +168,26 @@ export class MailService {
     });
   }
 
+  async sendAbandonedOnboardingNoAchievementEmail(params: {
+    to: string;
+    context: { firstName?: string; loginLink: string };
+  }) {
+    await this.mailQueue.add('abandonedOnboardingNoAchievement', {
+      to: params.to,
+      context: params.context,
+    });
+  }
+
+  async sendAbandonedOnboardingNoSubscriptionEmail(params: {
+    to: string;
+    context: { firstName?: string; loginLink: string };
+  }) {
+    await this.mailQueue.add('abandonedOnboardingNoSubscription', {
+      to: params.to,
+      context: params.context,
+    });
+  }
+
   async addContactToMailTrap(userData: {
     email: string;
     lastName: string;

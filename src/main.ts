@@ -7,21 +7,9 @@ import * as express from 'express';
 import { SentryFilter } from './sentry/sentry.filter.js';
 import { initializeSentry } from './instrument';
 import passport from 'passport';
-import * as fs from 'fs';
 
 async function bootstrap() {
   initializeSentry();
-  // const isDev = process.env.NODE_ENV !== 'production';
-  // const httpsOptions = isDev
-  //   ? {
-  //       // key: fs.readFileSync('./localhost-key.pem'),
-  //       // cert: fs.readFileSync('./localhost.pem'),
-  //     }
-  //   : undefined;
-
-  // const app = await NestFactory.create(AppModule, {
-  //   httpsOptions,
-  // });
   const app = await NestFactory.create(AppModule);
 
   const { httpAdapter } = app.get(HttpAdapterHost);

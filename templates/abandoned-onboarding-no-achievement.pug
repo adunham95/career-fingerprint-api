@@ -1,0 +1,71 @@
+html
+  head
+    meta(charset='UTF-8')
+    meta(name='viewport', content='width=device-width, initial-scale=1.0')
+  body(
+    style='margin: 0; padding: 0; background-color: #fdfaf9; font-family: Arial, sans-serif'
+  )
+    include header.pug
+
+    table(
+      width='100%',
+      cellpadding='0',
+      cellspacing='0',
+      border='0',
+      style='padding: 20px 0'
+    )
+      tr
+        td(align='center')
+          table(
+            width='600',
+            cellpadding='0',
+            cellspacing='0',
+            border='0',
+            style='border-radius: 8px; overflow: hidden; background-color: #ffffff'
+          )
+            // Greeting
+            tr
+              td(style='padding: 20px 30px 0 30px')
+                p(
+                  style='color: #333; font-size: 16px; margin: 0 0 10px 0; font-weight: bold'
+                )
+                  if firstName
+                    | Hi #{ firstName },
+                  else
+                    | Hi there,
+
+            // Main message
+            tr
+              td(style='padding: 20px 30px 0 30px')
+                p(
+                  style='color: #333; font-size: 16px; margin: 0 0 10px 0; font-weight: bold'
+                ) Your career has wins worth remembering. You just haven't logged them yet.
+                p(style='color: #333; font-size: 16px; margin: 0 0 10px 0') Career Fingerprint helps you track your accomplishments over time so you're never scrambling when it matters most, whether that's a performance review, a job search, or a tough interview question.
+
+            // What you get
+            tr
+              td(style='padding: 10px 30px 0 30px')
+                p(style='color: #555; font-size: 14px; margin: 0 0 8px 0') Log your first achievement and start your free trial to unlock everything:
+                ul(
+                  style='color: #555; font-size: 14px; padding-left: 20px; margin: 5px 0'
+                )
+                  li A project you shipped or contributed to
+                  li A problem you solved
+                  li A moment someone recognized your work
+
+            // Supporting line
+            tr
+              td(style='padding: 10px 30px 0 30px')
+                p(
+                  style='color: #555; font-size: 14px; margin: 10px 0 0 0; line-height: 1.5'
+                ) It only takes a few minutes. The hardest part is starting.
+
+            // CTA button
+            tr
+              td(style='padding: 25px 30px 30px 30px; text-align: center')
+                a(
+                  href=loginLink,
+                  style='background-color: #ff7a8a; color: #000000; text-decoration: none; padding: 12px 24px; border-radius: 6px; display: inline-block; font-weight: bold'
+                ) Log your first win
+
+    include footer.pug

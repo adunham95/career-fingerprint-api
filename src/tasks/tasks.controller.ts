@@ -27,6 +27,12 @@ export class TasksController {
   async handleGenerateMissingUpcomingWeeklyEmails() {
     await this.tasksService.scheduleWeeklyEmailSend();
   }
+
+  /** Runs daily at 9:00 AM EST (14:00 UTC) */
+  @Cron('0 14 * * *', { name: 'checkAbandonedOnboarding' })
+  async handleCheckAbandonedOnboarding() {
+    await this.tasksService.checkAbandonedOnboarding();
+  }
   // ─── Interval & Timeout ────────────────────────────────────────────────────
 
   /**  Runs once, 20 seconds after app start  */

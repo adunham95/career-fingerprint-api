@@ -11,8 +11,9 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { SubscriptionsService } from 'src/subscriptions/subscriptions.service';
 import { CacheService } from 'src/cache/cache.service';
 import { PermissionsService } from 'src/permission/permission.service';
-import { SessionOrJwtGuard } from 'src/auth/session-auth.guard';
+// import { SessionOrJwtGuard } from 'src/auth/session-auth.guard';
 import { Auth } from 'src/auth/better-auth';
+import { SessionOrJwtGuard } from './session-auth.guard';
 
 /**
  * Drop-in replacement for SessionOrJwtGuard that checks Better Auth sessions
@@ -29,11 +30,11 @@ import { Auth } from 'src/auth/better-auth';
 @Injectable()
 export class BetterAuthGuard implements CanActivate {
   constructor(
+    private subscriptionService: SubscriptionsService,
+    private cache: CacheService,
+    private permissionService: PermissionsService,
     private readonly baAuthService: AuthService<Auth>,
     private readonly prisma: PrismaService,
-    private readonly subscriptionService: SubscriptionsService,
-    private readonly cache: CacheService,
-    private readonly permissionService: PermissionsService,
     private readonly legacyGuard: SessionOrJwtGuard,
   ) {}
 
@@ -82,6 +83,7 @@ export class BetterAuthGuard implements CanActivate {
     // -----------------------------------------------------------------------
     // 2. Fall back to legacy Redis session + JWT guard
     // -----------------------------------------------------------------------
+
     return this.legacyGuard.canActivate(context);
   }
 }

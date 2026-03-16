@@ -31,6 +31,9 @@ export class RegisterController {
     @InjectQueue('register-users') private registerUsersQueue,
   ) {}
 
+  /**
+   * @deprecated Use better auth instead
+   */
   @Post()
   async create(
     @Body() createRegisterDto: CreateRegisterDto,

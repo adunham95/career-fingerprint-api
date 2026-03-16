@@ -14,6 +14,7 @@ import { CacheModule } from 'src/cache/cache.module';
 import { FailedLoginService } from './failed-login.service';
 import { DynamicSamlStrategy } from './saml.strategy';
 import { PermissionModule } from 'src/permission/permission.module';
+import { BetterAuthGuard } from './better-auth.guard';
 
 export const jwtSecret = process.env.SECRET || '123abc';
 
@@ -39,7 +40,8 @@ export const jwtSecret = process.env.SECRET || '123abc';
     FailedLoginService,
     DynamicSamlStrategy,
     SessionOrJwtGuard,
+    BetterAuthGuard,
   ],
-  exports: [AuthService, SessionOrJwtGuard],
+  exports: [AuthService, SessionOrJwtGuard, BetterAuthGuard],
 })
 export class AuthModule {}

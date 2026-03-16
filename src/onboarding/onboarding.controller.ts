@@ -13,11 +13,15 @@ import { CreateOnboardingAchievementDto } from './dto/create-onboarding-achievem
 import { CreateOnboardingJobDto } from './dto/create-onboarding-job.dto';
 import { OnboardingService } from './onboarding.service';
 import { Request } from 'express';
+import { BetterAuthGuard } from 'src/auth/better-auth.guard';
 
 @Controller('onboarding')
 export class OnboardingController {
   constructor(private readonly onboardingService: OnboardingService) {}
 
+  /**
+   * @deprecated built into add achievement
+   */
   @Post('new/job')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
@@ -30,7 +34,7 @@ export class OnboardingController {
   }
 
   @Post('new/achievement')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BetterAuthGuard)
   @ApiBearerAuth()
   createAchievement(
     @Body() dto: CreateOnboardingAchievementDto,

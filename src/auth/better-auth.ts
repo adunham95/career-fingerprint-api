@@ -3,6 +3,9 @@ import { prismaAdapter } from '@better-auth/prisma-adapter';
 import { magicLink } from 'better-auth/plugins';
 import { PrismaService } from 'src/prisma/prisma.service';
 import bcrypt from 'bcrypt';
+import type { BetterAuthOptions } from 'better-auth';
+import { Prisma } from '@prisma/client';
+import { UsersService } from 'src/users/users.service';
 
 export type SendMagicLinkFn = (data: {
   email: string;
@@ -21,7 +24,7 @@ export type SendMagicLinkFn = (data: {
  *   - Rewrites `result.id` ← `result.baId` on every returned row
  *   - Injects `baId: true` into any `select` so it is always available
  */
-function buildBaUserProxy(prisma: PrismaService) {
+function buildBaUserProxy(prisma: PrismaService, userService: UsersService) {
   function transformWhere(where: Record<string, unknown> | undefined) {
     if (!where) return where;
     const { id, ...rest } = where;
@@ -52,12 +55,19 @@ function buildBaUserProxy(prisma: PrismaService) {
       data: Record<string, unknown>;
       select?: Record<string, unknown>;
     }) {
-      const row = await (prisma.user as any).create({
-        data: transformData(data),
-        select: withBaId(select),
-        ...opts,
-      });
-      return mapResult(row);
+      // const row = await (prisma.user as any).create({
+      //   data: transformData(data),
+      //   select: withBaId(select),
+      //   ...opts,
+      // });
+
+      const user = await userService.createUser(
+        transformData(data) as unknown as Prisma.UserCreateInput,
+        true, // dont send the welcome email, now handled by better auth
+        true, // password is already hashed by Better Auth
+      );
+
+      return mapResult(user as unknown as Record<string, unknown>);
     },
 
     async findFirst({
@@ -169,14 +179,13 @@ function buildBaUserProxy(prisma: PrismaService) {
   });
 }
 
-import type { BetterAuthOptions } from 'better-auth';
-
 export function createAuth(
   prisma: PrismaService,
+  userService: UsersService,
   sendMagicLink: SendMagicLinkFn,
   databaseHooks?: BetterAuthOptions['databaseHooks'],
 ) {
-  const proxiedPrisma = buildBaUserProxy(prisma);
+  const proxiedPrisma = buildBaUserProxy(prisma, userService);
 
   return betterAuth({
     database: prismaAdapter(proxiedPrisma as any, { provider: 'postgresql' }),
@@ -222,7 +231,7 @@ export function createAuth(
       enabled: true,
       // Prevent new registrations through Better Auth until the migration
       // that backfills BaAccount entries for existing users is complete.
-      disableSignUp: true,
+      // disableSignUp: true,
       password: {
         // New passwords use bcrypt (10 rounds) to stay consistent with the
         // existing hash format used throughout the application.

@@ -63,4 +63,6 @@ export class UserEntity implements User {
   passwordRestRequired: boolean;
 
   abandonedOnboardingEmailSentAt: Date | null;
+
+  baId: string;
 }

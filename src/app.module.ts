@@ -67,20 +67,22 @@ import { GoalModule } from './goal/goal.module';
 import { SseModule } from './sse/sse.module';
 import { OrgUsersModule } from './org-users/org-users.module';
 import { OnboardingModule } from './onboarding/onboarding.module';
-import { BetterAuthModule } from './auth-better/better-auth.module';
+import { UsersService } from './users/users.service';
 
 @Module({
   imports: [
     BetterAuthNestModule.forRootAsync({
-      imports: [MailModule],
+      imports: [MailModule, StripeModule, UsersModule],
       useFactory: (
         prisma: PrismaService,
+        userService: UsersService,
         mailService: MailService,
         stripeService: StripeService,
         auditService: AuditService,
       ) => ({
         auth: createAuth(
           prisma,
+          userService,
           async ({ email, url }) => {
             await mailService.sendEmail({
               to: email,
@@ -89,10 +91,21 @@ import { BetterAuthModule } from './auth-better/better-auth.module';
               context: { url },
             });
           },
-          createBetterAuthHooks(mailService, stripeService, auditService, prisma),
+          createBetterAuthHooks(
+            mailService,
+            stripeService,
+            auditService,
+            prisma,
+          ),
         ),
       }),
-      inject: [PrismaService, MailService, StripeService, AuditService],
+      inject: [
+        PrismaService,
+        UsersService,
+        MailService,
+        StripeService,
+        AuditService,
+      ],
       isGlobal: true,
       disableGlobalAuthGuard: true,
     }),
@@ -182,7 +195,6 @@ import { BetterAuthModule } from './auth-better/better-auth.module';
     SseModule,
     OrgUsersModule,
     OnboardingModule,
-    BetterAuthModule,
   ],
   controllers: [AppController, HealthController, SkillListController],
   providers: [

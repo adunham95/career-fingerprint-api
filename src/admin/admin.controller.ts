@@ -1,14 +1,14 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
 import { AdminService } from './admin.service';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { PlatformAdminGuard } from 'src/auth/platform-admin.guard';
+import { BetterAuthGuard } from 'src/auth/better-auth.guard';
 
 @Controller('admin')
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
   @Get('dashboard')
-  @UseGuards(JwtAuthGuard, PlatformAdminGuard)
+  @UseGuards(BetterAuthGuard, PlatformAdminGuard)
   getAdminDashboard() {
     return this.adminService.getAdminDashboard();
   }

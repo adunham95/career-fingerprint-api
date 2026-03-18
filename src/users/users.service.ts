@@ -93,6 +93,7 @@ export class UsersService {
     });
   }
 
+  // @deprecated use better-auth version
   async createUser(
     data: Prisma.UserCreateInput,
     doNotSendWelcomeEmail?: boolean,
@@ -121,11 +122,11 @@ export class UsersService {
       throw error;
     }
 
-    await this.auditService.logEvent(
-      AUDIT_EVENT.USER_CREATED,
-      user.id,
-      ipAddress,
-    );
+    // await this.auditService.logEvent(
+    //   AUDIT_EVENT.USER_CREATED,
+    //   user.id,
+    //   ipAddress,
+    // );
 
     if (user.createdAt < FREE_TIER_DEPRECATED_AT) {
       const freePlan = await this.cache.wrap(
@@ -154,9 +155,9 @@ export class UsersService {
       // They will be required to start a paid plan before accessing app features.
     }
 
-    await this.stripeService.newStripeCustomer({ user });
+    // await this.stripeService.newStripeCustomer({ user });
 
-    await this.mailService.addContactToMailTrap(user);
+    // await this.mailService.addContactToMailTrap(user);
 
     if (!doNotSendWelcomeEmail) {
       await this.mailService.sendWelcomeEmail({

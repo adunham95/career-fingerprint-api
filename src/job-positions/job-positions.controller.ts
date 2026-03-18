@@ -16,7 +16,6 @@ import { JobPositionsService } from './job-positions.service';
 import { CreateJobPositionDto } from './dto/create-job-position.dto';
 import { UpdateJobPositionDto } from './dto/update-job-position.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { Request } from 'express';
 import { RequirePermission } from 'src/permission/permission.decorator';
 import { OrgMemberGuard } from 'src/org/org-admin.guard';
@@ -25,6 +24,7 @@ import { AuditService } from 'src/audit/audit.service';
 import { AUDIT_EVENT } from 'src/audit/auditEvents';
 import { MinPlanLevel } from 'src/decorators/min-plan-level.decorator';
 import { SubscriptionGuard } from 'src/auth/subscription.guard';
+import { BetterAuthGuard } from 'src/auth/better-auth.guard';
 
 @Controller('job-positions')
 export class JobPositionsController {
@@ -35,7 +35,7 @@ export class JobPositionsController {
 
   @Post()
   @MinPlanLevel(1)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   @ApiBearerAuth()
   create(
     @Body() createJobPositionDto: CreateJobPositionDto,
@@ -50,7 +50,7 @@ export class JobPositionsController {
 
   @Post('client/:userID')
   @RequirePermission('career:edit')
-  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
+  @UseGuards(BetterAuthGuard, OrgMemberGuard, PermissionGuard)
   async createForClient(
     @Body() createJobPositionDto: CreateJobPositionDto,
     @Param('userID') userID: string,
@@ -69,7 +69,7 @@ export class JobPositionsController {
 
   @Post('application')
   @MinPlanLevel(1)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   createFromApplications(
     @Req() req: Request,
     @Body() { appID }: { appID: string },
@@ -91,7 +91,7 @@ export class JobPositionsController {
   @Get('my')
   @Header('Cache-Control', 'private, max-age=30')
   @MinPlanLevel(1)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   async findMyJobs(@Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -102,7 +102,7 @@ export class JobPositionsController {
 
   @Get(':id')
   @MinPlanLevel(1)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   @Header('Cache-Control', 'private, max-age=30')
   findOne(@Param('id') id: string) {
     return this.jobPositionsService.findOne(id);
@@ -110,7 +110,7 @@ export class JobPositionsController {
 
   @Patch(':id')
   @MinPlanLevel(1)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   update(
     @Param('id') id: string,
     @Body() updateJobPositionDto: UpdateJobPositionDto,
@@ -120,7 +120,7 @@ export class JobPositionsController {
 
   @Patch(':id/client/:userID')
   @RequirePermission('career:edit')
-  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
+  @UseGuards(BetterAuthGuard, OrgMemberGuard, PermissionGuard)
   async updateClient(
     @Param('id') id: string,
     @Param('userID') userID: string,
@@ -143,14 +143,14 @@ export class JobPositionsController {
 
   @Delete(':id')
   @MinPlanLevel(1)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   remove(@Param('id') id: string, @Req() req: Request) {
     return this.jobPositionsService.remove(id, req.user?.id);
   }
 
   @Delete(':id/client/:userID')
   @RequirePermission('career:edit')
-  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
+  @UseGuards(BetterAuthGuard, OrgMemberGuard, PermissionGuard)
   async removeUser(
     @Param('id') id: string,
     @Param('userID') userID: string,
@@ -172,7 +172,7 @@ export class JobPositionsController {
 
   @Delete('bullet-point/:id')
   @MinPlanLevel(1)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   removeBulletPoint(@Param('id') id: string) {
     return this.jobPositionsService.removeBulletPoint(id);
   }

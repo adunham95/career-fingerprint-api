@@ -31,7 +31,7 @@ async function main() {
       level: 0,
       priceCents: 0,
       interval: 'month',
-      features: [FeatureFlags.CreateResumes],
+      features: [FeatureFlags.ResumeCreate],
       metadata: { resumeLimit: 1 },
     },
   });
@@ -60,7 +60,7 @@ async function main() {
       priceCents: 999,
       priceCentsYear: 9999,
       interval: 'month',
-      features: [FeatureFlags.CreateResumes, FeatureFlags.ExportPDF],
+      features: [FeatureFlags.ResumeCreate, FeatureFlags.ResumeExportPDF],
       metadata: { resumeLimit: null },
     },
   });
@@ -89,7 +89,7 @@ async function main() {
       priceCents: 699,
       priceCentsYear: 6999,
       interval: 'month',
-      features: [FeatureFlags.CreateResumes, FeatureFlags.ExportPDF],
+      features: [FeatureFlags.ResumeCreate, FeatureFlags.ResumeExportPDF],
       metadata: { resumeLimit: null },
     },
   });
@@ -118,7 +118,7 @@ async function main() {
       priceCents: 699,
       priceCentsYear: 6999,
       interval: 'month',
-      features: [FeatureFlags.CreateResumes, FeatureFlags.ExportPDF],
+      features: [FeatureFlags.ResumeCreate, FeatureFlags.ResumeExportPDF],
       metadata: { resumeLimit: null },
     },
   });

@@ -14,7 +14,6 @@ import {
 import { OrgUsersService } from './org-users.service';
 import { UpdateOrgUserDto } from './dto/update-org-user.dto';
 import { RequirePermission } from 'src/permission/permission.decorator';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { OrgMemberGuard } from 'src/org/org-admin.guard';
 import { PermissionGuard } from 'src/permission/permission.guard';
 import { Request } from 'express';
@@ -24,6 +23,7 @@ import {
   InviteClientDto,
 } from './dto/create-org-user.dto';
 import { Throttle } from '@nestjs/throttler';
+import { BetterAuthGuard } from 'src/auth/better-auth.guard';
 
 @Controller('org-users')
 export class OrgUsersController {
@@ -31,7 +31,7 @@ export class OrgUsersController {
 
   @Post('member')
   @RequirePermission('users:create')
-  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
+  @UseGuards(BetterAuthGuard, OrgMemberGuard, PermissionGuard)
   newOrgMember(
     @Body() createOrgUserDto: CreateOrgUserDto,
     @Req() req: Request,
@@ -46,7 +46,7 @@ export class OrgUsersController {
 
   @Post('client')
   @RequirePermission('client:add')
-  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
+  @UseGuards(BetterAuthGuard, OrgMemberGuard, PermissionGuard)
   inviteOrgClient(
     @Body() inviteClientDto: InviteClientDto,
     @Req() req: Request,
@@ -66,7 +66,7 @@ export class OrgUsersController {
 
   @Post('admin')
   @RequirePermission('admins:manage')
-  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
+  @UseGuards(BetterAuthGuard, OrgMemberGuard, PermissionGuard)
   newOrgAdmin(
     @Body() createOrgAdminDto: CreateOrgAdminDto,
     @Req() req: Request,
@@ -87,7 +87,7 @@ export class OrgUsersController {
   }
 
   @Post('join/:joinCode')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BetterAuthGuard)
   joinOrg(@Param('joinCode') joinCode: string, @Req() req: Request) {
     const userID = req.user?.id;
     if (!userID) {
@@ -107,7 +107,7 @@ export class OrgUsersController {
   // }
 
   @Get('connections')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BetterAuthGuard)
   findMyConnections(@Req() req: Request) {
     const userID = req.user?.id;
     if (!userID) {
@@ -127,7 +127,7 @@ export class OrgUsersController {
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard, OrgMemberGuard)
+  @UseGuards(BetterAuthGuard, OrgMemberGuard)
   update(
     @Param('id') id: string,
     @Body() updateOrgUserDto: UpdateOrgUserDto,
@@ -145,7 +145,7 @@ export class OrgUsersController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BetterAuthGuard)
   removeFromOrg(@Param('id') id: string) {
     return this.orgUsersService.removeFromOrg(id);
   }

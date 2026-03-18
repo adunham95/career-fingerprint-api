@@ -8,7 +8,6 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth } from '@nestjs/swagger';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { CreateOnboardingAchievementDto } from './dto/create-onboarding-achievement.dto';
 import { CreateOnboardingJobDto } from './dto/create-onboarding-job.dto';
 import { OnboardingService } from './onboarding.service';
@@ -23,7 +22,7 @@ export class OnboardingController {
    * @deprecated built into add achievement
    */
   @Post('new/job')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BetterAuthGuard)
   @ApiBearerAuth()
   createJob(@Body() dto: CreateOnboardingJobDto, @Req() req: Request) {
     if (!req.user) {

@@ -16,9 +16,9 @@ import { JobApplicationsService } from './job-applications.service';
 import { CreateJobApplicationDto } from './dto/create-job-application.dto';
 import { UpdateJobApplicationDto } from './dto/update-job-application.dto';
 import { Request } from 'express';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { MinPlanLevel } from 'src/decorators/min-plan-level.decorator';
 import { SubscriptionGuard } from 'src/auth/subscription.guard';
+import { BetterAuthGuard } from 'src/auth/better-auth.guard';
 
 @Controller('job-applications')
 export class JobApplicationsController {
@@ -28,7 +28,7 @@ export class JobApplicationsController {
 
   @Post()
   @MinPlanLevel(1)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   create(
     @Body() createJobApplicationDto: CreateJobApplicationDto,
     @Req() req: Request,
@@ -48,7 +48,7 @@ export class JobApplicationsController {
   @Get('my')
   @Header('Cache-Control', 'private, max-age=30')
   @MinPlanLevel(1)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   findMy(@Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -59,7 +59,7 @@ export class JobApplicationsController {
   @Get('my/active')
   @Header('Cache-Control', 'private, max-age=30')
   @MinPlanLevel(1)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   findMyActive(@Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -70,14 +70,14 @@ export class JobApplicationsController {
   @Get(':id')
   @Header('Cache-Control', 'private, max-age=30')
   @MinPlanLevel(1)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   findOne(@Param('id') id: string) {
     return this.jobApplicationsService.findOne(id);
   }
 
   @Patch(':id')
   @MinPlanLevel(1)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   update(
     @Param('id') id: string,
     @Body() updateJobApplicationDto: UpdateJobApplicationDto,
@@ -87,7 +87,7 @@ export class JobApplicationsController {
 
   @Delete(':id')
   @MinPlanLevel(1)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   remove(@Param('id') id: string) {
     return this.jobApplicationsService.remove(id);
   }

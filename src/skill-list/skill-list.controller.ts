@@ -10,10 +10,10 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Request } from 'express';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { SkillListService } from './skill-list.service';
 import { MinPlanLevel } from 'src/decorators/min-plan-level.decorator';
 import { SubscriptionGuard } from 'src/auth/subscription.guard';
+import { BetterAuthGuard } from 'src/auth/better-auth.guard';
 
 @Controller('skill-list')
 export class SkillListController {
@@ -21,7 +21,7 @@ export class SkillListController {
 
   @Post()
   @MinPlanLevel(1)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   upsertSkillList(
     @Body() skillListDto: { skillList: string[] },
     @Req() req: Request,
@@ -37,7 +37,7 @@ export class SkillListController {
 
   @Get('/my')
   @MinPlanLevel(1)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   @Header('Cache-Control', 'private, max-age=30')
   mySkillList(@Req() req: Request) {
     if (!req.user) {

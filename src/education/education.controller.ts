@@ -16,7 +16,6 @@ import { EducationService } from './education.service';
 import { CreateEducationDto } from './dto/create-education.dto';
 import { UpdateEducationDto } from './dto/update-education.dto';
 import { Request } from 'express';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RequirePermission } from 'src/permission/permission.decorator';
 import { OrgMemberGuard } from 'src/org/org-admin.guard';
 import { PermissionGuard } from 'src/permission/permission.guard';
@@ -24,6 +23,7 @@ import { AuditService } from 'src/audit/audit.service';
 import { AUDIT_EVENT } from 'src/audit/auditEvents';
 import { MinPlanLevel } from 'src/decorators/min-plan-level.decorator';
 import { SubscriptionGuard } from 'src/auth/subscription.guard';
+import { BetterAuthGuard } from 'src/auth/better-auth.guard';
 
 @Controller('education')
 export class EducationController {
@@ -34,7 +34,7 @@ export class EducationController {
 
   @Post()
   @MinPlanLevel(1)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   create(@Body() createEducationDto: CreateEducationDto, @Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -45,7 +45,7 @@ export class EducationController {
 
   @Post('client/:userID')
   @RequirePermission('career:edit')
-  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
+  @UseGuards(BetterAuthGuard, OrgMemberGuard, PermissionGuard)
   async createClient(
     @Body() createEducationDto: CreateEducationDto,
     @Req() req: Request,
@@ -69,7 +69,7 @@ export class EducationController {
   @Get('my')
   @Header('Cache-Control', 'private, max-age=30')
   @MinPlanLevel(1)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   findMyEducation(@Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -80,7 +80,7 @@ export class EducationController {
 
   @Get(':id')
   @MinPlanLevel(1)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   @Header('Cache-Control', 'private, max-age=30')
   findOne(@Param('id') id: string) {
     return this.educationService.findOne(id);
@@ -88,7 +88,7 @@ export class EducationController {
 
   @Patch(':id')
   @MinPlanLevel(1)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   update(
     @Param('id') id: string,
     @Body() updateEducationDto: UpdateEducationDto,
@@ -98,7 +98,7 @@ export class EducationController {
 
   @Patch(':id/client/:userID')
   @RequirePermission('career:edit')
-  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
+  @UseGuards(BetterAuthGuard, OrgMemberGuard, PermissionGuard)
   async updateClient(
     @Param('id') id: string,
     @Body() updateEducationDto: UpdateEducationDto,
@@ -116,14 +116,14 @@ export class EducationController {
 
   @Delete(':id')
   @MinPlanLevel(1)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   remove(@Param('id') id: string, @Req() req: Request) {
     return this.educationService.remove(id, req.user?.id);
   }
 
   @Delete(':id/client/:userID')
   @RequirePermission('career:edit')
-  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
+  @UseGuards(BetterAuthGuard, OrgMemberGuard, PermissionGuard)
   async removeClientObject(
     @Param('id') id: string,
     @Req() req: Request,

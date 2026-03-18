@@ -10,7 +10,6 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { StripeService } from './stripe.service';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { Request } from 'express';
 import {
   CreateStripeCoachSubscriptionDto,
@@ -21,6 +20,7 @@ import { CacheService } from 'src/cache/cache.service';
 import { RequirePermission } from 'src/permission/permission.decorator';
 import { OrgMemberGuard } from 'src/org/org-admin.guard';
 import { PermissionGuard } from 'src/permission/permission.guard';
+import { BetterAuthGuard } from 'src/auth/better-auth.guard';
 
 @Controller('stripe')
 export class StripeController {
@@ -30,7 +30,7 @@ export class StripeController {
   ) {}
 
   @Post('trial')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BetterAuthGuard)
   create(
     @Body() createStripeSubscriptionDto: CreateStripeSubscriptionDto,
     @Req() req: Request,
@@ -45,7 +45,7 @@ export class StripeController {
   }
 
   @Post('create-checkout-session')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BetterAuthGuard)
   createCheckoutSession(
     @Body() createCheckoutSessionDto: CreateStripeSubscriptionDto,
     @Req() req: Request,
@@ -61,7 +61,7 @@ export class StripeController {
   }
 
   @Post('create-checkout-session/org')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BetterAuthGuard)
   createCheckoutOrgSession(
     @Body() createCheckoutSessionDto: CreateStripeOrgSubscriptionDto,
     @Req() req: Request,
@@ -79,7 +79,7 @@ export class StripeController {
   }
 
   @Post('create-checkout-session/coach')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BetterAuthGuard)
   createCheckoutCoachSession(
     @Body() createCheckoutSessionDto: CreateStripeCoachSubscriptionDto,
     @Req() req: Request,
@@ -96,7 +96,7 @@ export class StripeController {
   }
 
   @Post('update-billing')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BetterAuthGuard)
   updateBilling(@Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -105,7 +105,7 @@ export class StripeController {
   }
 
   @Get('validate/:checkoutSession')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BetterAuthGuard)
   async validateSubscription(
     @Param('checkoutSession') checkoutSession: string,
     @Req() req: Request,
@@ -140,7 +140,7 @@ export class StripeController {
 
   @Post('create-promo-code')
   @RequirePermission('org:create_promo_code')
-  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
+  @UseGuards(BetterAuthGuard, OrgMemberGuard, PermissionGuard)
   async createPromoCode(
     @Req() req: Request,
     @Body()

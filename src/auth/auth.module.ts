@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { UsersModule } from 'src/users/users.module';
 import { PassportModule } from '@nestjs/passport';
@@ -18,6 +18,7 @@ import { BetterAuthGuard } from './better-auth.guard';
 
 export const jwtSecret = process.env.SECRET || '123abc';
 
+@Global()
 @Module({
   imports: [
     PrismaModule,

@@ -22,10 +22,10 @@ import {
   UpdateResumeObjectDto,
 } from './dto/update-resume.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { Request, Response } from 'express';
 import { MinPlanLevel } from 'src/decorators/min-plan-level.decorator';
 import { SubscriptionGuard } from 'src/auth/subscription.guard';
+import { BetterAuthGuard } from 'src/auth/better-auth.guard';
 
 @Controller('resume')
 export class ResumeController {
@@ -33,7 +33,7 @@ export class ResumeController {
 
   @Post()
   @MinPlanLevel(2)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   create(@Body() createResumeDto: CreateResumeDto, @Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -49,7 +49,7 @@ export class ResumeController {
 
   @Get('my')
   @MinPlanLevel(2)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   @ApiBearerAuth()
   findMyResumes(@Req() req: Request) {
     if (!req.user) {
@@ -60,14 +60,14 @@ export class ResumeController {
 
   @Get(':id')
   @MinPlanLevel(2)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   findOne(@Param('id') id: string) {
     return this.resumeService.findOne(id);
   }
 
   @Get(':id/pdf')
   @MinPlanLevel(2)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   async findOneForPDF(@Param('id') id: string, @Res() res: Response) {
     const stream = await this.resumeService.findOneAndBuildPDF(id);
     res.setHeader('Content-Type', 'application/pdf');
@@ -77,42 +77,42 @@ export class ResumeController {
 
   @Get(':id/objects')
   @MinPlanLevel(2)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   getObjectsForResume(@Param('id') id: string) {
     return this.resumeService.findResumeObjects(id);
   }
 
   @Get(':id/job-positions')
   @MinPlanLevel(2)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   getJobPositionsForResume(@Param('id') id: string) {
     return this.resumeService.findJobObject(id);
   }
 
   @Get(':id/education')
   @MinPlanLevel(2)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   getEducationForResume(@Param('id') id: string) {
     return this.resumeService.findEduObject(id);
   }
 
   @Get(':id/duplicate')
   @MinPlanLevel(2)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   duplicateResume(@Param('id') id: string) {
     return this.resumeService.duplicateResume(id);
   }
 
   @Patch(':id')
   @MinPlanLevel(2)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   update(@Param('id') id: string, @Body() updateResumeDto: UpdateResumeDto) {
     return this.resumeService.update(id, updateResumeDto);
   }
 
   @Post(':id/resume-object')
   @MinPlanLevel(2)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   createResumeObject(
     @Param('id') id: string,
     @Body() createResumeObjectDto: CreateResumeObjectDto,
@@ -122,7 +122,7 @@ export class ResumeController {
 
   @Patch('resume-object/:objID')
   @MinPlanLevel(2)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   updateResumeWithJob(
     @Param('objID') resumeObjectID: string,
     @Body() createResumeObjectDto: UpdateResumeObjectDto,
@@ -135,14 +135,14 @@ export class ResumeController {
 
   @Delete(':id')
   @MinPlanLevel(2)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   remove(@Param('id') id: string) {
     return this.resumeService.remove(id);
   }
 
   @Delete('resume-object/:objID')
   @MinPlanLevel(2)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   removeJobObject(@Param('objID') id: string) {
     return this.resumeService.removeJobObject(id);
   }

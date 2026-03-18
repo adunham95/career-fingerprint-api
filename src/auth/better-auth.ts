@@ -55,19 +55,13 @@ function buildBaUserProxy(prisma: PrismaService, userService: UsersService) {
       data: Record<string, unknown>;
       select?: Record<string, unknown>;
     }) {
-      // const row = await (prisma.user as any).create({
-      //   data: transformData(data),
-      //   select: withBaId(select),
-      //   ...opts,
-      // });
+      const row = await (prisma.user as any).create({
+        data: transformData(data),
+        select: withBaId(select),
+        ...opts,
+      });
 
-      const user = await userService.createUser(
-        transformData(data) as unknown as Prisma.UserCreateInput,
-        true, // dont send the welcome email, now handled by better auth
-        true, // password is already hashed by Better Auth
-      );
-
-      return mapResult(user as unknown as Record<string, unknown>);
+      return mapResult(row);
     },
 
     async findFirst({

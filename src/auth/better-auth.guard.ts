@@ -8,10 +8,7 @@ import { AuthService } from '@thallesp/nestjs-better-auth';
 import { fromNodeHeaders } from 'better-auth/node';
 import { Request } from 'express';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { SubscriptionsService } from 'src/subscriptions/subscriptions.service';
 import { CacheService } from 'src/cache/cache.service';
-import { PermissionsService } from 'src/permission/permission.service';
-// import { SessionOrJwtGuard } from 'src/auth/session-auth.guard';
 import { Auth } from 'src/auth/better-auth';
 import { SessionOrJwtGuard } from './session-auth.guard';
 
@@ -30,9 +27,7 @@ import { SessionOrJwtGuard } from './session-auth.guard';
 @Injectable()
 export class BetterAuthGuard implements CanActivate {
   constructor(
-    private subscriptionService: SubscriptionsService,
     private cache: CacheService,
-    private permissionService: PermissionsService,
     private readonly baAuthService: AuthService<Auth>,
     private readonly prisma: PrismaService,
     private readonly legacyGuard: SessionOrJwtGuard,
@@ -62,10 +57,40 @@ export class BetterAuthGuard implements CanActivate {
         throw new UnauthorizedException();
       }
 
-      const subscription =
-        (await this.subscriptionService.getActive(user.id)) || undefined;
-
-      const permissionList = this.permissionService.getPermissionsForRoles([]);
+      const subscription = await this.cache.wrap(
+        `activeUserSubscription:${user.id}`,
+        () =>
+          this.prisma.subscription.findFirst({
+            where: {
+              userID: user.id,
+              status: {
+                in: [
+                  'trialing',
+                  'active',
+                  'past_due',
+                  'temp',
+                  'org-managed',
+                  'canceling',
+                ],
+              },
+              OR: [
+                { currentPeriodEnd: null },
+                { currentPeriodEnd: { gt: new Date() } },
+              ],
+            },
+            include: { plan: true },
+            orderBy: [
+              {
+                plan: {
+                  level: 'desc', // highest plan level first
+                },
+              },
+              {
+                createdAt: 'desc', // newest first
+              },
+            ],
+          }),
+      );
 
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, ...safeUser } = user;
@@ -73,8 +98,8 @@ export class BetterAuthGuard implements CanActivate {
         ...safeUser,
         password: '',
         planLevel: subscription?.plan?.level ?? 0,
-        subscription,
-        permissionList,
+        subscription: subscription ?? undefined,
+        permissionList: [],
       } as unknown as NonNullable<Request['user']>;
 
       return true;

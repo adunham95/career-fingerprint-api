@@ -93,6 +93,7 @@ export class UsersService {
     });
   }
 
+  // @deprecated use better-auth version
   async createUser(
     data: Prisma.UserCreateInput,
     doNotSendWelcomeEmail?: boolean,

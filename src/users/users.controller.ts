@@ -15,19 +15,19 @@ import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User as UserModel } from '@prisma/client';
 import { CreateUserDto } from './dto/create-user.dto';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { Request } from 'express';
 import { PlatformAdminGuard } from 'src/auth/platform-admin.guard';
 import { OrgMemberGuard } from 'src/org/org-admin.guard';
 import { PermissionGuard } from 'src/permission/permission.guard';
 import { RequirePermission } from 'src/permission/permission.decorator';
+import { BetterAuthGuard } from 'src/auth/better-auth.guard';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get('start-verify-email')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BetterAuthGuard)
   startVerifyEmail(@Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -44,13 +44,13 @@ export class UsersController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard, PlatformAdminGuard)
+  @UseGuards(BetterAuthGuard, PlatformAdminGuard)
   findAll() {
     return this.usersService.users({ orderBy: { createdAt: 'desc' } });
   }
 
   @Get('new-invite-code')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BetterAuthGuard)
   generateNewInviteCode(@Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -59,7 +59,7 @@ export class UsersController {
   }
 
   @Get('invite-stats')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BetterAuthGuard)
   getInviteCodeStats(@Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -68,7 +68,7 @@ export class UsersController {
   }
 
   @Get('me/billing-status')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BetterAuthGuard)
   getMyStripeStatus(@Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -82,7 +82,7 @@ export class UsersController {
   }
   @Get('client/:id')
   @RequirePermission('client:view')
-  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
+  @UseGuards(BetterAuthGuard, OrgMemberGuard, PermissionGuard)
   findClient(@Param('id') id: string) {
     return this.usersService.user({ id: +id });
   }
@@ -96,7 +96,7 @@ export class UsersController {
   }
 
   @Delete()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BetterAuthGuard)
   remove(@Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);

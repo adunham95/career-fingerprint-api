@@ -5,7 +5,6 @@ import { PrismaModule } from 'src/prisma/prisma.module';
 import { CacheModule } from 'src/cache/cache.module';
 import { StripeModule } from 'src/stripe/stripe.module';
 import { MailModule } from 'src/mail/mail.module';
-
 @Module({
   controllers: [SubscriptionsController],
   providers: [SubscriptionsService],

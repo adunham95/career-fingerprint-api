@@ -12,7 +12,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { ApiCookieAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import {
   InitiatePasswordResetDto,
   LoginDto,
@@ -159,7 +159,6 @@ export class AuthController {
 
   @Get('current-user')
   @UseGuards(BetterAuthGuard)
-  @ApiCookieAuth()
   @ApiOkResponse({ type: UserEntity })
   user(@Req() req: Request) {
     if (!req.user) {

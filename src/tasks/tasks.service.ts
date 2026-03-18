@@ -238,10 +238,9 @@ export class TasksService {
         user.id,
         user.timezone,
       );
-      const loginToken = await this.loginTokenService.createLoginToken(
+      const loginLink = await this.loginTokenService.createBetterAuthMagicLink(
         user.email,
-        'check-in',
-        true,
+        `${process.env.FRONT_END_URL}/dashboard/weekly`,
       );
 
       await this.mailService.sendWeeklyReminderEmail({
@@ -249,7 +248,7 @@ export class TasksService {
         context: {
           firstName: user.firstName,
           streakCount,
-          loginToken: loginToken.rawToken,
+          loginLink,
         },
       });
       const nextSendAt = getNextPreferredSendTime(

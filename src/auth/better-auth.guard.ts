@@ -10,7 +10,6 @@ import { Request } from 'express';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CacheService } from 'src/cache/cache.service';
 import { Auth } from 'src/auth/better-auth';
-import { SessionOrJwtGuard } from './session-auth.guard';
 
 /**
  * Drop-in replacement for SessionOrJwtGuard that checks Better Auth sessions
@@ -30,7 +29,6 @@ export class BetterAuthGuard implements CanActivate {
     private cache: CacheService,
     private readonly baAuthService: AuthService<Auth>,
     private readonly prisma: PrismaService,
-    private readonly legacyGuard: SessionOrJwtGuard,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -43,6 +41,8 @@ export class BetterAuthGuard implements CanActivate {
       .getSession({ headers: fromNodeHeaders(req.headers) })
       .catch(() => null);
 
+    console.log('baSession', baSession);
+
     if (baSession?.session && baSession.user) {
       // baSession.user.id === User.baId (cuid) — load the full app user
       const user = await this.cache.wrap(
@@ -52,6 +52,8 @@ export class BetterAuthGuard implements CanActivate {
             where: { baId: baSession.user.id },
           }),
       );
+
+      console.log(user);
 
       if (!user?.id) {
         throw new UnauthorizedException();
@@ -109,6 +111,6 @@ export class BetterAuthGuard implements CanActivate {
     // 2. Fall back to legacy Redis session + JWT guard
     // -----------------------------------------------------------------------
 
-    return this.legacyGuard.canActivate(context);
+    return false;
   }
 }

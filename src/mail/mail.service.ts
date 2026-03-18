@@ -61,13 +61,13 @@ export class MailService {
 
   async sendWeeklyReminderEmail(params: {
     to: string;
-    context: { firstName: string; streakCount?: number; loginToken: string };
+    context: { firstName: string; streakCount?: number; loginLink: string };
   }) {
     return this.mailQueue.add('weeklyEmail', {
       to: params.to,
       context: {
         ...params.context,
-        weeklyLink: `${process.env.FRONT_END_URL}/login/${params.context.loginToken}`,
+        weeklyLink: params.context.loginLink,
       },
     });
   }

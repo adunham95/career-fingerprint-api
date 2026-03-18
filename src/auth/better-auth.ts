@@ -230,9 +230,6 @@ export function createAuth(
     // -----------------------------------------------------------------------
     emailAndPassword: {
       enabled: true,
-      // Prevent new registrations through Better Auth until the migration
-      // that backfills BaAccount entries for existing users is complete.
-      // disableSignUp: true,
       sendResetPassword: async (data) => {
         await sendResetPassword(data);
       },
@@ -280,6 +277,10 @@ export function createAuth(
 
     advanced: {
       cookiePrefix: 'cf',
+    },
+
+    rateLimit: {
+      enabled: false, // Disables rate limiting entirely
     },
   });
 }

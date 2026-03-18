@@ -47,9 +47,7 @@ async function verifyBetterAuthMigration() {
     where: { providerId: 'credential', password: null },
   });
   if (credentialWithoutPassword > 0) {
-    console.error(
-      `FAIL: ${credentialWithoutPassword} credential BaAccount(s) have no password`,
-    );
+    console.error(`FAIL: credential BaAccount(s) have no password`);
     failed = true;
   } else {
     console.log('PASS: All credential accounts have a password hash');

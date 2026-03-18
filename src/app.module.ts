@@ -91,6 +91,14 @@ import { UsersService } from './users/users.service';
               context: { url },
             });
           },
+          async ({ user, url }) => {
+            await mailService.sendEmail({
+              to: user.email,
+              subject: 'Reset Your Career Fingerprint Password',
+              template: 'password-reset',
+              context: { resetPasswordLink: url },
+            });
+          },
           createBetterAuthHooks(
             mailService,
             stripeService,

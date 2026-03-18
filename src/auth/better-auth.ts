@@ -13,6 +13,12 @@ export type SendMagicLinkFn = (data: {
   token: string;
 }) => Promise<void>;
 
+export type SendResetPasswordFn = (data: {
+  user: { email: string };
+  url: string;
+  token: string;
+}) => Promise<void>;
+
 /**
  * Better Auth uses a string "id" field for users, but our User model uses an
  * Int primary key. We bridge this with the `baId` String field (a cuid) that
@@ -177,6 +183,7 @@ export function createAuth(
   prisma: PrismaService,
   userService: UsersService,
   sendMagicLink: SendMagicLinkFn,
+  sendResetPassword: SendResetPasswordFn,
   databaseHooks?: BetterAuthOptions['databaseHooks'],
 ) {
   const proxiedPrisma = buildBaUserProxy(prisma, userService);
@@ -226,6 +233,9 @@ export function createAuth(
       // Prevent new registrations through Better Auth until the migration
       // that backfills BaAccount entries for existing users is complete.
       // disableSignUp: true,
+      sendResetPassword: async (data) => {
+        await sendResetPassword(data);
+      },
       password: {
         // New passwords use bcrypt (10 rounds) to stay consistent with the
         // existing hash format used throughout the application.

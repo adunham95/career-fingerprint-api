@@ -4,7 +4,6 @@ import { magicLink } from 'better-auth/plugins';
 import { PrismaService } from 'src/prisma/prisma.service';
 import bcrypt from 'bcrypt';
 import type { BetterAuthOptions } from 'better-auth';
-import { Prisma } from '@prisma/client';
 import { UsersService } from 'src/users/users.service';
 
 export type SendMagicLinkFn = (data: {
@@ -277,9 +276,9 @@ export function createAuth(
 
     advanced: {
       cookiePrefix: 'cf',
-      crossSubdomainCookies: {
+      crossSubDomainCookies: {
         enabled: true,
-        domain: '.mycareerfingerprint.com', // leading dot covers all subdomains
+        domain: '.mycareerfingerprint.com',
       },
     },
 

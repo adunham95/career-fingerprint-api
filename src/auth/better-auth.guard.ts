@@ -5,6 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { AuthService } from '@thallesp/nestjs-better-auth';
+import { AuthGuard } from '@nestjs/passport';
 import { fromNodeHeaders } from 'better-auth/node';
 import { Request } from 'express';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -37,9 +38,14 @@ export class BetterAuthGuard implements CanActivate {
     // -----------------------------------------------------------------------
     // 1. Try Better Auth session (cookie: cf.session_token)
     // -----------------------------------------------------------------------
+    console.log('cookie header:', req.headers.cookie);
+
     const baSession = await this.baAuthService.instance.api
       .getSession({ headers: fromNodeHeaders(req.headers) })
-      .catch(() => null);
+      .catch((err) => {
+        console.log('getSession error:', err);
+        return null;
+      });
 
     console.log('baSession', baSession);
 
@@ -111,6 +117,7 @@ export class BetterAuthGuard implements CanActivate {
     // 2. Fall back to legacy Redis session + JWT guard
     // -----------------------------------------------------------------------
 
-    return false;
+    const jwtGuard = new (AuthGuard('jwt'))();
+    return jwtGuard.canActivate(context) as Promise<boolean>;
   }
 }

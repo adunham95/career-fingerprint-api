@@ -50,6 +50,10 @@ projects:
                 value: '2025-12-15T00:00:00Z'
               - key: RUN_ORG_ADMIN_MIGRATION
                 sync: true
+              - key: BETTER_AUTH_SECRET
+                sync: false
+              - key: BETTER_AUTH_URL
+                value: https://api.mycareerfingerprint.com
           - type: keyvalue
             name: lightning
             ipAllowList: []
@@ -108,6 +112,10 @@ projects:
                 value: '2025-12-15T00:00:00Z'
               - key: RUN_ORG_ADMIN_MIGRATION
                 sync: true
+              - key: BETTER_AUTH_SECRET
+                sync: false
+              - key: BETTER_AUTH_URL
+                value: https://stage-api.mycareerfingerprint.com
           - type: keyvalue
             name: lightning-stage
             ipAllowList: []

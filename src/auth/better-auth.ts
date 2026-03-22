@@ -191,7 +191,7 @@ export function createAuth(
   return betterAuth({
     database: prismaAdapter(proxiedPrisma as any, { provider: 'postgresql' }),
 
-    baseURL: process.env.BACKEND_URL ?? 'http://localhost:3000',
+    baseURL: process.env.BETTER_AUTH_URL ?? 'http://localhost:3000',
 
     // Better Auth's user table IS our existing User model.
     // `name`  maps to User.firstName (best approximation without a schema change)
@@ -277,6 +277,10 @@ export function createAuth(
 
     advanced: {
       cookiePrefix: 'cf',
+      crossSubdomainCookies: {
+        enabled: true,
+        domain: '.mycareerfingerprint.com', // leading dot covers all subdomains
+      },
     },
 
     rateLimit: {

@@ -277,9 +277,9 @@ export function createAuth(
 
     advanced: {
       cookiePrefix: 'cf',
-      crossSubdomainCookies: {
+      crossSubDomainCookies: {
         enabled: true,
-        domain: 'mycareerfingerprint.com', // leading dot covers all subdomains
+        domain: '.mycareerfingerprint.com',
       },
     },
 

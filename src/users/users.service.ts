@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   HttpException,
   HttpStatus,
@@ -92,15 +93,17 @@ export class UsersService {
     });
   }
 
+  // @deprecated use better-auth version
   async createUser(
     data: Prisma.UserCreateInput,
     doNotSendWelcomeEmail?: boolean,
     doNotHashPassword?: boolean,
     ipAddress?: string,
   ): Promise<User> {
-    data.password = doNotHashPassword
-      ? data.password
-      : await this.hashPassword(data.password);
+    if (!doNotHashPassword) {
+      this.validatePassword(data.password);
+      data.password = await this.hashPassword(data.password);
+    }
 
     data.email = data.email.toLowerCase();
 
@@ -119,11 +122,11 @@ export class UsersService {
       throw error;
     }
 
-    await this.auditService.logEvent(
-      AUDIT_EVENT.USER_CREATED,
-      user.id,
-      ipAddress,
-    );
+    // await this.auditService.logEvent(
+    //   AUDIT_EVENT.USER_CREATED,
+    //   user.id,
+    //   ipAddress,
+    // );
 
     if (user.createdAt < FREE_TIER_DEPRECATED_AT) {
       const freePlan = await this.cache.wrap(
@@ -152,9 +155,9 @@ export class UsersService {
       // They will be required to start a paid plan before accessing app features.
     }
 
-    await this.stripeService.newStripeCustomer({ user });
+    // await this.stripeService.newStripeCustomer({ user });
 
-    await this.mailService.addContactToMailTrap(user);
+    // await this.mailService.addContactToMailTrap(user);
 
     if (!doNotSendWelcomeEmail) {
       await this.mailService.sendWelcomeEmail({
@@ -249,6 +252,7 @@ export class UsersService {
     await this.cache.del(`currentUser:${where.id}`);
 
     if (data?.password) {
+      this.validatePassword(data.password as string);
       data.password = await this.hashPassword(data.password as string);
     }
     return this.prisma.user.update({
@@ -357,6 +361,21 @@ export class UsersService {
     });
 
     return token;
+  }
+
+  private validatePassword(password: string): void {
+    const errors: string[] = [];
+    if (password.length < 8) errors.push('at least 8 characters');
+    if (!/[A-Z]/.test(password)) errors.push('an uppercase letter');
+    if (!/[a-z]/.test(password)) errors.push('a lowercase letter');
+    if (!/\d/.test(password)) errors.push('a number');
+    if (!/[^a-zA-Z0-9\s]/.test(password)) errors.push('a special character');
+
+    if (errors.length > 0) {
+      throw new BadRequestException(
+        `Password must contain ${errors.join(', ')}`,
+      );
+    }
   }
 
   private async hashPassword(password: string): Promise<string> {

@@ -238,10 +238,9 @@ export class TasksService {
         user.id,
         user.timezone,
       );
-      const loginToken = await this.loginTokenService.createLoginToken(
+      const loginLink = await this.loginTokenService.createBetterAuthMagicLink(
         user.email,
-        'check-in',
-        true,
+        `${process.env.FRONT_END_URL}/dashboard/weekly`,
       );
 
       await this.mailService.sendWeeklyReminderEmail({
@@ -249,7 +248,7 @@ export class TasksService {
         context: {
           firstName: user.firstName,
           streakCount,
-          loginToken: loginToken.rawToken,
+          loginLink,
         },
       });
       const nextSendAt = getNextPreferredSendTime(
@@ -265,6 +264,67 @@ export class TasksService {
     await Promise.all(promises);
 
     // console.log({ resolved });
+  }
+
+  async checkAbandonedOnboarding(): Promise<void> {
+    const minAge = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const maxAge = new Date(Date.now() - 48 * 60 * 60 * 1000);
+
+    const users = await this.prisma.user.findMany({
+      where: {
+        createdAt: { gte: minAge, lte: maxAge },
+        abandonedOnboardingEmailSentAt: null,
+        email: { not: { endsWith: '@demo.com' } },
+        subscriptions: {
+          none: {
+            status: {
+              in: ['active', 'trialing', 'past_due', 'temp', 'canceling'],
+            },
+          },
+        },
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        _count: { select: { achievements: true } },
+      },
+    });
+
+    for (const user of users) {
+      const loginToken = await this.loginTokenService.createLoginToken(
+        user.email,
+        'onboarding',
+        true,
+      );
+      const baseUrl = process.env.FRONT_END_URL;
+      const hasAchievement = user._count.achievements > 0;
+      const redirectPath = hasAchievement
+        ? '/onboard/membership'
+        : '/onboard/achievement';
+      const loginLink = `${baseUrl}/login/${loginToken.rawToken}?redirect=${redirectPath}`;
+
+      if (hasAchievement) {
+        await this.mailService.sendAbandonedOnboardingNoSubscriptionEmail({
+          to: user.email,
+          context: { firstName: user.firstName || undefined, loginLink },
+        });
+      } else {
+        await this.mailService.sendAbandonedOnboardingNoAchievementEmail({
+          to: user.email,
+          context: { firstName: user.firstName || undefined, loginLink },
+        });
+      }
+
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { abandonedOnboardingEmailSentAt: new Date() },
+      });
+    }
+
+    this.logger.log(
+      `checkAbandonedOnboarding finished. Emailed ${users.length} users.`,
+    );
   }
 
   async scheduleWeeklyEmailSend() {

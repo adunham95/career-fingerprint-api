@@ -8,9 +8,17 @@ export class MailProcessor {
 
   @Process('sendEmail')
   async handleSendEmail(
-    job: Job<{ to: string; subject: string; body: string; template: string }>,
+    job: Job<{
+      to: string;
+      subject: string;
+      body: string;
+      template: string;
+      context?: {
+        [name: string]: any;
+      };
+    }>,
   ) {
-    const { to, subject, template } = job.data;
+    const { to, subject, template, context } = job.data;
 
     console.log(`📧 Sending email to ${to}`);
 
@@ -19,6 +27,7 @@ export class MailProcessor {
         to,
         template,
         subject,
+        context,
       })
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       .catch((e) => console.log({ e }));
@@ -68,39 +77,6 @@ export class MailProcessor {
       console.log(`✅ User Added to Mailtrap`);
     } else {
       console.log("Missing ENV's");
-    }
-  }
-
-  @Process('sendECardNotification')
-  async handleSendECardNotification(
-    job: Job<{
-      to: string;
-      context: { eCardNumber: string; firstName: string };
-    }>,
-  ) {
-    const {
-      to,
-      context: { eCardNumber, firstName },
-    } = job.data;
-
-    const template = 'ecard-notification';
-    const subject = 'You have received a new ECard From Planner Bee';
-
-    console.log(`📧 Sending email to ${to}`);
-
-    try {
-      await this.mailerService.sendMail({
-        to: [to],
-        template,
-        subject,
-        context: {
-          firstName,
-          ecardURL: `https://planner-bee.com/ecard/${eCardNumber}`,
-        },
-      });
-      console.log(`✅ Email sent to ${to}`);
-    } catch (error) {
-      console.log(`❎ Email not sent`, error);
     }
   }
 
@@ -465,6 +441,62 @@ export class MailProcessor {
         context,
       });
       console.log(`✅ Email sent to ${to.join(',')}`);
+    } catch (error) {
+      console.log(`❌ Email not sent`, error);
+      throw error;
+    }
+  }
+
+  @Process('abandonedOnboardingNoAchievement')
+  async abandonedOnboardingNoAchievement(
+    job: Job<{
+      to: string;
+      context: { firstName?: string; loginLink: string };
+    }>,
+  ) {
+    const { to, context } = job.data;
+
+    const template = 'abandoned-onboarding-no-achievement';
+    const subject = 'Your career wins are waiting to be captured';
+
+    console.log(`📧 Sending email to ${to}`);
+
+    try {
+      await this.mailerService.sendMail({
+        to: [to],
+        template,
+        subject,
+        context,
+      });
+      console.log(`✅ Email sent to ${to}`);
+    } catch (error) {
+      console.log(`❌ Email not sent`, error);
+      throw error;
+    }
+  }
+
+  @Process('abandonedOnboardingNoSubscription')
+  async abandonedOnboardingNoSubscription(
+    job: Job<{
+      to: string;
+      context: { firstName?: string; loginLink: string };
+    }>,
+  ) {
+    const { to, context } = job.data;
+
+    const template = 'abandoned-onboarding-no-subscription';
+    const subject = "You're one step away from the full experience";
+
+    console.log(`📧 Sending email to ${to}`);
+
+    try {
+      await this.mailerService.sendMail({
+        to: [to],
+        template,
+        subject,
+        context,
+      });
+      console.log(`✅ Email sent to ${to}`);
     } catch (error) {
       console.log(`❌ Email not sent`, error);
       throw error;

@@ -1,4 +1,4 @@
-import { Controller, Logger } from '@nestjs/common';
+import { Controller, Get, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { TasksService } from './tasks.service';
 
@@ -27,6 +27,12 @@ export class TasksController {
   async handleGenerateMissingUpcomingWeeklyEmails() {
     await this.tasksService.scheduleWeeklyEmailSend();
   }
+
+  /** Runs daily at 9:00 AM EST (14:00 UTC) */
+  @Cron('0 14 * * *', { name: 'checkAbandonedOnboarding' })
+  async handleCheckAbandonedOnboarding() {
+    await this.tasksService.checkAbandonedOnboarding();
+  }
   // ─── Interval & Timeout ────────────────────────────────────────────────────
 
   /**  Runs once, 20 seconds after app start  */
@@ -36,4 +42,13 @@ export class TasksController {
   //   }
 
   // ─── Dynamic Schedule's ────────────────────────────────────────────────────
+
+  // ─── Dev Test Endpoints ─────────────────────────────────────────────────────
+
+  @Get('test/weekly-email')
+  async testWeeklyEmail() {
+    console.log('test week emails');
+    await this.tasksService.runWeeklyEmailSend();
+    return true;
+  }
 }

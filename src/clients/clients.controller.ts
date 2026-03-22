@@ -10,10 +10,10 @@ import {
 import { ClientsService } from './clients.service';
 import { CreateClientDto, InviteClientDto } from './dto/create-client.dto';
 import { RequirePermission } from 'src/permission/permission.decorator';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { PermissionGuard } from 'src/permission/permission.guard';
 import { OrgMemberGuard } from 'src/org/org-admin.guard';
 import { Request } from 'express';
+import { BetterAuthGuard } from 'src/auth/better-auth.guard';
 
 @Controller('client')
 export class ClientsController {
@@ -22,7 +22,7 @@ export class ClientsController {
   /** @deprecated switch to use org users */
   @Post()
   @RequirePermission('users:add')
-  @UseGuards(JwtAuthGuard, PermissionGuard)
+  @UseGuards(BetterAuthGuard, PermissionGuard)
   create(@Body() createClientDto: CreateClientDto) {
     return this.clientsService.create(createClientDto);
   }
@@ -30,7 +30,7 @@ export class ClientsController {
   /** @deprecated switch to use org users */
   @Post('invite')
   @RequirePermission('client:add')
-  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
+  @UseGuards(BetterAuthGuard, OrgMemberGuard, PermissionGuard)
   invite(@Body() inviteClientDto: InviteClientDto, @Req() req: Request) {
     const orgID = req.user?.orgID;
     const userID = req.user?.id;

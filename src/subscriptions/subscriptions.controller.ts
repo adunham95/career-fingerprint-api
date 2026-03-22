@@ -11,16 +11,16 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { SubscriptionsService } from './subscriptions.service';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { Request } from 'express';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
+import { BetterAuthGuard } from 'src/auth/better-auth.guard';
 
 @Controller('subscriptions')
 export class SubscriptionsController {
   constructor(private readonly subscriptionsService: SubscriptionsService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BetterAuthGuard)
   createSubscription(
     @Body() createSubscriptionDto: CreateSubscriptionDto,
     @Req() req: Request,
@@ -37,7 +37,7 @@ export class SubscriptionsController {
   }
 
   @Post('temp-access')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BetterAuthGuard)
   async createTempSubscription(
     @Body()
     { priceID, sessionID }: { priceID: string; sessionID: string },
@@ -60,7 +60,7 @@ export class SubscriptionsController {
   }
 
   @Get('plans/available')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BetterAuthGuard)
   getPlansAvailableToUpgrade(@Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -70,7 +70,7 @@ export class SubscriptionsController {
   }
 
   @Get('plans/type/:id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BetterAuthGuard)
   getPlansByType(@Req() req: Request, @Param('id') type: string) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -85,7 +85,7 @@ export class SubscriptionsController {
   }
 
   @Get('details')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BetterAuthGuard)
   getCurrentSubscription(@Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -94,7 +94,7 @@ export class SubscriptionsController {
   }
 
   @Delete('cancel/:id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BetterAuthGuard)
   cancelCurrentSubscription(@Req() req: Request, @Param('id') id: string) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);

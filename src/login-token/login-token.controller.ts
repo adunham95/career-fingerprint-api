@@ -10,6 +10,11 @@ export class LoginTokenController {
     return this.loginTokenService.verifyLoginToken(token);
   }
 
+  @Get('magic-link/exchange/:token')
+  exchangeMagicLink(@Param('token') token: string) {
+    return this.loginTokenService.consumeBetterAuthMagicLink(token);
+  }
+
   @Get('create/:email')
   generateLoginToken(@Param('email') email: string) {
     if (process.env.NODE_ENV === 'production') {

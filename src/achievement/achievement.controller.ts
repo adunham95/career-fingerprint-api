@@ -18,12 +18,12 @@ import {
 import { AchievementService } from './achievement.service';
 import { CreateAchievementDto } from './dto/create-achievement.dto';
 import { UpdateAchievementDto } from './dto/update-achievement.dto';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { PaginationQueryDto } from 'src/dto/default-pagination-query.dto';
 import { PdfService } from 'src/pdf/pdf.service';
 import { MinPlanLevel } from 'src/decorators/min-plan-level.decorator';
+import { BetterAuthGuard } from 'src/auth/better-auth.guard';
 
 interface MyAchievementQuery extends PaginationQueryDto {
   includeLinked?: string;
@@ -42,7 +42,7 @@ export class AchievementController {
 
   @Post()
   @MinPlanLevel(1)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   @ApiBearerAuth()
   create(
     @Body() createAchievementDto: CreateAchievementDto,
@@ -62,7 +62,7 @@ export class AchievementController {
 
   @Get('my')
   @MinPlanLevel(1)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   @Header('Cache-Control', 'private, max-age=30')
   findMyAchievements(@Req() req: Request, @Query() query: MyAchievementQuery) {
     if (!req.user) {
@@ -84,7 +84,7 @@ export class AchievementController {
 
   @Get('my/pdf')
   @MinPlanLevel(2)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   @Header('Cache-Control', 'private, max-age=30')
   async getMyAchievementsPDF(
     @Req() req: Request,
@@ -118,7 +118,7 @@ export class AchievementController {
 
   @Get('my/activity')
   @MinPlanLevel(1)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   @Header('Cache-Control', 'private, max-age=300')
   @ApiBearerAuth()
   getMyActivity(@Req() req: Request, @Query('timeZone') timeZone?: string) {
@@ -133,7 +133,7 @@ export class AchievementController {
 
   @Get('my/streak')
   @MinPlanLevel(1)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   @Header('Cache-Control', 'private, max-age=300')
   @ApiBearerAuth()
   getStreak(@Req() req: Request, @Query('timeZone') timeZone?: string) {
@@ -148,7 +148,7 @@ export class AchievementController {
 
   //Org Admin Guard
   @Get('my/:userID')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BetterAuthGuard)
   @Header('Cache-Control', 'private, max-age=30')
   findMyAchievementsByUser(
     @Req() req: Request,
@@ -171,7 +171,7 @@ export class AchievementController {
 
   @Get(':id')
   @MinPlanLevel(1)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   @Header('Cache-Control', 'private, max-age=30')
   @ApiBearerAuth()
   findOne(@Param('id') id: string) {
@@ -179,7 +179,7 @@ export class AchievementController {
   }
   @Patch(':id')
   @MinPlanLevel(1)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   @ApiBearerAuth()
   update(
     @Param('id') id: string,
@@ -190,7 +190,7 @@ export class AchievementController {
 
   @Delete(':id')
   @MinPlanLevel(1)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   @ApiBearerAuth()
   remove(@Param('id') id: string) {
     return this.achievementService.remove(id);

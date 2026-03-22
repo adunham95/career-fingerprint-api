@@ -12,7 +12,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { ApiCookieAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import {
   InitiatePasswordResetDto,
   LoginDto,
@@ -20,13 +20,13 @@ import {
 } from './dto/auth.dto';
 import { Request, Response } from 'express';
 import { JwtAuthGuard } from './jwt-auth.guard';
-import { SessionOrJwtGuard } from './session-auth.guard';
 import { UserEntity } from 'src/users/entities/user.entity';
 import { AuthCookieService } from 'src/authcookie/authcookie.service';
 import { Throttle } from '@nestjs/throttler';
 import { CustomThrottlerGuard } from './custom-throttler.guard';
 import { SamlAuthGuard } from './SamlAuthGuard.guard';
 import { getClientIp } from 'src/utils/getIPAddress';
+import { BetterAuthGuard } from 'src/auth/better-auth.guard';
 
 @Controller('auth')
 @ApiTags('Auth')
@@ -158,8 +158,7 @@ export class AuthController {
   }
 
   @Get('current-user')
-  @UseGuards(SessionOrJwtGuard)
-  @ApiCookieAuth()
+  @UseGuards(BetterAuthGuard)
   @ApiOkResponse({ type: UserEntity })
   user(@Req() req: Request) {
     if (!req.user) {

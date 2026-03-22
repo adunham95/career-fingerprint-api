@@ -13,10 +13,10 @@ import {
 import { BulletPointsService } from './bullet-points.service';
 import { CreateBulletPointDto } from './dto/create-bullet-point.dto';
 import { UpdateBulletPointDto } from './dto/update-bullet-point.dto';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { Request } from 'express';
 import { MinPlanLevel } from 'src/decorators/min-plan-level.decorator';
 import { SubscriptionGuard } from 'src/auth/subscription.guard';
+import { BetterAuthGuard } from 'src/auth/better-auth.guard';
 
 @Controller('bullet-points')
 export class BulletPointsController {
@@ -24,7 +24,7 @@ export class BulletPointsController {
 
   @Post()
   @MinPlanLevel(1)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   create(
     @Body() createBulletPointDto: CreateBulletPointDto,
     @Req() req: Request,
@@ -39,7 +39,7 @@ export class BulletPointsController {
 
   @Patch(':id')
   @MinPlanLevel(1)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   update(
     @Param('id') id: string,
     @Body() updateBulletPointDto: UpdateBulletPointDto,
@@ -49,7 +49,7 @@ export class BulletPointsController {
 
   @Delete(':id')
   @MinPlanLevel(1)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   remove(@Param('id') id: string) {
     return this.bulletPointsService.remove(id);
   }

@@ -20,7 +20,6 @@ import {
 } from '@nestjs/common';
 import { OrgService } from './org.service';
 import { CreateOrgDto } from './dto/create-org.dto';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { UpdateOrgDto, UpdateOrgSubscriptionDto } from './dto/update-org.dto';
 import { PlatformAdminGuard } from 'src/auth/platform-admin.guard';
 import { Request } from 'express';
@@ -28,23 +27,20 @@ import { RequirePermission } from 'src/permission/permission.decorator';
 import { PermissionGuard } from 'src/permission/permission.guard';
 import { OrgMemberGuard } from './org-admin.guard';
 import { Cron, CronExpression } from '@nestjs/schedule';
-// import { UpdateOrgDto } from './dto/update-org.dto';
-// import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-// import { Request } from 'express';
-
+import { BetterAuthGuard } from 'src/auth/better-auth.guard';
 @Controller('org')
 export class OrgController {
   constructor(private readonly orgService: OrgService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BetterAuthGuard)
   create(@Body() createOrgDto: CreateOrgDto) {
     return this.orgService.create(createOrgDto);
   }
 
   @Get(':orgID/users')
   @RequirePermission('client:list')
-  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
+  @UseGuards(BetterAuthGuard, OrgMemberGuard, PermissionGuard)
   @Header('Cache-Control', 'private, max-age=30')
   getOrgUser(
     @Param('orgID') id: string,
@@ -56,7 +52,7 @@ export class OrgController {
 
   @Get(':orgID/admins')
   @RequirePermission('admins:view')
-  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
+  @UseGuards(BetterAuthGuard, OrgMemberGuard, PermissionGuard)
   @Header('Cache-Control', 'private, max-age=30')
   getOrgAdmins(@Param('orgID') id: string) {
     return this.orgService.getOrgAdmins(id);
@@ -64,7 +60,7 @@ export class OrgController {
 
   @Get('invite-link')
   @RequirePermission('admins:view')
-  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
+  @UseGuards(BetterAuthGuard, OrgMemberGuard, PermissionGuard)
   getOrgSignUpLink(@Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -79,7 +75,7 @@ export class OrgController {
   /** @deprecated Moved to org users */
   @Post(':orgID/admins')
   @RequirePermission('admins:manage')
-  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
+  @UseGuards(BetterAuthGuard, OrgMemberGuard, PermissionGuard)
   newOrgAdmin(
     @Param('orgID') id: string,
     @Body()
@@ -102,7 +98,7 @@ export class OrgController {
   /** @deprecated Moved to org users */
   @Post(':orgID/members')
   @RequirePermission('users:create')
-  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
+  @UseGuards(BetterAuthGuard, OrgMemberGuard, PermissionGuard)
   newOrgMember(
     @Param('orgID') id: string,
     @Body()
@@ -123,7 +119,7 @@ export class OrgController {
 
   @Delete(':orgID/user/:userID')
   @RequirePermission('client:remove')
-  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
+  @UseGuards(BetterAuthGuard, OrgMemberGuard, PermissionGuard)
   removeUserFromOrg(
     @Param('orgID') id: string,
     @Param('userID') userID: string,
@@ -133,7 +129,7 @@ export class OrgController {
 
   @Delete(':orgID/admin/:userID')
   @RequirePermission('admins:manage')
-  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
+  @UseGuards(BetterAuthGuard, OrgMemberGuard, PermissionGuard)
   removeAdminFromOrg(
     @Param('orgID') id: string,
     @Param('userID') userID: string,
@@ -143,7 +139,7 @@ export class OrgController {
 
   @Patch(':orgID/admin/:userID')
   @RequirePermission('admins:manage')
-  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
+  @UseGuards(BetterAuthGuard, OrgMemberGuard, PermissionGuard)
   updateAdminFromOrg(
     @Param('orgID') id: string,
     @Param('userID') userID: string,
@@ -160,7 +156,7 @@ export class OrgController {
   }
 
   @Get(':id/permissions')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BetterAuthGuard)
   myOrgPermissions(@Param('id') id: string, @Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -170,20 +166,20 @@ export class OrgController {
 
   @Get(':id/roles')
   @RequirePermission('admins:manage')
-  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
+  @UseGuards(BetterAuthGuard, OrgMemberGuard, PermissionGuard)
   myOrgRoles(@Param('id') id: string) {
     return this.orgService.getRolesForOrg(id);
   }
 
   @Get(':id/coupon')
   @RequirePermission('org:view_promo_code')
-  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
+  @UseGuards(BetterAuthGuard, OrgMemberGuard, PermissionGuard)
   myOrgCoupon(@Param('id') id: string) {
     return this.orgService.getOrgCoupon(id);
   }
 
   @Get('my')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(BetterAuthGuard)
   findMine(@Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -201,7 +197,7 @@ export class OrgController {
   }
 
   @Get(':id/details')
-  @UseGuards(JwtAuthGuard, PlatformAdminGuard)
+  @UseGuards(BetterAuthGuard, PlatformAdminGuard)
   @Header('Cache-Control', 'private, max-age=30')
   findOneDetails(
     @Param('id') id: string,
@@ -211,20 +207,20 @@ export class OrgController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard, PlatformAdminGuard)
+  @UseGuards(BetterAuthGuard, PlatformAdminGuard)
   findAll() {
     return this.orgService.findAll();
   }
 
   @Patch(':id')
   @RequirePermission('org:update_details')
-  @UseGuards(JwtAuthGuard, OrgMemberGuard, PermissionGuard)
+  @UseGuards(BetterAuthGuard, OrgMemberGuard, PermissionGuard)
   update(@Param('id') id: string, @Body() updateOrgDto: UpdateOrgDto) {
     return this.orgService.update(id, updateOrgDto);
   }
 
   @Patch(':id/add-subscription')
-  @UseGuards(JwtAuthGuard, OrgMemberGuard, PlatformAdminGuard)
+  @UseGuards(BetterAuthGuard, OrgMemberGuard, PlatformAdminGuard)
   updatePlatformAdmin(
     @Param('id') id: string,
     @Body() updateOrgDto: UpdateOrgSubscriptionDto,

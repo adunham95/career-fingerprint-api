@@ -16,10 +16,10 @@ import { GoalService } from './goal.service';
 import { CreateGoalDto, GoalQueryDto } from './dto/create-goal.dto';
 import { CheckoffMilestoneDto, UpdateGoalDto } from './dto/update-goal.dto';
 import { Request } from 'express';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { MinPlanLevel } from 'src/decorators/min-plan-level.decorator';
 import { SubscriptionGuard } from 'src/auth/subscription.guard';
 import { Cron } from '@nestjs/schedule';
+import { BetterAuthGuard } from 'src/auth/better-auth.guard';
 
 @Controller('goal')
 export class GoalController {
@@ -27,7 +27,7 @@ export class GoalController {
 
   @Post()
   @MinPlanLevel(2)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   create(@Body() createGoalDto: CreateGoalDto, @Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -38,14 +38,14 @@ export class GoalController {
 
   @Get()
   @MinPlanLevel(2)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   findAll() {
     return this.goalService.findAll();
   }
 
   @Get('my')
   @MinPlanLevel(2)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   findMine(@Req() req: Request, @Query() query: GoalQueryDto) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -55,14 +55,14 @@ export class GoalController {
 
   @Get('skills')
   @MinPlanLevel(2)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   findSkills() {
     return this.goalService.findGoalSkills();
   }
 
   @Get('milestone/:id/:type')
   @MinPlanLevel(2)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   findMilestoneItem(
     @Param('id') id: string,
     @Param('type') type: string,
@@ -81,7 +81,7 @@ export class GoalController {
 
   @Patch('milestone/:id/:type')
   @MinPlanLevel(2)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   updateMilestoneItem(
     @Param('id') id: string,
     @Body() checkoffItemBody: CheckoffMilestoneDto,
@@ -101,21 +101,21 @@ export class GoalController {
 
   @Get(':id')
   @MinPlanLevel(2)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   findOne(@Param('id') id: string) {
     return this.goalService.findOne(+id);
   }
 
   @Patch(':id')
   @MinPlanLevel(2)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   update(@Param('id') id: string, @Body() updateGoalDto: UpdateGoalDto) {
     return this.goalService.update(+id, updateGoalDto);
   }
 
   @Delete(':id')
   @MinPlanLevel(2)
-  @UseGuards(JwtAuthGuard, SubscriptionGuard)
+  @UseGuards(BetterAuthGuard, SubscriptionGuard)
   remove(@Param('id') id: string) {
     return this.goalService.remove(+id);
   }

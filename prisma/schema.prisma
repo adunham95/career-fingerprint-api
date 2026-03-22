@@ -73,6 +73,10 @@ model User {
   GoalMilestoneManualState   GoalMilestoneManualState[]
   GoalMilestoneStreakCheckIn GoalMilestoneStreakCheckIn[]
   GoalMilestone              GoalMilestone[]
+  abandonedOnboardingEmailSentAt DateTime?
+  baId                           String?     @unique @default(cuid())
+  baSessions                     BaSession[]
+  baAccounts                     BaAccount[]
 
   @@index([email, inviteCode, stripeCustomerID])
 }
@@ -830,4 +834,58 @@ model GoalMilestoneStreakCheckIn {
   @@unique([milestoneID, userID, weekStart])
   @@index([milestoneID, userID, occurredAt])
   @@index([milestoneID, weekStart])
+}
+
+// ---------------------------------------------------------------------------
+// Better Auth tables
+// All userId fields reference User.baId (String, cuid) rather than User.id (Int)
+// ---------------------------------------------------------------------------
+
+model BaSession {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [baId], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("ba_session")
+}
+
+model BaAccount {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [baId], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?   // stores bcrypt hash for existing users, scrypt for new
+  createdAt             DateTime
+  updatedAt             DateTime
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+  @@map("ba_account")
+}
+
+// Standalone table — used for magic link tokens and email verification
+model BaVerification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
+
+  @@index([identifier])
+  @@map("ba_verification")
 }

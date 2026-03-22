@@ -17,13 +17,14 @@ export class MailService {
     template: string;
     to: string;
     context: ISendMailOptions['context'];
+    processName?: string;
   }) {
     // Skip emails to @demo.com
     if (params.to.endsWith('@demo.com')) {
       return;
     }
 
-    await this.mailQueue.add('sendECardNotification', {
+    await this.mailQueue.add(params.processName || 'sendEmail', {
       to: params.to,
       template: params.template,
       subject: params.subject,
@@ -31,19 +32,9 @@ export class MailService {
     });
   }
 
-  async sendECardNotification(params: {
-    to: string;
-    context: { firstName?: string; eCardNumber: string };
-  }) {
-    await this.mailQueue.add('sendECardNotification', {
-      to: params.to,
-      context: params.context,
-    });
-  }
-
   async sendResetEmail(params: {
     to: string;
-    context: { email: string; token: string };
+    context: { email: string; token?: string; link?: string };
   }) {
     await this.mailQueue.add('resetPassword', {
       to: params.to,
@@ -70,13 +61,13 @@ export class MailService {
 
   async sendWeeklyReminderEmail(params: {
     to: string;
-    context: { firstName: string; streakCount?: number; loginToken: string };
+    context: { firstName: string; streakCount?: number; loginLink: string };
   }) {
     return this.mailQueue.add('weeklyEmail', {
       to: params.to,
       context: {
         ...params.context,
-        weeklyLink: `${process.env.FRONT_END_URL}/login/${params.context.loginToken}`,
+        weeklyLink: params.context.loginLink,
       },
     });
   }
@@ -165,6 +156,26 @@ export class MailService {
       context: {
         ...params.context,
       },
+    });
+  }
+
+  async sendAbandonedOnboardingNoAchievementEmail(params: {
+    to: string;
+    context: { firstName?: string; loginLink: string };
+  }) {
+    await this.mailQueue.add('abandonedOnboardingNoAchievement', {
+      to: params.to,
+      context: params.context,
+    });
+  }
+
+  async sendAbandonedOnboardingNoSubscriptionEmail(params: {
+    to: string;
+    context: { firstName?: string; loginLink: string };
+  }) {
+    await this.mailQueue.add('abandonedOnboardingNoSubscription', {
+      to: params.to,
+      context: params.context,
     });
   }
 

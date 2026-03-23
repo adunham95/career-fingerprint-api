@@ -397,6 +397,48 @@ export class UsersService {
     return inviteCode;
   }
 
+  async getMyStats(userId: number): Promise<{
+    totalAchievements: number;
+    totalAchievementsBracket: string | number;
+    achievementsThisWeek: number;
+    activeGoals: number;
+  }> {
+    const now = new Date();
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - now.getDay());
+    weekStart.setHours(0, 0, 0, 0);
+
+    const [totalAchievements, achievementsThisWeek, activeGoals] =
+      await this.cache.wrap(
+        `userStats:${userId}`,
+        () =>
+          Promise.all([
+            this.prisma.achievement.count({ where: { userID: userId } }),
+            this.prisma.achievement.count({
+              where: { userID: userId, createdAt: { gte: weekStart } },
+            }),
+            this.prisma.goal.count({
+              where: { userID: userId, status: 'active' },
+            }),
+          ]),
+        300,
+      );
+
+    return {
+      totalAchievements,
+      totalAchievementsBracket: this.achievementBracket(totalAchievements),
+      achievementsThisWeek,
+      activeGoals,
+    };
+  }
+
+  private achievementBracket(count: number): string | number {
+    if (count <= 10) return count;
+    const thresholds = [20, 30, 40, 50, 60, 70, 80, 90, 100, 200, 500];
+    const bracket = [...thresholds].reverse().find((t) => count >= t);
+    return bracket ? `${bracket}+` : count;
+  }
+
   generateRandomString(length) {
     const characters =
       'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';

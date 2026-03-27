@@ -67,6 +67,15 @@ export class UsersController {
     return this.usersService.inviteCodeStats(req.user.id);
   }
 
+  @Get('me/stats')
+  @UseGuards(BetterAuthGuard)
+  getMyStats(@Req() req: Request) {
+    if (!req.user) {
+      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+    }
+    return this.usersService.getMyStats(req.user.id);
+  }
+
   @Get('me/billing-status')
   @UseGuards(BetterAuthGuard)
   getMyStripeStatus(@Req() req: Request) {

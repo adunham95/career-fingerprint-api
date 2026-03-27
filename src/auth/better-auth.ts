@@ -278,7 +278,7 @@ export function createAuth(
       cookiePrefix: 'cf',
       crossSubDomainCookies: {
         enabled: true,
-        domain: '.mycareerfingerprint.com',
+        domain: process.env.COOKIE_DOMAIN,
       },
     },
 

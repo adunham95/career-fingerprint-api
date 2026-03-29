@@ -31,7 +31,7 @@ export const FeatureFlags = {
   ResumeUpdate: 'resume:update',
   ResumeDelete: 'resume:delete',
   ResumeDuplicate: 'resume:duplicate',
-  ResumeExportPDF: 'resume:duplicate',
+  ResumeExportPDF: 'resume:download',
 
   // Cover Letters
   CoverLetterCreate: 'coverLetter:create',

@@ -5,6 +5,7 @@ import { AchievementService } from 'src/achievement/achievement.service';
 import { LoginTokenService } from 'src/login-token/login-token.service';
 import { MailService } from 'src/mail/mail.service';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { FeatureFlags } from 'src/utils/featureFlags';
 import { getNextPreferredSendTime } from 'src/utils/nestFridayAt9UTC';
 
 function capitalize(str: string): string {
@@ -221,6 +222,7 @@ export class TasksService {
             status: {
               in: ['trialing', 'active', 'past_due', 'temp', 'canceling'],
             },
+            plan: { features: { has: FeatureFlags.WeeklyEmailSend } },
           },
         },
       },
@@ -337,6 +339,7 @@ export class TasksService {
             status: {
               in: ['trialing', 'active', 'past_due', 'temp', 'canceling'],
             },
+            plan: { features: { has: FeatureFlags.WeeklyEmailSend } },
           },
         },
       },

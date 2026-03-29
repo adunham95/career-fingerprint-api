@@ -16,8 +16,9 @@ import { GoalService } from './goal.service';
 import { CreateGoalDto, GoalQueryDto } from './dto/create-goal.dto';
 import { CheckoffMilestoneDto, UpdateGoalDto } from './dto/update-goal.dto';
 import { Request } from 'express';
-import { MinPlanLevel } from 'src/decorators/min-plan-level.decorator';
-import { SubscriptionGuard } from 'src/auth/subscription.guard';
+import { HasFeature } from 'src/decorators/has-feature.decorator';
+import { FeatureGuard } from 'src/auth/feature.guard';
+import { FeatureFlags } from 'src/utils/featureFlags';
 import { Cron } from '@nestjs/schedule';
 import { BetterAuthGuard } from 'src/auth/better-auth.guard';
 
@@ -26,8 +27,8 @@ export class GoalController {
   constructor(private readonly goalService: GoalService) {}
 
   @Post()
-  @MinPlanLevel(2)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.GoalsCreate)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   create(@Body() createGoalDto: CreateGoalDto, @Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -37,15 +38,15 @@ export class GoalController {
   }
 
   @Get()
-  @MinPlanLevel(2)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.GoalsRead)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   findAll() {
     return this.goalService.findAll();
   }
 
   @Get('my')
-  @MinPlanLevel(2)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.GoalsRead)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   findMine(@Req() req: Request, @Query() query: GoalQueryDto) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -53,16 +54,19 @@ export class GoalController {
     return this.goalService.findMine(req.user.id, query);
   }
 
+  /**
+   * @deprecated
+   */
   @Get('skills')
-  @MinPlanLevel(2)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.GoalsRead)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   findSkills() {
     return this.goalService.findGoalSkills();
   }
 
   @Get('milestone/:id/:type')
-  @MinPlanLevel(2)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.GoalsRead)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   findMilestoneItem(
     @Param('id') id: string,
     @Param('type') type: string,
@@ -80,8 +84,8 @@ export class GoalController {
   }
 
   @Patch('milestone/:id/:type')
-  @MinPlanLevel(2)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.GoalsUpdate)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   updateMilestoneItem(
     @Param('id') id: string,
     @Body() checkoffItemBody: CheckoffMilestoneDto,
@@ -100,22 +104,22 @@ export class GoalController {
   }
 
   @Get(':id')
-  @MinPlanLevel(2)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.GoalsRead)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   findOne(@Param('id') id: string) {
     return this.goalService.findOne(+id);
   }
 
   @Patch(':id')
-  @MinPlanLevel(2)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.GoalsUpdate)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   update(@Param('id') id: string, @Body() updateGoalDto: UpdateGoalDto) {
     return this.goalService.update(+id, updateGoalDto);
   }
 
   @Delete(':id')
-  @MinPlanLevel(2)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.GoalsDelete)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   remove(@Param('id') id: string) {
     return this.goalService.remove(+id);
   }

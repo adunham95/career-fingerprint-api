@@ -140,7 +140,7 @@ const plans = [
       FeatureFlags.WeeklyEmailSend,
     ],
     type: 'user',
-    meta: {
+    metadata: {
       limits: {
         achievements: 15,
       },
@@ -313,7 +313,7 @@ async function main() {
         maxAdminSeats: plan.maxAdminSeats,
         maxSeats: plan.maxSeats,
         features: plan.features || [],
-        metadata: plan.meta,
+        metadata: plan?.metadata || undefined,
       },
       create: plan,
     });

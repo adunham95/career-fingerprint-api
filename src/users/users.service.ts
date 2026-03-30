@@ -402,6 +402,8 @@ export class UsersService {
     totalAchievementsBracket: string | number;
     achievementsThisWeek: number;
     activeGoals: number;
+    isTrialUser: boolean;
+    limits: Record<string, number>;
   }> {
     const now = new Date();
     const weekStart = new Date(now);
@@ -424,11 +426,39 @@ export class UsersService {
         300,
       );
 
+    const sub = await this.prisma.subscription.findFirst({
+      where: {
+        userID: userId,
+        status: {
+          in: [
+            'trialing',
+            'active',
+            'past_due',
+            'temp',
+            'org-managed',
+            'canceling',
+          ],
+        },
+        OR: [
+          { currentPeriodEnd: null },
+          { currentPeriodEnd: { gt: new Date() } },
+        ],
+      },
+      include: { plan: true },
+      orderBy: [{ plan: { level: 'desc' } }, { createdAt: 'desc' }],
+    });
+
+    const limits = (
+      sub?.plan?.metadata as { limits?: Record<string, number> } | null
+    )?.limits;
+
     return {
       totalAchievements,
       totalAchievementsBracket: this.achievementBracket(totalAchievements),
       achievementsThisWeek,
       activeGoals,
+      isTrialUser: sub?.status === 'trialing',
+      limits: limits || {},
     };
   }
 

@@ -100,6 +100,8 @@ export class BetterAuthGuard implements CanActivate {
           }),
       );
 
+      console.log('subscription', subscription);
+
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, ...safeUser } = user;
       req.user = {

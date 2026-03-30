@@ -79,6 +79,7 @@ import { UsersService } from './users/users.service';
         mailService: MailService,
         stripeService: StripeService,
         auditService: AuditService,
+        cacheService: CacheService,
       ) => ({
         auth: createAuth(
           prisma,
@@ -104,6 +105,7 @@ import { UsersService } from './users/users.service';
             stripeService,
             auditService,
             prisma,
+            cacheService,
           ),
         ),
       }),
@@ -113,6 +115,7 @@ import { UsersService } from './users/users.service';
         MailService,
         StripeService,
         AuditService,
+        CacheService,
       ],
       isGlobal: true,
       disableGlobalAuthGuard: true,

@@ -214,9 +214,6 @@ export class StripeService {
         planKey: planDetails?.key || 'Pro',
         planID: planDetails.id,
       },
-      subscription_data: {
-        trial_period_days: !user.redeemedFreeTrial ? 14 : 0,
-      },
       discounts: [
         {
           promotion_code: couponID,

@@ -12,8 +12,9 @@ import {
 import { ThankYousService } from './thank-yous.service';
 import { CreateThankYousDto } from './dto/create-thank-yous.dto';
 import { Request } from 'express';
-import { MinPlanLevel } from 'src/decorators/min-plan-level.decorator';
-import { SubscriptionGuard } from 'src/auth/subscription.guard';
+import { HasFeature } from 'src/decorators/has-feature.decorator';
+import { FeatureGuard } from 'src/auth/feature.guard';
+import { FeatureFlags } from 'src/utils/featureFlags';
 import { BetterAuthGuard } from 'src/auth/better-auth.guard';
 
 @Controller('thank-yous')
@@ -21,8 +22,8 @@ export class ThankYousController {
   constructor(private readonly thankYousService: ThankYousService) {}
 
   @Post()
-  @MinPlanLevel(1)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.ThankYouCreate)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   create(@Body() createThankYousDto: CreateThankYousDto, @Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -31,8 +32,8 @@ export class ThankYousController {
   }
 
   @Get('meeting/:id')
-  @MinPlanLevel(1)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.ThankYouCreate)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   getByMeetings(@Param('id') meetingID: string, @Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);

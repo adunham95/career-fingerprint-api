@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { ForbiddenException, Injectable, Logger } from '@nestjs/common';
 import { CreateAchievementDto } from './dto/create-achievement.dto';
 import {
   mapAchievementUpdateDto,
@@ -22,6 +22,42 @@ export class AchievementService {
   ) {}
 
   async create(createAchievementDto: CreateAchievementDto) {
+    const sub = await this.prisma.subscription.findFirst({
+      where: {
+        userID: createAchievementDto.userID,
+        status: {
+          in: [
+            'trialing',
+            'active',
+            'past_due',
+            'temp',
+            'org-managed',
+            'canceling',
+          ],
+        },
+        OR: [
+          { currentPeriodEnd: null },
+          { currentPeriodEnd: { gt: new Date() } },
+        ],
+      },
+      include: { plan: true },
+      orderBy: [{ plan: { level: 'desc' } }, { createdAt: 'desc' }],
+    });
+
+    const limits = (
+      sub?.plan?.metadata as { limits?: Record<string, number> } | null
+    )?.limits;
+    if (limits?.achievements != null) {
+      const count = await this.prisma.achievement.count({
+        where: { userID: createAchievementDto.userID },
+      });
+      if (count >= limits.achievements) {
+        throw new ForbiddenException(
+          `You've reached the ${limits.achievements} achievement limit on your current plan.`,
+        );
+      }
+    }
+
     const tags = createAchievementDto?.achievementTags || [];
 
     delete createAchievementDto.achievementTags;

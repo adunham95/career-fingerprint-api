@@ -23,8 +23,9 @@ import {
 } from './dto/update-resume.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { Request, Response } from 'express';
-import { MinPlanLevel } from 'src/decorators/min-plan-level.decorator';
-import { SubscriptionGuard } from 'src/auth/subscription.guard';
+import { HasFeature } from 'src/decorators/has-feature.decorator';
+import { FeatureGuard } from 'src/auth/feature.guard';
+import { FeatureFlags } from 'src/utils/featureFlags';
 import { BetterAuthGuard } from 'src/auth/better-auth.guard';
 
 @Controller('resume')
@@ -32,8 +33,8 @@ export class ResumeController {
   constructor(private readonly resumeService: ResumeService) {}
 
   @Post()
-  @MinPlanLevel(2)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.ResumeCreate)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   create(@Body() createResumeDto: CreateResumeDto, @Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -48,8 +49,8 @@ export class ResumeController {
   }
 
   @Get('my')
-  @MinPlanLevel(2)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.ResumeRead)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   @ApiBearerAuth()
   findMyResumes(@Req() req: Request) {
     if (!req.user) {
@@ -59,15 +60,15 @@ export class ResumeController {
   }
 
   @Get(':id')
-  @MinPlanLevel(2)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.ResumeRead)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   findOne(@Param('id') id: string) {
     return this.resumeService.findOne(id);
   }
 
   @Get(':id/pdf')
-  @MinPlanLevel(2)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.ResumeExportPDF)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   async findOneForPDF(@Param('id') id: string, @Res() res: Response) {
     const stream = await this.resumeService.findOneAndBuildPDF(id);
     res.setHeader('Content-Type', 'application/pdf');
@@ -76,43 +77,43 @@ export class ResumeController {
   }
 
   @Get(':id/objects')
-  @MinPlanLevel(2)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.ResumeRead)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   getObjectsForResume(@Param('id') id: string) {
     return this.resumeService.findResumeObjects(id);
   }
 
   @Get(':id/job-positions')
-  @MinPlanLevel(2)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.ResumeRead)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   getJobPositionsForResume(@Param('id') id: string) {
     return this.resumeService.findJobObject(id);
   }
 
   @Get(':id/education')
-  @MinPlanLevel(2)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.ResumeRead)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   getEducationForResume(@Param('id') id: string) {
     return this.resumeService.findEduObject(id);
   }
 
   @Get(':id/duplicate')
-  @MinPlanLevel(2)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.ResumeDuplicate)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   duplicateResume(@Param('id') id: string) {
     return this.resumeService.duplicateResume(id);
   }
 
   @Patch(':id')
-  @MinPlanLevel(2)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.ResumeUpdate)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   update(@Param('id') id: string, @Body() updateResumeDto: UpdateResumeDto) {
     return this.resumeService.update(id, updateResumeDto);
   }
 
   @Post(':id/resume-object')
-  @MinPlanLevel(2)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.ResumeCreate)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   createResumeObject(
     @Param('id') id: string,
     @Body() createResumeObjectDto: CreateResumeObjectDto,
@@ -121,8 +122,8 @@ export class ResumeController {
   }
 
   @Patch('resume-object/:objID')
-  @MinPlanLevel(2)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.ResumeUpdate)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   updateResumeWithJob(
     @Param('objID') resumeObjectID: string,
     @Body() createResumeObjectDto: UpdateResumeObjectDto,
@@ -134,15 +135,15 @@ export class ResumeController {
   }
 
   @Delete(':id')
-  @MinPlanLevel(2)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.ResumeDelete)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   remove(@Param('id') id: string) {
     return this.resumeService.remove(id);
   }
 
   @Delete('resume-object/:objID')
-  @MinPlanLevel(2)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.ResumeDelete)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   removeJobObject(@Param('objID') id: string) {
     return this.resumeService.removeJobObject(id);
   }

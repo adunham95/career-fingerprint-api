@@ -12,8 +12,9 @@ import {
 import { PrepService } from './prep.service';
 import { UpsertPrepAnswerDto } from './dto/upsert-prep-answer.dto';
 import { Request } from 'express';
-import { MinPlanLevel } from 'src/decorators/min-plan-level.decorator';
-import { SubscriptionGuard } from 'src/auth/subscription.guard';
+import { HasFeature } from 'src/decorators/has-feature.decorator';
+import { FeatureGuard } from 'src/auth/feature.guard';
+import { FeatureFlags } from 'src/utils/featureFlags';
 import { BetterAuthGuard } from 'src/auth/better-auth.guard';
 
 @Controller('prep')
@@ -21,15 +22,15 @@ export class PrepController {
   constructor(private readonly prepService: PrepService) {}
 
   @Get('questions')
-  @MinPlanLevel(2)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.MeetingPrep)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   findAll() {
     return this.prepService.findAllPrepQuestions();
   }
 
   @Get('questions/meeting/:id')
-  @MinPlanLevel(2)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.MeetingPrep)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   findAllQForMeeting(@Param('id') id: string, @Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -38,8 +39,8 @@ export class PrepController {
   }
 
   @Get('answers/meeting/:id')
-  @MinPlanLevel(2)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.MeetingPrep)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   findAllAForMeeting(@Param('id') id: string, @Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -48,8 +49,8 @@ export class PrepController {
   }
 
   @Patch('answer')
-  @MinPlanLevel(2)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.MeetingPrep)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   upsertAnswer(
     @Body() upsertAnswerDto: UpsertPrepAnswerDto,
     @Req() req: Request,

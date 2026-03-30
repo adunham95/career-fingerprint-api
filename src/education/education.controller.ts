@@ -21,8 +21,9 @@ import { OrgMemberGuard } from 'src/org/org-admin.guard';
 import { PermissionGuard } from 'src/permission/permission.guard';
 import { AuditService } from 'src/audit/audit.service';
 import { AUDIT_EVENT } from 'src/audit/auditEvents';
-import { MinPlanLevel } from 'src/decorators/min-plan-level.decorator';
-import { SubscriptionGuard } from 'src/auth/subscription.guard';
+import { HasFeature } from 'src/decorators/has-feature.decorator';
+import { FeatureGuard } from 'src/auth/feature.guard';
+import { FeatureFlags } from 'src/utils/featureFlags';
 import { BetterAuthGuard } from 'src/auth/better-auth.guard';
 
 @Controller('education')
@@ -33,8 +34,8 @@ export class EducationController {
   ) {}
 
   @Post()
-  @MinPlanLevel(1)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.EducationCreate)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   create(@Body() createEducationDto: CreateEducationDto, @Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -68,8 +69,8 @@ export class EducationController {
 
   @Get('my')
   @Header('Cache-Control', 'private, max-age=30')
-  @MinPlanLevel(1)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.EducationRead)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   findMyEducation(@Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -79,16 +80,16 @@ export class EducationController {
   }
 
   @Get(':id')
-  @MinPlanLevel(1)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.EducationRead)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   @Header('Cache-Control', 'private, max-age=30')
   findOne(@Param('id') id: string) {
     return this.educationService.findOne(id);
   }
 
   @Patch(':id')
-  @MinPlanLevel(1)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.EducationUpdate)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   update(
     @Param('id') id: string,
     @Body() updateEducationDto: UpdateEducationDto,
@@ -115,8 +116,8 @@ export class EducationController {
   }
 
   @Delete(':id')
-  @MinPlanLevel(1)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.EducationDelete)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   remove(@Param('id') id: string, @Req() req: Request) {
     return this.educationService.remove(id, req.user?.id);
   }

@@ -16,8 +16,9 @@ import { NotesService } from './notes.service';
 import { CreateNoteDto } from './dto/create-note.dto';
 import { UpdateNoteDto } from './dto/update-note.dto';
 import { Request, Response } from 'express';
-import { MinPlanLevel } from 'src/decorators/min-plan-level.decorator';
-import { SubscriptionGuard } from 'src/auth/subscription.guard';
+import { HasFeature } from 'src/decorators/has-feature.decorator';
+import { FeatureGuard } from 'src/auth/feature.guard';
+import { FeatureFlags } from 'src/utils/featureFlags';
 import { BetterAuthGuard } from 'src/auth/better-auth.guard';
 
 @Controller('notes')
@@ -25,8 +26,8 @@ export class NotesController {
   constructor(private readonly notesService: NotesService) {}
 
   @Post()
-  @MinPlanLevel(2)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.NotesCreate)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   create(@Body() createNoteDto: CreateNoteDto, @Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -41,8 +42,8 @@ export class NotesController {
   }
 
   @Get('my')
-  @MinPlanLevel(2)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.NotesRead)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   findMyNotes(@Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -51,8 +52,8 @@ export class NotesController {
   }
 
   @Get('job-application/:id')
-  @MinPlanLevel(2)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.NotesRead)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   findJobAppNotes(@Param('id') id: string, @Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -61,15 +62,15 @@ export class NotesController {
   }
 
   @Get('meeting/:id')
-  @MinPlanLevel(2)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.NotesRead)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   findMeetingNOtes(@Param('id') id: string) {
     return this.notesService.findByMeeting(id);
   }
 
   @Get('meeting/:id/pdf')
-  @MinPlanLevel(2)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.MeetingNotesDownload)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   async findOneNotesPdfDoc(@Param('id') id: string, @Res() res: Response) {
     const stream = await this.notesService.getMeetingNotesDocPdf(id);
     res.setHeader('Content-Type', 'application/pdf');
@@ -78,22 +79,22 @@ export class NotesController {
   }
 
   @Get(':id')
-  @MinPlanLevel(2)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.NotesRead)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   findOne(@Param('id') id: string) {
     return this.notesService.findOne(+id);
   }
 
   @Patch(':id')
-  @MinPlanLevel(2)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.NotesUpdate)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   update(@Param('id') id: string, @Body() updateNoteDto: UpdateNoteDto) {
     return this.notesService.update(id, updateNoteDto);
   }
 
   @Delete(':id')
-  @MinPlanLevel(2)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.NotesDelete)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   remove(@Param('id') id: string) {
     return this.notesService.remove(id);
   }

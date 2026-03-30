@@ -16,8 +16,9 @@ import {
 import { AchievementTagsService } from './achievement-tags.service';
 import { CreateAchievementTagDto } from './dto/create-achievement-tag.dto';
 import { Request } from 'express';
-import { MinPlanLevel } from 'src/decorators/min-plan-level.decorator';
-import { SubscriptionGuard } from 'src/auth/subscription.guard';
+import { HasFeature } from 'src/decorators/has-feature.decorator';
+import { FeatureGuard } from 'src/auth/feature.guard';
+import { FeatureFlags } from 'src/utils/featureFlags';
 import { BetterAuthGuard } from 'src/auth/better-auth.guard';
 
 @Controller('achievement-tags')
@@ -27,8 +28,8 @@ export class AchievementTagsController {
   ) {}
 
   @Post()
-  @MinPlanLevel(1)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.AchievementTagsCreate)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   create(
     @Req() req: Request,
     @Body() createAchievementTagDto: CreateAchievementTagDto,
@@ -41,8 +42,8 @@ export class AchievementTagsController {
   }
 
   @Get()
-  @MinPlanLevel(1)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.AchievementTagsRead)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   findAll(@Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -51,8 +52,8 @@ export class AchievementTagsController {
   }
 
   @Get('autocomplete')
-  @MinPlanLevel(1)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.AchievementTagsRead)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   findAutocomplete(
     @Query('query') query: string,
     @Query('limit') limit = 10,
@@ -66,15 +67,15 @@ export class AchievementTagsController {
 
   @Get(':id')
   @Header('Cache-Control', 'private, max-age=30')
-  @MinPlanLevel(1)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.AchievementTagsRead)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   findOne(@Param('id') id: string) {
     return this.achievementTagsService.findOne(+id);
   }
 
   @Patch(':id')
-  @MinPlanLevel(1)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.AchievementTagsUpdate)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   update(
     @Param('id') id: string,
     // @Body() updateAchievementTagDto: UpdateAchievementTagDto,
@@ -84,8 +85,8 @@ export class AchievementTagsController {
   }
 
   @Patch(':id/ach/:achievement_id')
-  @MinPlanLevel(1)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.AchievementTagsUpdate)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   linkToAchievementID(
     @Param('id') id: string,
     @Param('achievement_id') achievement_id: string,
@@ -94,8 +95,8 @@ export class AchievementTagsController {
   }
 
   @Delete(':id')
-  @MinPlanLevel(1)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.AchievementTagsDelete)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   remove(@Param('id') id: string) {
     return this.achievementTagsService.remove(+id);
   }

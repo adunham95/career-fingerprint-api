@@ -300,23 +300,13 @@ export class TasksService {
         true,
       );
       const baseUrl = process.env.FRONT_END_URL;
-      const hasAchievement = user._count.achievements > 0;
-      const redirectPath = hasAchievement
-        ? '/onboard/membership'
-        : '/onboard/achievement';
+      const redirectPath = '/onboard/achievement';
       const loginLink = `${baseUrl}/login/${loginToken.rawToken}?redirect=${redirectPath}`;
 
-      if (hasAchievement) {
-        await this.mailService.sendAbandonedOnboardingNoSubscriptionEmail({
-          to: user.email,
-          context: { firstName: user.firstName || undefined, loginLink },
-        });
-      } else {
-        await this.mailService.sendAbandonedOnboardingNoAchievementEmail({
-          to: user.email,
-          context: { firstName: user.firstName || undefined, loginLink },
-        });
-      }
+      await this.mailService.sendAbandonedOnboardingNoAchievementEmail({
+        to: user.email,
+        context: { firstName: user.firstName || undefined, loginLink },
+      });
 
       await this.prisma.user.update({
         where: { id: user.id },

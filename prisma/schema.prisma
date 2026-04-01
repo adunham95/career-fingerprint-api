@@ -209,6 +209,7 @@ model Plan {
   level                Int?           @default(0)
   type                 String         @default("user")
   name                 String
+  upgradeTo            String? 
   description          String         @default("")
   featureList          String[]
   priceCents           Int? // e.g. 0 for Free, 1000 for $10

@@ -4,6 +4,8 @@ import { MailService } from 'src/mail/mail.service';
 import { StripeService } from 'src/stripe/stripe.service';
 import { AuditService } from 'src/audit/audit.service';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { error } from 'console';
+import { CacheService } from 'src/cache/cache.service';
 
 const logger = new Logger('BetterAuthHooks');
 
@@ -21,6 +23,7 @@ export function createBetterAuthHooks(
   stripeService: StripeService,
   auditService: AuditService,
   prisma: PrismaService,
+  cacheService: CacheService,
 ): BetterAuthOptions['databaseHooks'] {
   return {
     user: {
@@ -87,7 +90,34 @@ export function createBetterAuthHooks(
             );
           }
 
-          // 4. Audit log
+          // 4. Create Limited Free Trial
+          try {
+            const freePlan = await cacheService.wrap(
+              'plan:limited-trial',
+              () => {
+                return prisma.plan.findFirst({
+                  where: { key: 'limited-trial' },
+                });
+              },
+              86400,
+            );
+
+            if (!freePlan) {
+              throw new error('Missing Free Trial Plan');
+            }
+
+            await prisma.subscription.create({
+              data: {
+                userID: user.id,
+                planID: freePlan.id,
+                status: 'trialing',
+              },
+            });
+          } catch (error) {
+            logger.error('Failed to create free trial after BA signup', error);
+          }
+
+          // 5. Audit log
           try {
             await auditService.logEvent('user.signup.better-auth', user.id);
           } catch (err) {

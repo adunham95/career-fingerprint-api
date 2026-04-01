@@ -15,8 +15,9 @@ import { HighlightsService } from './highlights.service';
 import { CreateHighlightDto } from './dto/create-highlight.dto';
 import { UpdateHighlightDto } from './dto/update-highlight.dto';
 import { Request } from 'express';
-import { MinPlanLevel } from 'src/decorators/min-plan-level.decorator';
-import { SubscriptionGuard } from 'src/auth/subscription.guard';
+import { HasFeature } from 'src/decorators/has-feature.decorator';
+import { FeatureGuard } from 'src/auth/feature.guard';
+import { FeatureFlags } from 'src/utils/featureFlags';
 import { BetterAuthGuard } from 'src/auth/better-auth.guard';
 
 @Controller('highlights')
@@ -24,8 +25,8 @@ export class HighlightsController {
   constructor(private readonly highlightsService: HighlightsService) {}
 
   @Post()
-  @MinPlanLevel(2)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.HighlightsCreate)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   create(@Body() createHighlightDto: CreateHighlightDto, @Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -40,22 +41,22 @@ export class HighlightsController {
   }
 
   @Get(':id')
-  @MinPlanLevel(1)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.HighlightsView)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   findOne(@Param('id') id: string) {
     return this.highlightsService.findOne(+id);
   }
 
   @Get('meeting/:id')
-  @MinPlanLevel(1)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.HighlightsView)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   findForMeeting(@Param('id') id: string) {
     return this.highlightsService.findForMeeting(id);
   }
 
   @Patch(':id')
-  @MinPlanLevel(1)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.HighlightsCreate)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   update(
     @Param('id') id: string,
     @Body() updateHighlightDto: UpdateHighlightDto,
@@ -64,8 +65,8 @@ export class HighlightsController {
   }
 
   @Delete(':id')
-  @MinPlanLevel(1)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.HighlightsCreate)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   remove(@Param('id') id: string) {
     return this.highlightsService.remove(id);
   }

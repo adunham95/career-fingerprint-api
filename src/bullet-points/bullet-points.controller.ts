@@ -14,8 +14,9 @@ import { BulletPointsService } from './bullet-points.service';
 import { CreateBulletPointDto } from './dto/create-bullet-point.dto';
 import { UpdateBulletPointDto } from './dto/update-bullet-point.dto';
 import { Request } from 'express';
-import { MinPlanLevel } from 'src/decorators/min-plan-level.decorator';
-import { SubscriptionGuard } from 'src/auth/subscription.guard';
+import { HasFeature } from 'src/decorators/has-feature.decorator';
+import { FeatureGuard } from 'src/auth/feature.guard';
+import { FeatureFlags } from 'src/utils/featureFlags';
 import { BetterAuthGuard } from 'src/auth/better-auth.guard';
 
 @Controller('bullet-points')
@@ -23,8 +24,8 @@ export class BulletPointsController {
   constructor(private readonly bulletPointsService: BulletPointsService) {}
 
   @Post()
-  @MinPlanLevel(1)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.BulletPointsCreate)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   create(
     @Body() createBulletPointDto: CreateBulletPointDto,
     @Req() req: Request,
@@ -38,8 +39,8 @@ export class BulletPointsController {
   }
 
   @Patch(':id')
-  @MinPlanLevel(1)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.BulletPointsUpdate)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   update(
     @Param('id') id: string,
     @Body() updateBulletPointDto: UpdateBulletPointDto,
@@ -48,8 +49,8 @@ export class BulletPointsController {
   }
 
   @Delete(':id')
-  @MinPlanLevel(1)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.BulletPointsDelete)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   remove(@Param('id') id: string) {
     return this.bulletPointsService.remove(id);
   }

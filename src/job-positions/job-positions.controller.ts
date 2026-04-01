@@ -22,8 +22,9 @@ import { OrgMemberGuard } from 'src/org/org-admin.guard';
 import { PermissionGuard } from 'src/permission/permission.guard';
 import { AuditService } from 'src/audit/audit.service';
 import { AUDIT_EVENT } from 'src/audit/auditEvents';
-import { MinPlanLevel } from 'src/decorators/min-plan-level.decorator';
-import { SubscriptionGuard } from 'src/auth/subscription.guard';
+import { HasFeature } from 'src/decorators/has-feature.decorator';
+import { FeatureGuard } from 'src/auth/feature.guard';
+import { FeatureFlags } from 'src/utils/featureFlags';
 import { BetterAuthGuard } from 'src/auth/better-auth.guard';
 
 @Controller('job-positions')
@@ -34,8 +35,8 @@ export class JobPositionsController {
   ) {}
 
   @Post()
-  @MinPlanLevel(1)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.JobPositionCreate)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   @ApiBearerAuth()
   create(
     @Body() createJobPositionDto: CreateJobPositionDto,
@@ -68,8 +69,8 @@ export class JobPositionsController {
   }
 
   @Post('application')
-  @MinPlanLevel(1)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.JobPositionCreate)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   createFromApplications(
     @Req() req: Request,
     @Body() { appID }: { appID: string },
@@ -90,8 +91,8 @@ export class JobPositionsController {
 
   @Get('my')
   @Header('Cache-Control', 'private, max-age=30')
-  @MinPlanLevel(1)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.JobPositionRead)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   async findMyJobs(@Req() req: Request) {
     if (!req.user) {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
@@ -101,16 +102,16 @@ export class JobPositionsController {
   }
 
   @Get(':id')
-  @MinPlanLevel(1)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.JobPositionRead)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   @Header('Cache-Control', 'private, max-age=30')
   findOne(@Param('id') id: string) {
     return this.jobPositionsService.findOne(id);
   }
 
   @Patch(':id')
-  @MinPlanLevel(1)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.JobPositionRead)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   update(
     @Param('id') id: string,
     @Body() updateJobPositionDto: UpdateJobPositionDto,
@@ -142,8 +143,8 @@ export class JobPositionsController {
   }
 
   @Delete(':id')
-  @MinPlanLevel(1)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.JobPositionDelete)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   remove(@Param('id') id: string, @Req() req: Request) {
     return this.jobPositionsService.remove(id, req.user?.id);
   }
@@ -171,8 +172,8 @@ export class JobPositionsController {
   }
 
   @Delete('bullet-point/:id')
-  @MinPlanLevel(1)
-  @UseGuards(BetterAuthGuard, SubscriptionGuard)
+  @HasFeature(FeatureFlags.BulletPointsDelete)
+  @UseGuards(BetterAuthGuard, FeatureGuard)
   removeBulletPoint(@Param('id') id: string) {
     return this.jobPositionsService.removeBulletPoint(id);
   }

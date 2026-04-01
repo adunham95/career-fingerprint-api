@@ -6,15 +6,17 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
+import { CacheService } from 'src/cache/cache.service';
 import { HAS_FEATURE_KEY } from 'src/decorators/has-feature.decorator';
-import { SubscriptionsService } from 'src/subscriptions/subscriptions.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { FeatureFlag } from 'src/utils/featureFlags';
 
 @Injectable()
 export class FeatureGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
-    private subscriptionService: SubscriptionsService,
+    private cache: CacheService,
+    private prisma: PrismaService,
   ) {}
 
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
@@ -31,7 +33,46 @@ export class FeatureGuard implements CanActivate {
       throw new ForbiddenException('User not authenticated');
     }
 
-    const sub = await this.subscriptionService.getActive(user?.id);
+    console.log(user);
+
+    const sub = await this.cache.wrap(
+      `activeUserSubscription:${user.id}`,
+      () => {
+        return this.prisma.subscription.findFirst({
+          where: {
+            userID: user.id,
+            status: {
+              in: [
+                'trialing',
+                'active',
+                'past_due',
+                'temp',
+                'org-managed',
+                'canceling',
+              ],
+            },
+            OR: [
+              { currentPeriodEnd: null },
+              { currentPeriodEnd: { gt: new Date() } },
+            ], // optional: time-safe check
+          },
+          include: {
+            plan: true,
+          },
+          orderBy: [
+            {
+              plan: {
+                level: 'desc', // highest plan level first
+              },
+            },
+            {
+              createdAt: 'desc', // newest first
+            },
+          ],
+        });
+      },
+      86400,
+    );
 
     const hasAccess = sub?.plan?.features.includes(feature);
     if (!hasAccess)

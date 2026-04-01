@@ -5,6 +5,7 @@ import { AchievementService } from 'src/achievement/achievement.service';
 import { LoginTokenService } from 'src/login-token/login-token.service';
 import { MailService } from 'src/mail/mail.service';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { FeatureFlags } from 'src/utils/featureFlags';
 import { getNextPreferredSendTime } from 'src/utils/nestFridayAt9UTC';
 
 function capitalize(str: string): string {
@@ -221,6 +222,7 @@ export class TasksService {
             status: {
               in: ['trialing', 'active', 'past_due', 'temp', 'canceling'],
             },
+            plan: { features: { has: FeatureFlags.WeeklyEmailSend } },
           },
         },
       },
@@ -298,23 +300,13 @@ export class TasksService {
         true,
       );
       const baseUrl = process.env.FRONT_END_URL;
-      const hasAchievement = user._count.achievements > 0;
-      const redirectPath = hasAchievement
-        ? '/onboard/membership'
-        : '/onboard/achievement';
+      const redirectPath = '/onboard/achievement';
       const loginLink = `${baseUrl}/login/${loginToken.rawToken}?redirect=${redirectPath}`;
 
-      if (hasAchievement) {
-        await this.mailService.sendAbandonedOnboardingNoSubscriptionEmail({
-          to: user.email,
-          context: { firstName: user.firstName || undefined, loginLink },
-        });
-      } else {
-        await this.mailService.sendAbandonedOnboardingNoAchievementEmail({
-          to: user.email,
-          context: { firstName: user.firstName || undefined, loginLink },
-        });
-      }
+      await this.mailService.sendAbandonedOnboardingNoAchievementEmail({
+        to: user.email,
+        context: { firstName: user.firstName || undefined, loginLink },
+      });
 
       await this.prisma.user.update({
         where: { id: user.id },
@@ -337,6 +329,7 @@ export class TasksService {
             status: {
               in: ['trialing', 'active', 'past_due', 'temp', 'canceling'],
             },
+            plan: { features: { has: FeatureFlags.WeeklyEmailSend } },
           },
         },
       },

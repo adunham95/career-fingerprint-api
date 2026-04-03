@@ -126,7 +126,7 @@ export class MailProcessor {
     } = job.data;
 
     const template = 'weekly-reminder';
-    const subject = 'Weekly Reminder Email';
+    const subject = "What's your win this week?";
 
     console.log(`📧 Sending email to ${to}`);
 

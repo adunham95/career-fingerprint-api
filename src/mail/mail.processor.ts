@@ -117,12 +117,17 @@ export class MailProcessor {
   async weeklyEmail(
     job: Job<{
       to: string;
-      context: { firstName: string; weeklyLink: string };
+      context: {
+        firstName: string;
+        weeklyLink: string;
+        streakCount: number;
+        totalAchievements: number;
+      };
     }>,
   ) {
     const {
       to,
-      context: { firstName, weeklyLink },
+      context: { firstName, weeklyLink, streakCount, totalAchievements },
     } = job.data;
 
     const template = 'weekly-reminder';
@@ -138,6 +143,8 @@ export class MailProcessor {
         context: {
           firstName,
           weeklyLink,
+          streakCount,
+          totalAchievements,
         },
       });
       console.log(`✅ Email sent to ${to}`);

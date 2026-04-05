@@ -68,6 +68,7 @@ import { SseModule } from './sse/sse.module';
 import { OrgUsersModule } from './org-users/org-users.module';
 import { OnboardingModule } from './onboarding/onboarding.module';
 import { UsersService } from './users/users.service';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
@@ -206,6 +207,7 @@ import { UsersService } from './users/users.service';
     SseModule,
     OrgUsersModule,
     OnboardingModule,
+    EventEmitterModule.forRoot({ wildcard: true }),
   ],
   controllers: [AppController, HealthController, SkillListController],
   providers: [

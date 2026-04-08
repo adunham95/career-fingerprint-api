@@ -229,6 +229,7 @@ export function createAuth(
     // -----------------------------------------------------------------------
     emailAndPassword: {
       enabled: true,
+      minPasswordLength: 8,
       sendResetPassword: async (data) => {
         await sendResetPassword(data);
       },

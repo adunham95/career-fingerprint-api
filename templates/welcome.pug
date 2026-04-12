@@ -27,41 +27,34 @@ html
             td(style='padding: 20px 30px 0 30px')
               p(
                 style='color: #333; font-size: 16px; margin: 0 0 10px 0; font-weight: bold'
-              ) Hi #{ firstName },
+              ) Hi #{ firstName || 'there' },
           tr
             td(style='padding: 20px 30px 0 30px')
-              p(
-                style='color: #333; font-size: 16px; margin: 0 0 10px 0; font-weight: bold'
-              ) Welcome to Career Fingerprint! We're excited to help you take control of your career story.
-              p(
-                style='color: #333; font-size: 16px; margin: 0 0 10px 0; font-weight: bold'
-              ) Whether you’re tracking accomplishments, refining your resume, or preparing for your next interview, you’re in the right place. Your career deserves more than scattered notes and outdated documents. Now you have one place to organize everything that makes you stand out.
-          tr
-            td(style='padding: 20px 30px 0 30px')
-              p(
-                style='color: #333; font-size: 16px; margin: 0 0 10px 0; font-weight: bold'
-              ) Welcome to Career Fingerprint! We're excited to help you take control of your career story.
-              ul
-                li Log your wins: Add job accomplishments as they happen
-                li Set and track goals: Turn long-term career goals into clear, doable steps
-                li Track interviews and meetings: Keep notes and insights in one place
-                li Build your resume: Quickly turn your work into polished applications
+              p(style='color: #333; font-size: 16px; margin: 0 0 16px 0') Welcome to Career Fingerprint. You're all set.
+              p(style='color: #333; font-size: 16px; margin: 0 0 16px 0') The idea is simple: log what you accomplish each week, and Career Fingerprint turns it into something useful — a resume, talking points for your next review, or just a record you can look back on.
+              p(style='color: #333; font-size: 16px; margin: 0 0 16px 0') Most people wait until they need a resume to think about this stuff. You'll have a head start.
 
           tr
             td(style='padding: 20px 30px 0 30px')
               p(
-                style='color: #333; font-size: 16px; margin: 0 0 10px 0; font-weight: bold'
-              ) You’ve just taken a smart step toward owning your professional journey. We’re here to support you every step of the way.
+                style='color: #333; font-size: 14px; margin: 0 0 8px 0; font-weight: bold'
+              ) A few things worth knowing:
+              ul(
+                style='color: #333; font-size: 16px; padding-left: 20px; margin: 0 0 16px 0'
+              )
+                li(style='margin-bottom: 8px') Every Friday you'll get an email asking about your wins for the week. Log them before the weekend so nothing gets lost.
+                li(style='margin-bottom: 8px') Achievements are saved in STAR format — situation, task, action, result. Makes them easy to pull into a resume later.
+                li(style='margin-bottom: 8px') You have 10 free achievements to get started. No credit card needed.
+
           tr
-            td(style='padding: 20px 30px 0 30px')
+            td(style='padding: 30px 30px 0 30px')
               a(
-                href=verifyLink,
+                href=dashboardLink,
                 style='background-color: #ff7a8a; color: #000000; text-decoration: none; padding: 12px 24px; border-radius: 6px; display: inline-block; font-weight: bold'
-              ) Verify your email
+              ) Go to your dashboard
+
           tr
-            td(style='padding: 20px 30px 0 30px')
-              p(
-                style='color: #333; font-size: 16px; margin: 0 0 10px 0; font-weight: bold'
-              ) Let’s get started,</br>The Career Fingerprint Team
+            td(style='padding: 20px 30px 30px 30px')
+              p(style='color: #333; font-size: 16px; margin: 24px 0 0 0') — Adrian, Career Fingerprint
 
   include footer.pug

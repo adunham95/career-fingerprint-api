@@ -158,7 +158,7 @@ export class MailProcessor {
   async welcomeEmail(
     job: Job<{
       to: string;
-      context: { firstName: string; token: string };
+      context: { firstName?: string; token: string };
     }>,
   ) {
     const {
@@ -178,6 +178,7 @@ export class MailProcessor {
         subject,
         context: {
           firstName,
+          dashboardLink: `${process.env.FRONT_END_URL}/dashboard`,
           verifyLink: `${process.env.FRONT_END_URL}/verify?token=${token}&showFreeTrial=true`,
         },
       });

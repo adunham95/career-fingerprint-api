@@ -13,11 +13,7 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import {
-  InitiatePasswordResetDto,
-  LoginDto,
-  PasswordResetDto,
-} from './dto/auth.dto';
+import { LoginDto } from './dto/auth.dto';
 import { Request, Response } from 'express';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { UserEntity } from 'src/users/entities/user.entity';
@@ -49,13 +45,13 @@ export class AuthController {
       accessToken,
       user,
       sessionID,
-      resetRequired = false,
-      resetToken,
+      // resetRequired = false,
+      // resetToken,
     } = await this.authService.loginUser(email, password, getClientIp(req));
 
-    if (resetRequired) {
-      return { resetToken, user };
-    }
+    // if (resetRequired) {
+    //   return { resetToken, user };
+    // }
 
     this.logger.verbose('login response', {
       accessToken,
@@ -134,27 +130,6 @@ export class AuthController {
     const token = authHeader.replace('Bearer ', '');
     this.authCookieService.setAuthCookie(res, token);
     return { ok: true };
-  }
-
-  @Post('request-reset')
-  requestPasswordReset(
-    @Body() { email }: InitiatePasswordResetDto,
-    @Req() req: Request,
-  ) {
-    return this.authService.generateResetToken(email, getClientIp(req));
-  }
-
-  @Post('reset-password')
-  requestPassword(
-    @Body() { email, password, token }: PasswordResetDto,
-    @Req() req: Request,
-  ) {
-    return this.authService.resetFromToken(
-      email,
-      password,
-      token,
-      getClientIp(req),
-    );
   }
 
   @Get('current-user')

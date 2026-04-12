@@ -265,4 +265,12 @@ export class AchievementService {
 
     return streak;
   }
+  async getTotalAchievements(userId: number): Promise<number> {
+    // 1. Fetch all achievements from the past 8 weeks
+    return await this.prisma.achievement.count({
+      where: {
+        userID: userId,
+      },
+    });
+  }
 }

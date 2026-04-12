@@ -240,6 +240,9 @@ export class TasksService {
         user.id,
         user.timezone,
       );
+      const totalAchievements = await this.achService.getTotalAchievements(
+        user.id,
+      );
       const loginLink = await this.loginTokenService.createBetterAuthMagicLink(
         user.email,
         `${process.env.FRONT_END_URL}/dashboard/weekly`,
@@ -251,6 +254,7 @@ export class TasksService {
           firstName: user.firstName,
           streakCount,
           loginLink,
+          totalAchievements,
         },
       });
       const nextSendAt = getNextPreferredSendTime(

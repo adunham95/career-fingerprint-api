@@ -9,8 +9,7 @@ import { UsersService } from '../users/users.service';
 import bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma/prisma.service';
-import crypto, { randomUUID } from 'crypto';
-import { MailService } from 'src/mail/mail.service';
+import { randomUUID } from 'crypto';
 import { FailedLoginService } from './failed-login.service';
 import { AuditService } from 'src/audit/audit.service';
 import { AUDIT_EVENT } from 'src/audit/auditEvents';
@@ -26,7 +25,6 @@ export class AuthService {
     private usersService: UsersService,
     private jwtService: JwtService,
     private prisma: PrismaService,
-    private mail: MailService,
     private failedLoginService: FailedLoginService,
     private auditService: AuditService,
     private permissionService: PermissionsService,
@@ -86,22 +84,22 @@ export class AuthService {
       throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
     }
 
-    if (user.passwordRestRequired) {
-      const tokenData = this.generateResetTokenData();
-      await this.prisma.resetToken.create({
-        data: {
-          email: email.toLowerCase(),
-          token: tokenData.token,
-          expiresAt: tokenData.expiresAt,
-        },
-      });
-      return {
-        accessToken: '',
-        user: { email: user.email },
-        resetRequired: true,
-        resetToken: tokenData.token,
-      };
-    }
+    // if (user.passwordRestRequired) {
+    //   const tokenData = this.generateResetTokenData();
+    //   await this.prisma.resetToken.create({
+    //     data: {
+    //       email: email.toLowerCase(),
+    //       token: tokenData.token,
+    //       expiresAt: tokenData.expiresAt,
+    //     },
+    //   });
+    //   return {
+    //     accessToken: '',
+    //     user: { email: user.email },
+    //     resetRequired: true,
+    //     resetToken: tokenData.token,
+    //   };
+    // }
 
     const isPasswordValid = await bcrypt.compare(pass, user.password);
 
@@ -234,78 +232,6 @@ export class AuthService {
     };
   }
 
-  async generateResetToken(email: string, ipAddress?: string) {
-    const user = await this.usersService.user({ email: email.toLowerCase() });
-    if (!user) {
-      this.logger.warn('Password reset requested for non-existent email', {
-        email,
-        ipAddress,
-      });
-      return true;
-    }
-
-    const tokenData = this.generateResetTokenData();
-    await this.prisma.resetToken.create({
-      data: {
-        email: email.toLowerCase(),
-        token: tokenData.token,
-        expiresAt: tokenData.expiresAt,
-      },
-    });
-
-    await this.mail.sendResetEmail({
-      to: email,
-      context: { email, token: tokenData.token },
-    });
-    await this.auditService.logEvent(
-      AUDIT_EVENT.PASSWORD_RESET_REQUESTED,
-      undefined,
-      ipAddress,
-      { email },
-    );
-    this.logger.verbose('Token Data', { tokenData });
-    return true;
-  }
-
-  async resetFromToken(
-    email: string,
-    password: string,
-    token: string,
-    ipAddress?: string,
-  ) {
-    const tokenData = await this.prisma.resetToken.findFirst({
-      where: {
-        email: email.toLowerCase(),
-        token,
-        expiresAt: { gte: new Date() },
-      },
-    });
-
-    if (!tokenData) {
-      this.logger.warn('No token data');
-      return false;
-    }
-
-    await this.usersService.updateUser({
-      where: { email: email.toLowerCase() },
-      data: { password, passwordRestRequired: false },
-    });
-
-    await this.auditService.logEvent(
-      AUDIT_EVENT.PASSWORD_RESET,
-      undefined,
-      ipAddress,
-      { email },
-    );
-
-    await this.prisma.resetToken.delete({
-      where: {
-        token_email: { token, email: email.toLowerCase() },
-      },
-    });
-    return true;
-  }
-
   async logout(
     ipAddress?: string,
   ): Promise<{ message: string; statusCode: number }> {
@@ -318,15 +244,5 @@ export class AuthService {
       message: 'Logout successful',
       statusCode: HttpStatus.OK,
     };
-  }
-
-  private generateResetTokenData(): {
-    token: string;
-    expiresAt: Date;
-  } {
-    const token = crypto.randomBytes(32).toString('hex');
-    const expiresAt = new Date(Date.now() + 1000 * 60 * 60); // 1 hour from now
-
-    return { token, expiresAt };
   }
 }

@@ -1,12 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
+import { InjectQueue } from '@nestjs/bull';
 import { CronJob } from 'cron';
-import { AchievementService } from 'src/achievement/achievement.service';
+import { Queue } from 'bull';
 import { LoginTokenService } from 'src/login-token/login-token.service';
 import { MailService } from 'src/mail/mail.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { FeatureFlags } from 'src/utils/featureFlags';
 import { getNextPreferredSendTime } from 'src/utils/nestFridayAt9UTC';
+import { WeeklyEmailJobData } from './tasks.processor';
 
 function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
@@ -19,8 +21,8 @@ export class TasksService {
     private readonly schedulerRegistry: SchedulerRegistry,
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
-    private readonly achService: AchievementService,
     private readonly loginTokenService: LoginTokenService,
+    @InjectQueue('tasks') private readonly tasksQueue: Queue,
   ) {}
 
   createCronJob(
@@ -214,7 +216,7 @@ export class TasksService {
   }
 
   async runWeeklyEmailSend() {
-    const premiumUsers = await this.prisma.user.findMany({
+    const eligibleUsers = await this.prisma.user.findMany({
       where: {
         nextSendAt: { lte: new Date() },
         subscriptions: {
@@ -235,41 +237,22 @@ export class TasksService {
       },
     });
 
-    const promises = premiumUsers.map(async (user) => {
-      const streakCount = await this.achService.getWeeklyStreak(
-        user.id,
-        user.timezone,
-      );
-      const totalAchievements = await this.achService.getTotalAchievements(
-        user.id,
-      );
-      const loginLink = await this.loginTokenService.createBetterAuthMagicLink(
-        user.email,
-        `${process.env.FRONT_END_URL}/dashboard/weekly`,
-      );
+    const jobs = eligibleUsers.map((user) => ({
+      name: 'processWeeklyEmail',
+      data: {
+        userId: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        timezone: user.timezone,
+        preferredDay: user.preferredDay,
+      } satisfies WeeklyEmailJobData,
+    }));
 
-      await this.mailService.sendWeeklyReminderEmail({
-        to: user.email,
-        context: {
-          firstName: user.firstName,
-          streakCount,
-          loginLink,
-          totalAchievements,
-        },
-      });
-      const nextSendAt = getNextPreferredSendTime(
-        user.timezone,
-        user.preferredDay,
-      );
-      await this.prisma.user.update({
-        where: { id: user.id },
-        data: { nextSendAt },
-      });
-    });
+    await this.tasksQueue.addBulk(jobs);
 
-    await Promise.all(promises);
-
-    // console.log({ resolved });
+    this.logger.log(
+      `runWeeklyEmailSend: queued ${jobs.length} weekly email jobs`,
+    );
   }
 
   async checkAbandonedOnboarding(): Promise<void> {
@@ -321,6 +304,21 @@ export class TasksService {
     this.logger.log(
       `checkAbandonedOnboarding finished. Emailed ${users.length} users.`,
     );
+  }
+
+  async devResetNextSendAt(userId?: number): Promise<number> {
+    const pastDate = new Date(0);
+    if (userId !== undefined) {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { nextSendAt: pastDate },
+      });
+      return 1;
+    }
+    const { count } = await this.prisma.user.updateMany({
+      data: { nextSendAt: pastDate },
+    });
+    return count;
   }
 
   async scheduleWeeklyEmailSend() {

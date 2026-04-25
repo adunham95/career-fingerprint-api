@@ -1,4 +1,10 @@
-import { Controller, Get, Logger } from '@nestjs/common';
+import {
+  Controller,
+  ForbiddenException,
+  Get,
+  Logger,
+  Query,
+} from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { TasksService } from './tasks.service';
 
@@ -16,7 +22,9 @@ export class TasksController {
   }
 
   /**  Runs friday every hour  */
-  @Cron('0 * * * 5', { name: 'sendWeeklyEmail' })
+  @Cron(process.env.WEEKLY_EMAIL_CRON || '0 * * * 5', {
+    name: 'sendWeeklyEmail',
+  })
   // @Cron('0/5 * * * *', { name: 'sendWeeklyEmail' })
   async handleSendWeeklyEmails() {
     await this.tasksService.runWeeklyEmailSend();
@@ -50,5 +58,16 @@ export class TasksController {
     console.log('test week emails');
     await this.tasksService.runWeeklyEmailSend();
     return true;
+  }
+
+  @Get('test/reset-next-send')
+  async testResetNextSendAt(@Query('userId') userId?: string) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new ForbiddenException('Not available in production');
+    }
+    const count = await this.tasksService.devResetNextSendAt(
+      userId ? parseInt(userId, 10) : undefined,
+    );
+    return { updated: count };
   }
 }

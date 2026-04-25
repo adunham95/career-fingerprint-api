@@ -218,7 +218,7 @@ export class TasksService {
   async runWeeklyEmailSend() {
     const eligibleUsers = await this.prisma.user.findMany({
       where: {
-        nextSendAt: { lte: new Date() },
+        weeklyReminderSettings: { nextSendAt: { lte: new Date() } },
         subscriptions: {
           some: {
             status: {
@@ -233,7 +233,7 @@ export class TasksService {
         firstName: true,
         email: true,
         timezone: true,
-        preferredDay: true,
+        weeklyReminderSettings: { select: { preferredDay: true } },
       },
     });
 
@@ -244,7 +244,7 @@ export class TasksService {
         email: user.email,
         firstName: user.firstName,
         timezone: user.timezone,
-        preferredDay: user.preferredDay,
+        preferredDay: user.weeklyReminderSettings!.preferredDay,
       } satisfies WeeklyEmailJobData,
     }));
 
@@ -309,13 +309,13 @@ export class TasksService {
   async devResetNextSendAt(userId?: number): Promise<number> {
     const pastDate = new Date(0);
     if (userId !== undefined) {
-      await this.prisma.user.update({
-        where: { id: userId },
+      await this.prisma.weeklyReminderSettings.update({
+        where: { userID: userId },
         data: { nextSendAt: pastDate },
       });
       return 1;
     }
-    const { count } = await this.prisma.user.updateMany({
+    const { count } = await this.prisma.weeklyReminderSettings.updateMany({
       data: { nextSendAt: pastDate },
     });
     return count;
@@ -325,7 +325,11 @@ export class TasksService {
     this.logger.log('Schedule Weekly Email Send Started');
     const users = await this.prisma.user.findMany({
       where: {
-        OR: [{ nextSendAt: null }, { nextSendAt: { lt: new Date() } }],
+        OR: [
+          { weeklyReminderSettings: null },
+          { weeklyReminderSettings: { is: { nextSendAt: null } } },
+          { weeklyReminderSettings: { is: { nextSendAt: { lt: new Date() } } } },
+        ],
         subscriptions: {
           some: {
             status: {
@@ -338,18 +342,23 @@ export class TasksService {
       select: {
         id: true,
         timezone: true,
-        preferredDay: true,
+        weeklyReminderSettings: { select: { preferredDay: true } },
       },
     });
 
     const promises = users.map(async (user) => {
       const nextSendAt = getNextPreferredSendTime(
         user.timezone,
-        user.preferredDay,
+        user.weeklyReminderSettings?.preferredDay ?? 5,
       );
-      await this.prisma.user.update({
-        where: { id: user.id },
-        data: { nextSendAt },
+      await this.prisma.weeklyReminderSettings.upsert({
+        where: { userID: user.id },
+        create: {
+          userID: user.id,
+          nextSendAt,
+          preferredDay: user.weeklyReminderSettings?.preferredDay ?? 5,
+        },
+        update: { nextSendAt },
       });
     });
 

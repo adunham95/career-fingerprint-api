@@ -44,10 +44,6 @@ export class UserEntity implements User {
 
   timezone: string;
 
-  preferredDay: number;
-
-  nextSendAt: Date | null;
-
   org: Organization | null;
 
   orgs: Organization[];

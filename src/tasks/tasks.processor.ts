@@ -47,8 +47,8 @@ export class TasksProcessor {
       });
 
       const nextSendAt = getNextPreferredSendTime(timezone, preferredDay);
-      await this.prisma.user.update({
-        where: { id: userId },
+      await this.prisma.weeklyReminderSettings.update({
+        where: { userID: userId },
         data: { nextSendAt },
       });
     } catch (error) {

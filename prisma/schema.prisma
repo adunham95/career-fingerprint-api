@@ -39,8 +39,7 @@ model User {
   inviteCode                 String?
   emailVerified              Boolean                      @default(false)
   timezone                   String                       @default("America/New_York")
-  nextSendAt                 DateTime? // in UTC
-  preferredDay               Int                          @default(5)
+  weeklyReminderSettings     WeeklyReminderSettings?
   resume                     Resume[]
   positions                  JobPosition[]
   achievements               Achievement[]
@@ -79,6 +78,14 @@ model User {
   baAccounts                     BaAccount[]
 
   @@index([email, inviteCode, stripeCustomerID])
+}
+
+model WeeklyReminderSettings {
+  id           Int       @id @default(autoincrement())
+  userID       Int       @unique
+  user         User      @relation(fields: [userID], references: [id], onDelete: Cascade)
+  preferredDay Int       @default(5)
+  nextSendAt   DateTime?
 }
 
 enum OrgDataAccessLevel {

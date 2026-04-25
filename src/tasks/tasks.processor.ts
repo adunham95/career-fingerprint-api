@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nestjs';
 import { Processor, Process } from '@nestjs/bull';
 import { Logger } from '@nestjs/common';
 import { Job } from 'bull';
@@ -52,6 +53,10 @@ export class TasksProcessor {
       });
     } catch (error) {
       this.logger.error(`Failed to send weekly email for user ${userId}`, error);
+      Sentry.captureException(error, {
+        tags: { job: 'processWeeklyEmail' },
+        extra: { userId, email },
+      });
       throw error;
     }
   }

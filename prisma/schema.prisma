@@ -86,6 +86,7 @@ model WeeklyReminderSettings {
   user         User      @relation(fields: [userID], references: [id], onDelete: Cascade)
   preferredDay Int       @default(5)
   nextSendAt   DateTime?
+  lastSentAt   DateTime?
 }
 
 enum OrgDataAccessLevel {

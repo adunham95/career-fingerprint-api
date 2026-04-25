@@ -49,7 +49,7 @@ export class TasksProcessor {
       const nextSendAt = getNextPreferredSendTime(timezone, preferredDay);
       await this.prisma.weeklyReminderSettings.update({
         where: { userID: userId },
-        data: { nextSendAt },
+        data: { nextSendAt, lastSentAt: new Date() },
       });
     } catch (error) {
       this.logger.error(`Failed to send weekly email for user ${userId}`, error);

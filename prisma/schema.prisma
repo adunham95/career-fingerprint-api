@@ -81,12 +81,14 @@ model User {
 }
 
 model WeeklyReminderSettings {
-  id           Int       @id @default(autoincrement())
-  userID       Int       @unique
-  user         User      @relation(fields: [userID], references: [id], onDelete: Cascade)
-  preferredDay Int       @default(5)
-  nextSendAt   DateTime?
-  lastSentAt   DateTime?
+  id             Int       @id @default(autoincrement())
+  userID         Int       @unique
+  user           User      @relation(fields: [userID], references: [id], onDelete: Cascade)
+  preferredDay   Int       @default(5)
+  preferredHour  Int       @default(9)
+  emailsDisabled Boolean   @default(false)
+  nextSendAt     DateTime?
+  lastSentAt     DateTime?
 }
 
 enum OrgDataAccessLevel {

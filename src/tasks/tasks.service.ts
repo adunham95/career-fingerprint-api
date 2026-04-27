@@ -218,7 +218,7 @@ export class TasksService {
   async runWeeklyEmailSend() {
     const eligibleUsers = await this.prisma.user.findMany({
       where: {
-        weeklyReminderSettings: { nextSendAt: { lte: new Date() } },
+        weeklyReminderSettings: { nextSendAt: { lte: new Date() }, emailsDisabled: false },
         subscriptions: {
           some: {
             status: {
@@ -233,7 +233,7 @@ export class TasksService {
         firstName: true,
         email: true,
         timezone: true,
-        weeklyReminderSettings: { select: { preferredDay: true } },
+        weeklyReminderSettings: { select: { preferredDay: true, preferredHour: true } },
       },
     });
 
@@ -245,6 +245,7 @@ export class TasksService {
         firstName: user.firstName,
         timezone: user.timezone,
         preferredDay: user.weeklyReminderSettings!.preferredDay,
+        preferredHour: user.weeklyReminderSettings!.preferredHour,
       } satisfies WeeklyEmailJobData,
     }));
 
@@ -330,6 +331,7 @@ export class TasksService {
           { weeklyReminderSettings: { is: { nextSendAt: null } } },
           { weeklyReminderSettings: { is: { nextSendAt: { lt: new Date() } } } },
         ],
+        NOT: { weeklyReminderSettings: { emailsDisabled: true } },
         subscriptions: {
           some: {
             status: {
@@ -342,21 +344,21 @@ export class TasksService {
       select: {
         id: true,
         timezone: true,
-        weeklyReminderSettings: { select: { preferredDay: true } },
+        weeklyReminderSettings: { select: { preferredDay: true, preferredHour: true } },
       },
     });
 
     const promises = users.map(async (user) => {
-      const nextSendAt = getNextPreferredSendTime(
-        user.timezone,
-        user.weeklyReminderSettings?.preferredDay ?? 5,
-      );
+      const preferredDay = user.weeklyReminderSettings?.preferredDay ?? 5;
+      const preferredHour = user.weeklyReminderSettings?.preferredHour ?? 9;
+      const nextSendAt = getNextPreferredSendTime(user.timezone, preferredDay, preferredHour);
       await this.prisma.weeklyReminderSettings.upsert({
         where: { userID: user.id },
         create: {
           userID: user.id,
           nextSendAt,
-          preferredDay: user.weeklyReminderSettings?.preferredDay ?? 5,
+          preferredDay,
+          preferredHour,
         },
         update: { nextSendAt },
       });

@@ -14,6 +14,7 @@ export interface WeeklyEmailJobData {
   firstName: string;
   timezone: string;
   preferredDay: number;
+  preferredHour: number;
 }
 
 @Processor('tasks')
@@ -29,7 +30,7 @@ export class TasksProcessor {
 
   @Process({ name: 'processWeeklyEmail', concurrency: 5 })
   async handleProcessWeeklyEmail(job: Job<WeeklyEmailJobData>) {
-    const { userId, email, firstName, timezone, preferredDay } = job.data;
+    const { userId, email, firstName, timezone, preferredDay, preferredHour } = job.data;
 
     try {
       const [streakCount, totalAchievements, loginLink] = await Promise.all([
@@ -46,7 +47,7 @@ export class TasksProcessor {
         context: { firstName, streakCount, loginLink, totalAchievements },
       });
 
-      const nextSendAt = getNextPreferredSendTime(timezone, preferredDay);
+      const nextSendAt = getNextPreferredSendTime(timezone, preferredDay, preferredHour);
       await this.prisma.weeklyReminderSettings.update({
         where: { userID: userId },
         data: { nextSendAt, lastSentAt: new Date() },

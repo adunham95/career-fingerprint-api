@@ -3,6 +3,7 @@ import { DateTime } from 'luxon';
 export function getNextPreferredSendTime(
   timezone?: string,
   preferredDay = 5,
+  preferredHour = 9,
 ): Date {
   let tz = timezone || 'America/New_York';
   let now = DateTime.now().setZone(tz);
@@ -13,11 +14,11 @@ export function getNextPreferredSendTime(
     now = DateTime.now().setZone(tz);
   }
 
-  let target = now.set({ hour: 9, minute: 0, second: 0, millisecond: 0 });
+  let target = now.set({ hour: preferredHour, minute: 0, second: 0, millisecond: 0 });
 
   if (
     now.weekday > preferredDay ||
-    (now.weekday === preferredDay && now.hour >= 9)
+    (now.weekday === preferredDay && now.hour >= preferredHour)
   ) {
     const daysToAdd = (7 - now.weekday + preferredDay) % 7 || 7;
     target = target.plus({ days: daysToAdd });

@@ -21,8 +21,8 @@ export class TasksController {
     this.logger.log('Daily job at 5 AM');
   }
 
-  /**  Runs friday every hour  */
-  @Cron(process.env.WEEKLY_EMAIL_CRON || '0 * * * 5', {
+  /**  Runs at the top of every hour  */
+  @Cron(process.env.WEEKLY_EMAIL_CRON || '0 * * * *', {
     name: 'sendWeeklyEmail',
   })
   // @Cron('0/5 * * * *', { name: 'sendWeeklyEmail' })
